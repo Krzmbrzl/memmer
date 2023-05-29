@@ -21,7 +21,7 @@ from memmer.orm import Base, Member, Session
 class TesRelations(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.engine = sqlalchemy.create_engine("sqlite:///:memory:", echo=True)
+        cls.engine = sqlalchemy.create_engine("sqlite:///:memory:")
         Base.metadata.create_all(cls.engine)
         cls.Session = sqlalchemy.orm.sessionmaker(bind=cls.engine)
 
