@@ -42,9 +42,9 @@ class Member(Base):
     use_sepa_debit: Mapped[bool]
 
     # Relations
-    participating_sessions: Mapped[List["Session"]] = relationship(
+    participating_sessions: Mapped[List["Session"]] = relationship( # type: ignore
         back_populates="members", secondary="participations"
     )
-    trained_sessions: Mapped[List["Session"]] = relationship(
+    trained_sessions: Mapped[List["Session"]] = relationship( # type: ignore
         back_populates="trainers", secondary="trainers"
     )
