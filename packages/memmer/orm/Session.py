@@ -22,9 +22,9 @@ class Session(Base):
     membership_fee: Mapped[Decimal]
 
     # Relations
-    members: Mapped[List["Member"]] = relationship( # type:ignore
+    members: Mapped[List["Member"]] = relationship(  # type:ignore
         back_populates="participating_sessions", secondary="participations"
     )
-    trainers: Mapped[List["Member"]] = relationship( # type: ignore
+    trainers: Mapped[List["Member"]] = relationship(  # type: ignore
         back_populates="trained_sessions", secondary="trainers"
     )

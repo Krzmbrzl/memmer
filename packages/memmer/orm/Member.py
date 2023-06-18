@@ -42,9 +42,9 @@ class Member(Base):
     sepa_mandate_date: Mapped[Optional[datetime.date]]
 
     # Relations
-    participating_sessions: Mapped[List["Session"]] = relationship( # type: ignore
+    participating_sessions: Mapped[List["Session"]] = relationship(  # type: ignore
         back_populates="members", secondary="participations"
     )
-    trained_sessions: Mapped[List["Session"]] = relationship( # type: ignore
+    trained_sessions: Mapped[List["Session"]] = relationship(  # type: ignore
         back_populates="trainers", secondary="trainers"
     )
