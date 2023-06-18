@@ -1,0 +1,19 @@
+{
+	"sessions": [
+		{
+			"id": 1,
+			"name": "Short session",
+			"membership_fee": 16
+		},
+		{
+			"id": 2,
+			"name": "Medium session",
+			"membership_fee": 20
+		},
+		{
+			"id": 3,
+			"name": "Long session",
+			"membership_fee": 33
+		}
+	]
+}
