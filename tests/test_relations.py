@@ -37,7 +37,7 @@ class TesRelations(unittest.TestCase):
                 iban="IE12BOFI90000112345678",
                 bic="KHYBPKKAJHE",
                 account_owner="Alice",
-                use_sepa_debit=True,
+                sepa_mandate_date=datetime.date(year=2000, month=11, day=13),
             )
             bob = Member(
                 first_name="Bob",
@@ -50,7 +50,7 @@ class TesRelations(unittest.TestCase):
                 iban="IE12BOFI90000112345678",
                 bic="KHYBPKKAJHE",
                 account_owner="Bob",
-                use_sepa_debit=True,
+                sepa_mandate_date=datetime.date(year=1990, month=8, day=1),
             )
             session1 = Session(name="Session 1", membership_fee=Decimal("15"))
             session2 = Session(name="Session 2", membership_fee=Decimal("0"))

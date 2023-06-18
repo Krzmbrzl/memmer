@@ -36,7 +36,6 @@ class TestORM(unittest.TestCase):
             "iban": "IE12BOFI90000112345678",
             "bic": "KHYBPKKAJHE",
             "account_owner": "Elvis's dad",
-            "use_sepa_debit": True,
         }
 
         # First verify that the parameters work as-is

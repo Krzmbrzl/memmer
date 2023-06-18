@@ -39,7 +39,7 @@ class Member(Base):
     bic: Mapped[str]
     account_owner: Mapped[str]
 
-    use_sepa_debit: Mapped[bool]
+    sepa_mandate_date: Mapped[Optional[datetime.date]]
 
     # Relations
     participating_sessions: Mapped[List["Session"]] = relationship( # type: ignore
