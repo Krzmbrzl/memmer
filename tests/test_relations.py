@@ -7,7 +7,7 @@
 
 import unittest
 
-from datetime import datetime
+import datetime
 from decimal import Decimal
 
 import sqlalchemy
@@ -29,7 +29,7 @@ class TesRelations(unittest.TestCase):
             alice = Member(
                 first_name="Alice",
                 last_name="Aliceton",
-                birthday=datetime(year=1978, month=2, day=1),
+                birthday=datetime.date(year=1978, month=2, day=1),
                 street="Alice's street",
                 street_number="42",
                 postal_code="61452",
@@ -42,7 +42,7 @@ class TesRelations(unittest.TestCase):
             bob = Member(
                 first_name="Bob",
                 last_name="Bobbington",
-                birthday=datetime(year=1978, month=2, day=1),
+                birthday=datetime.date(year=1978, month=2, day=1),
                 street="Bob's street",
                 street_number="7",
                 postal_code="73125",

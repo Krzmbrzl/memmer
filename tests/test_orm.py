@@ -7,7 +7,7 @@
 
 import unittest
 
-from datetime import datetime
+import datetime
 from decimal import Decimal
 
 import sqlalchemy
@@ -28,7 +28,7 @@ class TestORM(unittest.TestCase):
         mandatory_parameter = {
             "first_name": "Elvis",
             "last_name": "Presley",
-            "birthday": datetime(year=1935, month=1, day=8),
+            "birthday": datetime.date(year=1935, month=1, day=8),
             "street": "Famous road",
             "street_number": "8A",
             "postal_code": "13476",

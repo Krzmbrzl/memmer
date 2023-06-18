@@ -22,7 +22,7 @@ class Member(Base):
     # Personal data
     first_name: Mapped[str]
     last_name: Mapped[str]
-    birthday: Mapped[datetime.datetime]
+    birthday: Mapped[datetime.date]
 
     # Address
     street: Mapped[str]
