@@ -18,7 +18,7 @@ class Session(Base):
     __tablename__ = "sessions"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    name: Mapped[str]
+    name: Mapped[str] = mapped_column(unique=True)
     membership_fee: Mapped[Decimal]
 
     # Relations
