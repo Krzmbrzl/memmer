@@ -9,6 +9,7 @@ import unittest
 import json
 import os
 import datetime
+from decimal import Decimal
 
 import sqlalchemy
 import sqlalchemy.orm
@@ -16,8 +17,20 @@ import sqlalchemy.exc
 from sqlalchemy import select
 
 from memmer.orm import Base, Member, Session, Relation, FixedCost
-from memmer.queries import are_related, make_relation, drop_relation, get_relatives, get_fixed_cost
-from memmer import AdmissionFeeKey, BasicFeeAdultsKey, BasicFeeYouthsKey, ProcessingFeeKey
+from memmer.queries import (
+    are_related,
+    make_relation,
+    drop_relation,
+    get_relatives,
+    get_fixed_cost,
+    compute_monthly_fee,
+)
+from memmer import (
+    AdmissionFeeKey,
+    BasicFeeAdultsKey,
+    BasicFeeYouthsKey,
+    ProcessingFeeKey,
+)
 
 
 working_dir = os.path.dirname(os.path.realpath(__file__))
@@ -51,11 +64,13 @@ def get_users(session):
 def get_sessions(session):
     shortSession = session.scalars(
         select(Session).where(Session.name == "Short session")
-    )
+    ).first()
     mediumSession = session.scalars(
         select(Session).where(Session.name == "Medium session")
-    )
-    longSession = session.scalars(select(Session).where(Session.name == "Long session"))
+    ).first()
+    longSession = session.scalars(
+        select(Session).where(Session.name == "Long session")
+    ).first()
 
     assert shortSession != None
     assert mediumSession != None
@@ -113,9 +128,12 @@ class TestOperations(unittest.TestCase):
             session.add(Relation(first_id=sally.id, second_id=sam.id))
 
             # set fixed costs
-            fixed_costs = [ FixedCost(name=AdmissionFeeKey, costs = 15), FixedCost(name=BasicFeeAdultsKey, cost=15), FixedCost(name=BasicFeeYouthsKey,
-                                                                                                                               cost=4),
-                           FixedCost(name=ProcessingFeeKey, cost=15)]
+            fixed_costs = [
+                FixedCost(name=AdmissionFeeKey, cost=15),
+                FixedCost(name=BasicFeeAdultsKey, cost=5),
+                FixedCost(name=BasicFeeYouthsKey, cost=4),
+                FixedCost(name=ProcessingFeeKey, cost=15),
+            ]
             session.add_all(fixed_costs)
 
             session.commit()
@@ -156,11 +174,45 @@ class TestOperations(unittest.TestCase):
             sally, sam, dirk = get_users(session)
             shortSession, mediumSession, longSession = get_sessions(session)
 
-            self.assertEqual(compute_monthly_fee(sally), get_fixed_cost(BasicFeeYouthsKey))
-            self.assertEqual(compute_monthly_fee(dirk), get_fixed_cost(BasicFeeAdultsKey))
+            youth_base_fee = get_fixed_cost(session, BasicFeeYouthsKey)
+            adult_base_fee = get_fixed_cost(session, BasicFeeAdultsKey)
 
-            #sally.participating_sessions.append(shortSession)
+            # Youth basic fee
+            self.assertEqual(
+                compute_monthly_fee(session, sally),
+                youth_base_fee,
+            )
+            # Adult basic fee
+            self.assertEqual(
+                compute_monthly_fee(session, dirk),
+                adult_base_fee,
+            )
+            # Youth basic fee with sibling discount
+            self.assertEqual(
+                compute_monthly_fee(session, sam),
+                youth_base_fee / 2,
+            )
 
+            # The most expensive sibling has to pay fully
+            sam.participating_sessions.append(mediumSession)
+            sally.participating_sessions.append(shortSession)
+            self.assertEqual(
+                compute_monthly_fee(session, sam),
+                youth_base_fee + 20,
+            )
+            self.assertEqual(
+                compute_monthly_fee(session, sally),
+                (youth_base_fee + 16) / 2,
+            )
+
+            # First session costs 100%, second 75% and all other are free
+            dirk.participating_sessions.append(longSession)
+            dirk.participating_sessions.append(shortSession)
+            dirk.participating_sessions.append(mediumSession)
+            self.assertEqual(
+                compute_monthly_fee(session, dirk),
+                adult_base_fee + 28 + Decimal(20 * 0.75),
+            )
 
 
 if __name__ == "__main__":
