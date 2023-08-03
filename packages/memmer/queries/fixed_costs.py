@@ -10,7 +10,8 @@ from sqlalchemy import select
 
 from memmer.orm import FixedCost
 
-def get_fixed_cost(session:Session, key: str) -> Decimal:
+
+def get_fixed_cost(session: Session, key: str) -> Decimal:
     """Gets the fixed cost associated with the given key"""
     fixed_cost = session.scalars(select(FixedCost).where(FixedCost.name == key)).first()
 
@@ -18,4 +19,3 @@ def get_fixed_cost(session:Session, key: str) -> Decimal:
         raise RuntimeError("No fixed cost known with key '{}'".format(key))
 
     return fixed_cost.cost
-

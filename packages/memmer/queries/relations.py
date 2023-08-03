@@ -29,13 +29,21 @@ def are_related(session: Session, first: Member, second: Member) -> bool:
 
 def get_relatives(session: Session, member: Member) -> List[Member]:
     """Gets a list of members that are related to the given one"""
-    relations = session.scalars(select(Relation).where(or_(Relation.first_id == member.id, Relation.second_id == member.id))).all()
+    relations = session.scalars(
+        select(Relation).where(
+            or_(Relation.first_id == member.id, Relation.second_id == member.id)
+        )
+    ).all()
 
     relatedMembers: List[Member] = []
 
     for currentRelation in relations:
-        first = session.scalars(select(Member).where(Member.id == currentRelation.first_id)).first()
-        second = session.scalars(select(Member).where(Member.id == currentRelation.second_id)).first()
+        first = session.scalars(
+            select(Member).where(Member.id == currentRelation.first_id)
+        ).first()
+        second = session.scalars(
+            select(Member).where(Member.id == currentRelation.second_id)
+        ).first()
 
         assert first != None
         assert second != None
@@ -44,9 +52,8 @@ def get_relatives(session: Session, member: Member) -> List[Member]:
             relatedMembers.append(first)
         if member != second and not second in relatedMembers:
             relatedMembers.append(second)
-        
-    return relatedMembers
 
+    return relatedMembers
 
 
 def make_relation(session: Session, first: Member, second: Member) -> None:

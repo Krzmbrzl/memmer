@@ -10,6 +10,7 @@ from sqlalchemy.orm import mapped_column
 
 from .Base import Base
 
+
 class FixedCost(Base):
     __tablename__ = "fixedcosts"
 

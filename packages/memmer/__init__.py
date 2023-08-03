@@ -1,1 +1,6 @@
-from .Constants import AdmissionFeeKey, BasicFeeAdultsKey, BasicFeeYouthsKey, ProcessingFeeKey
+from .Constants import (
+    AdmissionFeeKey,
+    BasicFeeAdultsKey,
+    BasicFeeYouthsKey,
+    ProcessingFeeKey,
+)
