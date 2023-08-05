@@ -16,7 +16,7 @@ import sqlalchemy.orm
 import sqlalchemy.exc
 from sqlalchemy import select
 
-from memmer.orm import Base, Member, Session, Relation, FixedCost
+from memmer.orm import Base, Member, Session, Relation, FixedCost, OneTimeFee
 from memmer.queries import (
     are_related,
     make_relation,
@@ -24,6 +24,7 @@ from memmer.queries import (
     get_relatives,
     get_fixed_cost,
     compute_monthly_fee,
+    compute_total_fee,
 )
 from memmer import (
     AdmissionFeeKey,
@@ -213,6 +214,31 @@ class TestOperations(unittest.TestCase):
                 compute_monthly_fee(session, dirk),
                 adult_base_fee + 28 + Decimal(20 * 0.75),
             )
+
+    def test_total_fee_calculation(self):
+        with self.Session() as session:
+            sally, sam, dirk = get_users(session)
+            shortSession, mediumSession, longSession = get_sessions(session)
+
+            youth_base_fee = get_fixed_cost(session, BasicFeeYouthsKey)
+            adult_base_fee = get_fixed_cost(session, BasicFeeAdultsKey)
+
+            # Total fee = monthly fee + one-time fees
+            dirk.one_time_fees = [
+                OneTimeFee(reason="Sample one-time fee", amount=20),
+                OneTimeFee(reason="Another", amount=10),
+            ]
+            self.assertEqual(compute_total_fee(session, dirk), adult_base_fee + 20 + 10)
+
+            # One-time fee are not affected by discounts and also don't influence who pays
+            # fully
+            sam.participating_sessions.append(shortSession)
+            sam.one_time_fees.append(OneTimeFee(reason="Test", amount=10))
+            sally.participating_sessions.append(mediumSession)
+            self.assertEqual(
+                compute_total_fee(session, sam), (youth_base_fee + 16) / 2 + 10
+            )
+            self.assertEqual(compute_total_fee(session, sally), youth_base_fee + 20)
 
 
 if __name__ == "__main__":

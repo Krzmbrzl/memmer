@@ -5,3 +5,4 @@ from .Participation import Participation
 from .Trainer import Trainer
 from .Relation import Relation
 from .FixedCost import FixedCost
+from .OneTimeFee import OneTimeFee

@@ -48,3 +48,7 @@ class Member(Base):
     trained_sessions: Mapped[List["Session"]] = relationship(  # type: ignore
         back_populates="trainers", secondary="trainers"
     )
+
+    one_time_fees: Mapped[List["OneTimeFee"]] = relationship(  # type:ignore
+        back_populates="member"
+    )

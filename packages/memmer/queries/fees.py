@@ -9,7 +9,7 @@ from decimal import Decimal
 from datetime import date
 
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import delete
 
 import memmer.orm as morm
 from memmer import BasicFeeAdultsKey, BasicFeeYouthsKey
@@ -35,6 +35,7 @@ def get_age(member: morm.Member) -> int:
 def compute_monthly_fee(
     session: Session, member: morm.Member, account_for_siblings: bool = True
 ) -> Decimal:
+    """Computes the given member's monthly fee"""
     member_age: int = get_age(member)
 
     fee: Decimal = Decimal(0)
@@ -92,3 +93,23 @@ def compute_monthly_fee(
                 fee /= 2
 
     return fee
+
+
+def compute_total_fee(session: Session, member: morm.Member) -> Decimal:
+    """Computes the current fee of the given member. The total fee consists of the
+    monthly fee plus all outstanding one-time fees"""
+
+    fee = compute_monthly_fee(session, member)
+
+    for current_fee in member.one_time_fees:
+        fee += current_fee.amount
+
+    return fee
+
+
+def clear_one_time_fees(session: Session, member: morm.Member) -> None:
+    """Deletes all one-time fees associated with the given member"""
+    for current_fee in member.one_time_fees:
+        session.execute(
+            delete(morm.OneTimeFee).where(morm.OneTimeFee.id == current_fee.id)
+        )
