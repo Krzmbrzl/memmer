@@ -41,6 +41,9 @@ class Member(Base):
 
     sepa_mandate_date: Mapped[Optional[datetime.date]]
 
+    entry_date: Mapped[datetime.date] = mapped_column(default=datetime.datetime.utcnow)
+    exit_date: Mapped[Optional[datetime.date]]
+
     # Relations
     participating_sessions: Mapped[List["Session"]] = relationship(  # type: ignore
         back_populates="members", secondary="participations"

@@ -8,7 +8,7 @@ import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import delete
 
-from memmer.orm import Participation
+from memmer.orm import Participation, Member
 
 
 def clear_outdated_entries(session: Session) -> None:
@@ -16,3 +16,4 @@ def clear_outdated_entries(session: Session) -> None:
     today = datetime.datetime.now().date()
 
     session.execute(delete(Participation).where(Participation.until < today))
+    session.execute(delete(Member).where(Member.exit_date < today))
