@@ -16,7 +16,15 @@ import sqlalchemy.orm
 import sqlalchemy.exc
 from sqlalchemy import select
 
-from memmer.orm import Base, Member, Session, Relation, FixedCost, OneTimeFee
+from memmer.orm import (
+    Base,
+    Member,
+    Session,
+    Relation,
+    FixedCost,
+    OneTimeFee,
+    Participation,
+)
 from memmer.queries import (
     are_related,
     make_relation,
@@ -239,6 +247,54 @@ class TestOperations(unittest.TestCase):
                 compute_total_fee(session, sam), (youth_base_fee + 16) / 2 + 10
             )
             self.assertEqual(compute_total_fee(session, sally), youth_base_fee + 20)
+
+    def test_participation_dates(self):
+        with self.Session() as session:
+            sally, sam, dirk = get_users(session)
+            shortSession, mediumSession, longSession = get_sessions(session)
+
+            youth_base_fee = get_fixed_cost(session, BasicFeeYouthsKey)
+            adult_base_fee = get_fixed_cost(session, BasicFeeAdultsKey)
+
+            today = datetime.datetime.now().date()
+            tomorrow = today + datetime.timedelta(days=1)
+            yesterday = today - datetime.timedelta(days=1)
+
+            part1 = Participation(
+                member_id=dirk.id, session_id=shortSession.id, since=tomorrow
+            )
+            part2 = Participation(
+                member_id=dirk.id,
+                session_id=longSession.id,
+                since=yesterday - datetime.timedelta(days=1),
+                until=yesterday,
+            )
+            session.add_all([part1, part2])
+
+            self.assertTrue(shortSession in dirk.participating_sessions)
+            self.assertTrue(longSession in dirk.participating_sessions)
+            self.assertEqual(
+                compute_monthly_fee(session, dirk, target_date=today), adult_base_fee
+            )
+
+            # Ensure future and/or past participations don't influence sibling discount
+            part3 = Participation(
+                member_id=sam.id, session_id=mediumSession.id, since=tomorrow
+            )
+            part4 = Participation(
+                member_id=sam.id,
+                session_id=shortSession.id,
+                since=yesterday - datetime.timedelta(days=1),
+                until=yesterday,
+            )
+            session.add_all([part3, part4])
+
+            self.assertEqual(
+                compute_monthly_fee(session, sally, target_date=today), youth_base_fee
+            )
+            self.assertEqual(
+                compute_monthly_fee(session, sam, target_date=today), youth_base_fee / 2
+            )
 
 
 if __name__ == "__main__":

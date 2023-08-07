@@ -6,10 +6,10 @@
 from typing import List
 
 from decimal import Decimal
-from datetime import date
+from datetime import date, datetime
 
 from sqlalchemy.orm import Session
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 
 import memmer.orm as morm
 from memmer import BasicFeeAdultsKey, BasicFeeYouthsKey
@@ -33,7 +33,10 @@ def get_age(member: morm.Member) -> int:
 
 
 def compute_monthly_fee(
-    session: Session, member: morm.Member, account_for_siblings: bool = True
+    session: Session,
+    member: morm.Member,
+    account_for_siblings: bool = True,
+    target_date: date = datetime.now().date(),
 ) -> Decimal:
     """Computes the given member's monthly fee"""
     member_age: int = get_age(member)
@@ -49,7 +52,17 @@ def compute_monthly_fee(
     # Then add the training fees for the actively participating sessions
     session_fees: List[Decimal] = []
     for current_session in member.participating_sessions:
-        session_fees.append(current_session.membership_fee)
+        participation = session.scalar(
+            select(morm.Participation)
+            .where(morm.Participation.member_id == member.id)
+            .where(morm.Participation.session_id == current_session.id)
+        )
+        assert participation != None
+
+        if participation.since <= target_date and (
+            participation.until is None or participation.until > target_date
+        ):
+            session_fees.append(current_session.membership_fee)
 
     session_fees = sorted(session_fees, reverse=True)
     # The most expensive session has to be payed 100%, the second expensive 75% and all others are for free
