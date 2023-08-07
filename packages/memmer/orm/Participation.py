@@ -8,7 +8,6 @@ from typing import Optional
 import datetime
 
 from sqlalchemy import ForeignKey
-from sqlalchemy import func
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 
@@ -27,5 +26,5 @@ class Participation(Base):
         ForeignKey(Session.id, onupdate="CASCADE", ondelete="CASCADE"),
         primary_key=True,
     )
-    since: Mapped[datetime.date] = mapped_column(server_default=func.now())
+    since: Mapped[datetime.date] = mapped_column(default=datetime.datetime.utcnow)
     until: Mapped[Optional[datetime.date]]
