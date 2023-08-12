@@ -39,11 +39,21 @@ def compute_monthly_fee(
     target_date: date = datetime.now().date(),
 ) -> Decimal:
     """Computes the given member's monthly fee"""
+
+    # First check if there exists a fee override for this member as this will make any of the below
+    # superfluous
+    override = session.scalar(
+        select(morm.FeeOverride).where(morm.FeeOverride.member_id == member.id)
+    )
+
+    if not override is None:
+        return override.amount
+
     member_age: int = get_age(member)
 
     fee: Decimal = Decimal(0)
 
-    # First part: base fee
+    # Base fee
     if member_age < 18:
         fee += get_fixed_cost(session=session, key=BasicFeeYouthsKey)
     else:

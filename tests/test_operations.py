@@ -24,6 +24,7 @@ from memmer.orm import (
     FixedCost,
     OneTimeFee,
     Participation,
+    FeeOverride,
 )
 from memmer.queries import (
     are_related,
@@ -295,6 +296,30 @@ class TestOperations(unittest.TestCase):
             self.assertEqual(
                 compute_monthly_fee(session, sam, target_date=today), youth_base_fee / 2
             )
+
+    def test_fee_overwrite(self):
+        with self.Session() as session:
+            sally, sam, dirk = get_users(session)
+            shortSession, mediumSession, longSession = get_sessions(session)
+
+            youth_base_fee = get_fixed_cost(session, BasicFeeYouthsKey)
+
+            # Setting a fee override will completely bypass the regular monthly fee calculation
+            dirk.participating_sessions = [shortSession, longSession]
+            session.add(FeeOverride(member_id=dirk.id, amount=Decimal("7.25")))
+            self.assertEqual(compute_monthly_fee(session, dirk), Decimal("7.25"))
+
+            # Fee override doesn't override one-time fees though
+            session.add(OneTimeFee(member_id=dirk.id, reason="Test", amount=50))
+            self.assertEqual(compute_total_fee(session, dirk), Decimal("57.25"))
+
+            # It does influence the sibling discount (if only not all fees are overridden)
+            sally.participating_sessions.append(mediumSession)
+            sam.participating_sessions.append(shortSession)
+            session.add(FeeOverride(member_id=sally.id, amount=0))
+
+            self.assertEqual(compute_monthly_fee(session, sally), 0)
+            self.assertEqual(compute_monthly_fee(session, sam), youth_base_fee + 16)
 
 
 if __name__ == "__main__":
