@@ -53,11 +53,12 @@ def compute_monthly_fee(
 
     fee: Decimal = Decimal(0)
 
-    # Base fee
-    if member_age < 18:
-        fee += get_fixed_cost(session=session, key=BasicFeeYouthsKey)
-    else:
-        fee += get_fixed_cost(session=session, key=BasicFeeAdultsKey)
+    if not member.is_honorary_member:
+        # Base fee
+        if member_age < 18:
+            fee += get_fixed_cost(session=session, key=BasicFeeYouthsKey)
+        else:
+            fee += get_fixed_cost(session=session, key=BasicFeeAdultsKey)
 
     # Then add the training fees for the actively participating sessions
     session_fees: List[Decimal] = []

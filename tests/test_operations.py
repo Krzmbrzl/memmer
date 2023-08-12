@@ -321,6 +321,18 @@ class TestOperations(unittest.TestCase):
             self.assertEqual(compute_monthly_fee(session, sally), 0)
             self.assertEqual(compute_monthly_fee(session, sam), youth_base_fee + 16)
 
+    def test_honorary_member(self):
+        with self.Session() as session:
+            _, _, dirk = get_users(session)
+            shortSession, _, _ = get_sessions(session)
+
+            # Honorary members don't have to pay the base fee
+            dirk.is_honorary_member = True
+            self.assertEqual(compute_monthly_fee(session, dirk), 0)
+
+            dirk.participating_sessions.append(shortSession)
+            self.assertEqual(compute_monthly_fee(session, dirk), 16)
+
 
 if __name__ == "__main__":
     unittest.main()

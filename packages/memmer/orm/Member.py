@@ -44,6 +44,9 @@ class Member(Base):
     entry_date: Mapped[datetime.date] = mapped_column(default=datetime.datetime.utcnow)
     exit_date: Mapped[Optional[datetime.date]]
 
+    # Honorary members don't have to pay the base fee
+    is_honorary_member: Mapped[bool] = mapped_column(default=False)
+
     # Relations
     participating_sessions: Mapped[List["Session"]] = relationship(  # type: ignore
         back_populates="members", secondary="participations"
