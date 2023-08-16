@@ -14,22 +14,9 @@ from sqlalchemy import delete, select
 import memmer.orm as morm
 from memmer import BasicFeeAdultsKey, BasicFeeYouthsKey
 from memmer.queries import get_relatives
+from memmer.utils import nominal_year_diff
 
 from .fixed_costs import get_fixed_cost
-
-
-def get_age(member: morm.Member) -> int:
-    """Gets the age of the given member in full years"""
-    today = date.today()
-
-    age = today.year - member.birthday.year
-
-    if today.month > member.birthday.month:
-        age += 1
-    elif today.month == member.birthday.month and today.day >= member.birthday.day:
-        age += 1
-
-    return age
 
 
 def compute_monthly_fee(
@@ -49,7 +36,7 @@ def compute_monthly_fee(
     if not override is None:
         return override.amount
 
-    member_age: int = get_age(member)
+    member_age: int = nominal_year_diff(member.birthday, datetime.now().date())
 
     fee: Decimal = Decimal(0)
 
@@ -87,7 +74,8 @@ def compute_monthly_fee(
     # (only siblings < 18 years old are considered)
     if account_for_siblings and member_age < 18:
         relatives = get_relatives(session=session, member=member)
-        relatives = [x for x in relatives if get_age(x) < 18]
+        today = datetime.now().date()
+        relatives = [x for x in relatives if nominal_year_diff(x.birthday, today) < 18]
         relative_fees = [
             compute_monthly_fee(
                 session=session, member=current, account_for_siblings=False
