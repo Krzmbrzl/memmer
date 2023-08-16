@@ -3,17 +3,96 @@
 # LICENSE file at the root of the source tree or at
 # <https://github.com/Krzmbrzl/memmer/blob/main/LICENSE>.
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Callable, List
 
 from gettext import gettext as _
+import datetime
+import re
 
 import PySimpleGUI as sg
 
+from schwifty import IBAN
+from schwifty.exceptions import SchwiftyException
+
 from memmer.gui import Layout
 from memmer.orm import Member
+from memmer.utils import nominal_year_diff
 
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy import create_engine, URL
+
+
+def set_validation_state(element, valid: bool) -> None:
+    if type(element) == sg.Input:
+        default_bg = sg.theme_input_background_color()
+    elif type(element) == sg.Text:
+        default_bg = sg.theme_text_element_background_color()
+    else:
+        default_bg = sg.theme_background_color()
+
+    element.update(background_color="red" if not valid else default_bg)
+
+
+def validate_email(element):
+    mail = element.get().strip()
+
+    valid = re.fullmatch(r"[^@]+@[^@]+\.[^@]+", mail) is not None
+
+    set_validation_state(element, valid)
+
+    if valid and mail != element.get():
+        element.update(value=mail)
+
+
+def validate_non_empty(element, strip: bool = True) -> bool:
+    if strip:
+        if element.get().strip() == "":
+            set_validation_state(element, False)
+            return False
+        else:
+            set_validation_state(element, True)
+            if element.get() != element.get().strip():
+                element.update(value=element.get().strip())
+            return True
+    else:
+        if element.get() == "":
+            set_validation_state(element, False)
+            return False
+        else:
+            set_validation_state(element, True)
+            return True
+
+
+def validate_date(element) -> Optional[datetime.date]:
+    try:
+        # Parse in a date in any known format
+        date: datetime.datetime = datetime.datetime.fromisoformat(element.get())
+
+        set_validation_state(element, True)
+
+        # Make sure we represent the date in ISO format
+        formatted = date.date().isoformat()
+        if formatted != element.get():
+            element.update(value=date.date().isoformat())
+
+        return date.date()
+    except ValueError:
+        set_validation_state(element, False)
+
+
+def validate_iban(element) -> Optional[IBAN]:
+    try:
+        iban = IBAN(element.get().strip())
+
+        set_validation_state(element, True)
+
+        if iban.formatted != element.get():
+            element.update(value=iban.formatted)
+
+        return iban
+
+    except SchwiftyException:
+        set_validation_state(element, False)
 
 
 class MemmerGUI:
@@ -55,18 +134,29 @@ class MemmerGUI:
     USEREDIT_HONORABLEMEMBER_CHECKBOX: str = "-USEREDIT_HONORABLEMEMBER_CHECKBOX-"
     USEREDIT_IBAN_INPUT: str = "-USEREDIT_IBAN_INPUT-"
     USEREDIT_BIC_INPUT: str = "-USEREDIT_BIC_INPUT-"
+    USEREDIT_CREDITINSTITUTE_INPUT: str = "-USEREDIT_CREDITINSTITUTE_INPUT-"
     USEREDIT_ACCOUNTOWNER_INPUT: str = "-USEREDIT_ACCOUNTOWNER_INPUT-"
     USEREDIT_SEPAMANDATEDATE_INPUT: str = "-USEREDIT_SEPAMANDATEDATE_INPUT-"
     USEREDIT_MONTHLYFEE_INPUT: str = "-USEREDIT_MONTHLYFEE_INPUT-"
     USEREDIT_FEEOVERWRITE_CHECK: str = "-USEREDIT_FEEOVERWRITE_CHECK-"
+    USEREDIT_ONETIMEFEES_CONTAINER: str = "-USEREDIT_ONETIMEFEES_CONTAINER-"
+    USEREDIT_ONETIMEFEEADD_BUTTON: str = "-USEREDIT_ONETIMEFEEADD_BUTTON-"
     USEREDITOR_COLUMN: str = "-USEREDITOR_COLUMN-"
 
     def __init__(self):
         self.layout: Layout = [[]]
+        self.event_processors: Dict[str, List[Callable[[Dict[Any, Any]], Any]]] = {}
+
         self.create_connector()
         self.create_overview()
         self.create_management()
         self.create_usereditor()
+
+    def connect(self, event: str, processor: Callable[[Dict[Any, Any]], Any]):
+        if not event in self.event_processors:
+            self.event_processors[event] = [processor]
+        else:
+            self.event_processors[event].append(processor)
 
     def create_connector(self):
         labels: Layout = [
@@ -97,6 +187,9 @@ class MemmerGUI:
             [sg.Column(layout=labels), sg.Column(layout=inputs)],
             [sg.Button(button_text=_("Connect"), key=self.CONNECTOR_CONNECT_BUTTON)],
         ]
+
+        self.connect(self.CONNECTOR_CONNECT_BUTTON, self.on_connect_button_pressed)
+        self.connect(self.CONNECTOR_DBBACKEND_COMBO, self.on_db_backend_changed)
 
         self.layout[0].append(
             sg.Column(
@@ -163,6 +256,9 @@ class MemmerGUI:
             ],
             [sg.Button(button_text=_("Create tally"), key=self.OVERVIEW_TALLY_BUTTON)],
         ]
+
+        self.connect(self.OVERVIEW_MANAGEMENT_BUTTON, self.on_management_button_pressed)
+        self.connect(self.OVERVIEW_TALLY_BUTTON, self.on_tally_button_pressed)
 
         self.layout[0].append(
             sg.Column(
@@ -236,6 +332,8 @@ class MemmerGUI:
             ],
         ]
 
+        self.connect(self.MANAGEMENT_ADDMEMBER_BUTTON, self.on_addmember_button_pressed)
+
         self.layout[0].append(
             sg.Column(
                 layout=combined,
@@ -277,8 +375,10 @@ class MemmerGUI:
                         [sg.Input(key=self.USEREDIT_FIRSTNAME_INPUT)],
                         [sg.Input(key=self.USEREDIT_LASTNAME_INPUT)],
                         [
-                            sg.Input(key=self.USEREDIT_BIRTHDAY_INPUT),
-                            sg.Text(text="(3 years)", key=self.USEREDIT_AGE_LABEL),
+                            sg.Input(
+                                key=self.USEREDIT_BIRTHDAY_INPUT, enable_events=True
+                            ),
+                            sg.Text(text="", key=self.USEREDIT_AGE_LABEL),
                         ],
                     ]
                 ),
@@ -317,7 +417,7 @@ class MemmerGUI:
                 sg.Column(
                     layout=[
                         [sg.Input(key=self.USEREDIT_PHONE_INPUT)],
-                        [sg.Input(key=self.USEREDIT_EMAIL_INPUT)],
+                        [sg.Input(key=self.USEREDIT_EMAIL_INPUT, enable_events=True)],
                     ]
                 ),
             ]
@@ -333,8 +433,16 @@ class MemmerGUI:
                 ),
                 sg.Column(
                     layout=[
-                        [sg.Input(key=self.USEREDIT_ENTRYDATE_INPUT)],
-                        [sg.Input(key=self.USEREDIT_EXITDATE_INPUT)],
+                        [
+                            sg.Input(
+                                key=self.USEREDIT_ENTRYDATE_INPUT, enable_events=True
+                            )
+                        ],
+                        [
+                            sg.Input(
+                                key=self.USEREDIT_EXITDATE_INPUT, enable_events=True
+                            )
+                        ],
                     ]
                 ),
             ],
@@ -346,6 +454,11 @@ class MemmerGUI:
                 )
             ],
         ]
+
+        self.connect(self.USEREDIT_BIRTHDAY_INPUT, self.on_member_birthday_changed)
+        self.connect(self.USEREDIT_EMAIL_INPUT, self.on_member_email_changed)
+        self.connect(self.USEREDIT_ENTRYDATE_INPUT, self.on_member_entrydate_changed)
+        self.connect(self.USEREDIT_EXITDATE_INPUT, self.on_member_exitdate_changed)
 
         general_tab: Layout = [
             [sg.Frame(title=_("Personal"), layout=personal, expand_x=True)],
@@ -364,14 +477,25 @@ class MemmerGUI:
                         [sg.Text(_("SEPA mandate date:"))],
                         [sg.Text(_("IBAN:"))],
                         [sg.Text(_("BIC:"))],
+                        [sg.Text(_("Institute:"))],
                         [sg.Text(_("Account owner:"))],
                     ]
                 ),
                 sg.Column(
                     layout=[
-                        [sg.Input(key=self.USEREDIT_SEPAMANDATEDATE_INPUT)],
-                        [sg.Input(key=self.USEREDIT_IBAN_INPUT)],
-                        [sg.Input(key=self.USEREDIT_BIC_INPUT)],
+                        [
+                            sg.Input(
+                                key=self.USEREDIT_SEPAMANDATEDATE_INPUT,
+                                enable_events=True,
+                            )
+                        ],
+                        [sg.Input(key=self.USEREDIT_IBAN_INPUT, enable_events=True)],
+                        [sg.Input(key=self.USEREDIT_BIC_INPUT, disabled=True)],
+                        [
+                            sg.Input(
+                                key=self.USEREDIT_CREDITINSTITUTE_INPUT, disabled=True
+                            )
+                        ],
                         [sg.Input(key=self.USEREDIT_ACCOUNTOWNER_INPUT)],
                     ]
                 ),
@@ -384,19 +508,38 @@ class MemmerGUI:
                     layout=[
                         [sg.Text(_("Monthly fee:"))],
                         [sg.Text(_("One-time fees:"))],
+                        [sg.VPush()],
                     ]
                 ),
                 sg.Column(
                     layout=[
                         [
-                            sg.Input(disabled=True, key=self.USEREDIT_MONTHLYFEE_INPUT),
+                            sg.Input(
+                                default_text="0",
+                                disabled=True,
+                                key=self.USEREDIT_MONTHLYFEE_INPUT,
+                                enable_events=True,
+                            ),
                             sg.Checkbox(
                                 text=_("Overwrite"),
                                 default=False,
                                 key=self.USEREDIT_FEEOVERWRITE_CHECK,
+                                enable_events=True,
                             ),
                         ],
-                        [sg.Button(button_text=_("Add"))],
+                        [
+                            sg.Column(
+                                layout=[[]],
+                                visible=False,
+                                key=self.USEREDIT_ONETIMEFEES_CONTAINER,
+                            )
+                        ],
+                        [
+                            sg.Button(
+                                button_text=_("Add"),
+                                key=self.USEREDIT_ONETIMEFEEADD_BUTTON,
+                            )
+                        ],
                     ]
                 ),
             ],
@@ -407,6 +550,19 @@ class MemmerGUI:
             [sg.HorizontalSeparator()],
             [sg.Frame(title=_("Fees"), layout=fees, expand_x=True)],
         ]
+
+        self.connect(
+            self.USEREDIT_SEPAMANDATEDATE_INPUT,
+            self.on_member_sepa_mandate_date_changed,
+        )
+        self.connect(self.USEREDIT_IBAN_INPUT, self.on_member_iban_changed)
+        self.connect(self.USEREDIT_MONTHLYFEE_INPUT, self.on_member_monthly_fee_changed)
+        self.connect(
+            self.USEREDIT_FEEOVERWRITE_CHECK, self.on_member_fee_overwrite_changed
+        )
+        self.connect(
+            self.USEREDIT_ONETIMEFEEADD_BUTTON, self.on_member_onetime_fee_add_clicked
+        )
 
         sessions_tab: Layout = [[]]
 
@@ -435,6 +591,7 @@ class MemmerGUI:
                 ),
             ],
             [
+                sg.Push(),
                 sg.Button(button_text=_("Cancel")),
                 sg.Button(button_text=_("Save")),
                 sg.Button(button_text=_("Delete")),
@@ -457,9 +614,100 @@ class MemmerGUI:
             pass
         else:
             # TODO: Clear all fields
+            # Setup admission fee
             pass
 
         self.window[self.USEREDITOR_COLUMN].update(visible=True)
+
+    def on_member_birthday_changed(self, values: Dict[Any, Any]):
+        date = validate_date(self.window[self.USEREDIT_BIRTHDAY_INPUT])
+
+        if date is not None:
+            self.window[self.USEREDIT_AGE_LABEL].update(
+                value=_("({:d} years)").format(
+                    nominal_year_diff(date, datetime.datetime.now().date())
+                )
+            )
+
+            if nominal_year_diff(date, datetime.datetime.now().date()) < 0:
+                set_validation_state(self.window[self.USEREDIT_BIRTHDAY_INPUT], False)
+        else:
+            self.window[self.USEREDIT_AGE_LABEL].update(value="")
+
+    def on_member_email_changed(self, values: Dict[Any, Any]):
+        if values[self.USEREDIT_EMAIL_INPUT] == "":
+            # Leaving this empty is allowed
+            set_validation_state(self.window[self.USEREDIT_EMAIL_INPUT], True)
+        else:
+            validate_email(self.window[self.USEREDIT_EMAIL_INPUT])
+
+    def on_member_entrydate_changed(self, values: Dict[Any, Any]):
+        validate_date(self.window[self.USEREDIT_ENTRYDATE_INPUT])
+
+    def on_member_exitdate_changed(self, values: Dict[Any, Any]):
+        if values[self.USEREDIT_EXITDATE_INPUT] == "":
+            # Leaving this empty is allowed
+            set_validation_state(self.window[self.USEREDIT_EXITDATE_INPUT], True)
+        else:
+            validate_date(self.window[self.USEREDIT_EXITDATE_INPUT])
+
+    def on_member_sepa_mandate_date_changed(self, values: Dict[Any, Any]):
+        if values[self.USEREDIT_SEPAMANDATEDATE_INPUT] == "":
+            # Leaving this empty is allowed
+            set_validation_state(self.window[self.USEREDIT_SEPAMANDATEDATE_INPUT], True)
+        else:
+            date = validate_date(self.window[self.USEREDIT_SEPAMANDATEDATE_INPUT])
+
+            if date is not None and date > datetime.datetime.now().date():
+                # Mandate date can't be in the future
+                set_validation_state(
+                    self.window[self.USEREDIT_SEPAMANDATEDATE_INPUT], False
+                )
+
+    def on_member_iban_changed(self, values: Dict[Any, Any]):
+        if values[self.USEREDIT_IBAN_INPUT] == "":
+            # Leaving this empty is allowed
+            set_validation_state(self.window[self.USEREDIT_IBAN_INPUT], True)
+            self.window[self.USEREDIT_BIC_INPUT].update(value="")
+            self.window[self.USEREDIT_CREDITINSTITUTE_INPUT].update(value="")
+        else:
+            iban = validate_iban(self.window[self.USEREDIT_IBAN_INPUT])
+
+            if not iban is None:
+                if not iban.bic is None:
+                    self.window[self.USEREDIT_BIC_INPUT].update(
+                        value=iban.bic, disabled=True
+                    )
+                else:
+                    self.window[self.USEREDIT_BIC_INPUT].update(
+                        value="", disabled=False
+                    )
+
+                if iban.bank_name is not None:
+                    self.window[self.USEREDIT_CREDITINSTITUTE_INPUT].update(
+                        value=iban.bank_name
+                    )
+                else:
+                    self.window[self.USEREDIT_CREDITINSTITUTE_INPUT].update(
+                        value=_("Unknown")
+                    )
+
+    def on_member_monthly_fee_changed(self, values: Dict[Any, Any]):
+        try:
+            float(values[self.USEREDIT_MONTHLYFEE_INPUT])
+            set_validation_state(self.window[self.USEREDIT_MONTHLYFEE_INPUT], True)
+        except ValueError:
+            set_validation_state(self.window[self.USEREDIT_MONTHLYFEE_INPUT], False)
+
+    def on_member_fee_overwrite_changed(self, values: Dict[Any, Any]):
+        if values[self.USEREDIT_FEEOVERWRITE_CHECK]:
+            self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(disabled=False)
+        else:
+            # TODO: Re-compute regular monthly fee and write that into the respective field
+            self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(disabled=True)
+
+    def on_member_onetime_fee_add_clicked(self, values: Dict[Any, Any]):
+        sg.PopupOK("One-time fee handling not yet implemented")
 
     def show_and_execute(self):
         self.window: sg.Window = sg.Window(
@@ -472,16 +720,9 @@ class MemmerGUI:
             if event in [sg.WIN_CLOSED]:
                 break
 
-            if event == self.CONNECTOR_CONNECT_BUTTON:
-                self.on_connect_button_pressed(values)
-            elif event == self.CONNECTOR_DBBACKEND_COMBO:
-                self.on_db_backend_changed(values)
-            elif event == self.OVERVIEW_MANAGEMENT_BUTTON:
-                self.on_management_button_pressed(values)
-            elif event == self.OVERVIEW_TALLY_BUTTON:
-                self.on_tally_button_pressed(values)
-            elif event == self.MANAGEMENT_ADDMEMBER_BUTTON:
-                self.on_addmember_button_pressed(values)
+            if event in self.event_processors:
+                for current in self.event_processors[event]:
+                    current(values)
 
             print("Event: ", event)
 
