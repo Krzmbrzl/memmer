@@ -8,17 +8,20 @@ from typing import Dict, Any, Optional, Callable, List
 from gettext import gettext as _
 import datetime
 import re
+from pathlib import Path
 
 import PySimpleGUI as sg
 
 from schwifty import IBAN
 from schwifty.exceptions import SchwiftyException
 
+from sshtunnel import SSHTunnelForwarder, BaseSSHTunnelForwarderError
+
 from memmer.gui import Layout
 from memmer.orm import Member
 from memmer.utils import nominal_year_diff
 
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, URL
 
 
@@ -96,12 +99,23 @@ def validate_iban(element) -> Optional[IBAN]:
 
 
 class MemmerGUI:
-    CONNECTOR_DBBACKEND_COMBO: str = "-CONNCETOR_DBBACKEND_COMBO-"
+    CONNECTOR_CONNECTIONTYPE_COMBO: str = "-CONNECTOR_CONNECTIONTYPE_COMBO-"
+    CONNECTOR_DB_FRAME: str = "-CONNECTOR_DB_FRAME-"
+    CONNECTOR_SSH_FRAME: str = "-CONNECTOR_SSH_FRAME-"
+    CONNECTOR_DBBACKEND_COMBO: str = "-CONNECTOR_DBBACKEND_COMBO-"
     CONNECTOR_CONNECT_BUTTON: str = "-CONNECTOR_CONNECT_EVENT-"
-    CONNECTOR_HOST_FIELD: str = "-CONNECTOR_HOST_INPUT-"
-    CONNECTOR_USER_FIELD: str = "-CONNECTOR_USER_INPUT-"
-    CONNECTOR_PORT_FIELD: str = "-CONNECTOR_PORT_INPUT-"
-    CONNECTOR_DBNAME_FIELD: str = "-CONNECTOR_DBNAME_INPUT-"
+    CONNECTOR_HOST_INPUT: str = "-CONNECTOR_HOST_INPUT-"
+    CONNECTOR_USER_INPUT: str = "-CONNECTOR_USER_INPUT-"
+    CONNECTOR_PASSWORD_INPUT: str = "-CONNECTOR_PASSWORD_FIELD-"
+    CONNECTOR_PORT_INPUT: str = "-CONNECTOR_PORT_INPUT-"
+    CONNECTOR_DBNAME_INPUT: str = "-CONNECTOR_DBNAME_INPUT-"
+    CONNECTOR_SSHUSER_INPUT: str = "-CONNECTOR_SSHUSER_INPUT_"
+    CONNECTOR_SSHPORT_INPUT: str = "-CONNECTOR_SSHPORT_INPUT-"
+    CONNECTOR_SSHPASSWORD_INPUT: str = "-CONNECTOR_SSHPASSWORD_INPUT-"
+    CONNECTOR_SSHPRIVATEKEY_INPUT: str = "-CONNECTOR_SSHPRIVATEKEY_INPUT-"
+    CONNECTOR_SSHPRIVATEKEY_BROWSE_BUTTON: str = (
+        "-CONNECTOR_SSHPRIVATEKEY_BROWSE_BUTTON-"
+    )
     CONNECTOR_COLUMN: str = "-CONNECTOR_COLUMN-"
 
     OVERVIEW_MANAGEMENT_BUTTON: str = "-OVERVIEW_MANAGEMENT_BUTTON-"
@@ -146,6 +160,8 @@ class MemmerGUI:
     def __init__(self):
         self.layout: Layout = [[]]
         self.event_processors: Dict[str, List[Callable[[Dict[Any, Any]], Any]]] = {}
+        self.ssh_tunnel: Optional[SSHTunnelForwarder] = None
+        self.session: Optional[Session] = None
 
         self.create_connector()
         self.create_overview()
@@ -158,16 +174,30 @@ class MemmerGUI:
         else:
             self.event_processors[event].append(processor)
 
+    def prompted_commit(self):
+        if self.session:
+            if self.session.new or self.session.dirty or self.session.deleted:
+                # There are uncommitted changes
+                result = sg.PopupYesNo(
+                    _("Do you want to persist your modifications?"),
+                    title=_("Persist changes?"),
+                )
+
+                # TODO: Handle translations
+                if result == "Yes":
+                    self.session.commit()
+
     def create_connector(self):
-        labels: Layout = [
+        db_labels: Layout = [
             [sg.Text(_("Backend:"))],
             [sg.Text(_("User:"))],
+            [sg.Text(_("Password:"))],
             [sg.Text(_("Host:"))],
             [sg.Text(_("Port:"))],
             [sg.Text(_("Database:"))],
         ]
 
-        inputs: Layout = [
+        db_inputs: Layout = [
             [
                 sg.Combo(
                     values=["PostgreSQL", "MySQL", "SQLite"],
@@ -177,17 +207,71 @@ class MemmerGUI:
                     key=self.CONNECTOR_DBBACKEND_COMBO,
                 )
             ],
-            [sg.Input(key=self.CONNECTOR_USER_FIELD)],
-            [sg.Input(key=self.CONNECTOR_HOST_FIELD)],
-            [sg.Input(key=self.CONNECTOR_PORT_FIELD)],
-            [sg.Input(key=self.CONNECTOR_DBNAME_FIELD)],
+            [sg.Input(key=self.CONNECTOR_USER_INPUT)],
+            [sg.Input(key=self.CONNECTOR_PASSWORD_INPUT)],
+            [sg.Input(key=self.CONNECTOR_HOST_INPUT)],
+            [sg.Input(key=self.CONNECTOR_PORT_INPUT)],
+            [sg.Input(key=self.CONNECTOR_DBNAME_INPUT)],
+        ]
+
+        ssh_labels: Layout = [
+            [sg.Text(_("User:"))],
+            [sg.Text(_("Port:"))],
+            [sg.Text(_("Password:"))],
+            [sg.Text(_("Private key:"))],
+        ]
+
+        ssh_inputs: Layout = [
+            [sg.Input(key=self.CONNECTOR_SSHUSER_INPUT)],
+            [sg.Input(key=self.CONNECTOR_SSHPORT_INPUT)],
+            [sg.Input(key=self.CONNECTOR_SSHPASSWORD_INPUT)],
+            [
+                sg.Input(key=self.CONNECTOR_SSHPRIVATEKEY_INPUT),
+                sg.FileBrowse(
+                    button_text="…",
+                    key=self.CONNECTOR_SSHPRIVATEKEY_BROWSE_BUTTON,
+                    initial_folder=Path.home(),
+                ),
+            ],
         ]
 
         connector_layout: Layout = [
-            [sg.Column(layout=labels), sg.Column(layout=inputs)],
+            [
+                sg.Text(_("Connection type:")),
+                sg.Combo(
+                    values=["Regular", "SSH-Tunnel"],
+                    default_value="Regular",
+                    key=self.CONNECTOR_CONNECTIONTYPE_COMBO,
+                    enable_events=True,
+                    readonly=True,
+                ),
+            ],
+            [sg.HorizontalSeparator()],
+            [
+                sg.Frame(
+                    title=_("Database"),
+                    layout=[[sg.Column(layout=db_labels), sg.Column(layout=db_inputs)]],
+                    key=self.CONNECTOR_DB_FRAME,
+                    expand_x=True,
+                )
+            ],
+            [
+                sg.Frame(
+                    title=_("SSH"),
+                    layout=[
+                        [sg.Column(layout=ssh_labels), sg.Column(layout=ssh_inputs)]
+                    ],
+                    key=self.CONNECTOR_SSH_FRAME,
+                    visible=False,
+                    expand_x=True,
+                )
+            ],
             [sg.Button(button_text=_("Connect"), key=self.CONNECTOR_CONNECT_BUTTON)],
         ]
 
+        self.connect(
+            self.CONNECTOR_CONNECTIONTYPE_COMBO, self.on_connection_type_changed
+        )
         self.connect(self.CONNECTOR_CONNECT_BUTTON, self.on_connect_button_pressed)
         self.connect(self.CONNECTOR_DBBACKEND_COMBO, self.on_db_backend_changed)
 
@@ -201,20 +285,75 @@ class MemmerGUI:
             )
         )
 
+    def on_connection_type_changed(self, values: Dict[Any, Any]):
+        selected_type = values[self.CONNECTOR_CONNECTIONTYPE_COMBO]
+
+        remote_options_disabled = values[self.CONNECTOR_DBBACKEND_COMBO] == "SQLite"
+
+        if selected_type == "Regular":
+            self.window[self.CONNECTOR_SSH_FRAME].update(visible=False)
+            self.window[self.CONNECTOR_PORT_INPUT].update(
+                disabled=remote_options_disabled
+            )
+            self.window[self.CONNECTOR_HOST_INPUT].update(
+                disabled=remote_options_disabled
+            )
+        else:
+            assert selected_type == "SSH-Tunnel"
+            self.window[self.CONNECTOR_SSH_FRAME].update(visible=True)
+            self.window[self.CONNECTOR_PORT_INPUT].update(disabled=False)
+            self.window[self.CONNECTOR_HOST_INPUT].update(disabled=False)
+
     def on_db_backend_changed(self, values: Dict[Any, Any]):
         selected_backend = values[self.CONNECTOR_DBBACKEND_COMBO]
 
         remote_options_disabled = selected_backend == "SQLite"
+        reuse_for_ssh = values[self.CONNECTOR_CONNECTIONTYPE_COMBO] == "SSH-Tunnel"
 
-        self.window[self.CONNECTOR_HOST_FIELD].update(disabled=remote_options_disabled)
-        self.window[self.CONNECTOR_PORT_FIELD].update(disabled=remote_options_disabled)
-        self.window[self.CONNECTOR_USER_FIELD].update(disabled=remote_options_disabled)
+        self.window[self.CONNECTOR_HOST_INPUT].update(
+            disabled=remote_options_disabled and not reuse_for_ssh
+        )
+        self.window[self.CONNECTOR_PORT_INPUT].update(
+            disabled=remote_options_disabled and not reuse_for_ssh
+        )
+        self.window[self.CONNECTOR_USER_INPUT].update(disabled=remote_options_disabled)
+        self.window[self.CONNECTOR_PASSWORD_INPUT].update(
+            disabled=remote_options_disabled
+        )
 
     def on_connect_button_pressed(self, values: Dict[Any, Any]):
+        if values[self.CONNECTOR_CONNECTIONTYPE_COMBO] == "SSH-Tunnel":
+            # Establish SSH tunnel
+            try:
+                if not self.ssh_tunnel is None:
+                    self.ssh_tunnel.stop()
+
+                self.ssh_tunnel = SSHTunnelForwarder(
+                    ssh_address_or_host=values[self.CONNECTOR_HOST_INPUT],
+                    ssh_port=int(values[self.CONNECTOR_SSHPORT_INPUT])
+                    if values[self.CONNECTOR_SSHPORT_INPUT].strip() != ""
+                    else 22,
+                    ssh_username=values[self.CONNECTOR_SSHUSER_INPUT],
+                    ssh_password=values[self.CONNECTOR_SSHPASSWORD_INPUT]
+                    if values[self.CONNECTOR_SSHPASSWORD_INPUT] != ""
+                    else None,
+                    ssh_pkey=values[self.CONNECTOR_SSHPRIVATEKEY_INPUT],
+                    remote_bind_address=(
+                        "127.0.0.1",
+                        int(values[self.CONNECTOR_PORT_INPUT]),
+                    ),
+                )
+
+                self.ssh_tunnel.start()
+            except BaseSSHTunnelForwarderError as e:
+                sg.PopupOK(_("Failed to establish ssh tunnel: ") + str(e))
+                return
+
+        # Process DB backend that shall be used
         if values[self.CONNECTOR_DBBACKEND_COMBO] == "SQLite":
             backend = "sqlite"
 
-            if values[self.CONNECTOR_DBNAME_FIELD] == "":
+            if values[self.CONNECTOR_DBNAME_INPUT] == "":
                 sg.popup_ok(
                     _(
                         "Warning: Using in-memory (temporary) SQLite database not supported"
@@ -227,19 +366,38 @@ class MemmerGUI:
             assert values[self.CONNECTOR_DBBACKEND_COMBO] == "MySQL"
             backend = "mysql"
 
+        # Figure out what host and port to connect the DB to
+        if backend == "sqlite":
+            host = None
+            port = None
+        else:
+            port = (
+                self.ssh_tunnel.local_bind_port
+                if self.ssh_tunnel is not None
+                else values[self.CONNECTOR_PORT_INPUT]
+            )
+            host = (
+                self.ssh_tunnel.local_bind_host
+                if self.ssh_tunnel is not None
+                else values[self.CONNECTOR_HOST_INPUT]
+            )
+
         try:
             connect_url = URL.create(
                 drivername=backend,
-                username=values[self.CONNECTOR_USER_FIELD]
+                username=values[self.CONNECTOR_USER_INPUT]
                 if backend != "sqlite"
                 else None,
-                port=values[self.CONNECTOR_PORT_FIELD] if backend != "sqlite" else None,
-                host=values[self.CONNECTOR_HOST_FIELD] if backend != "sqlite" else None,
-                database=values[self.CONNECTOR_DBNAME_FIELD],
+                port=port,
+                host=host,
+                database=values[self.CONNECTOR_DBNAME_INPUT],
             )
+
+            print("Connecting DB via ", connect_url)
+
             engine = create_engine(connect_url)
 
-            self.Session = sessionmaker(bind=engine)
+            self.session = Session(bind=engine)
 
             # Switch to overview
             self.window[self.CONNECTOR_COLUMN].update(visible=False)
@@ -726,4 +884,9 @@ class MemmerGUI:
 
             print("Event: ", event)
 
+        self.prompted_commit()
+
         self.window.close()
+
+        if not self.ssh_tunnel is None:
+            self.ssh_tunnel.stop()
