@@ -3,8 +3,9 @@
 # LICENSE file at the root of the source tree or at
 # <https://github.com/Krzmbrzl/memmer/blob/main/LICENSE>.
 
-from typing import Dict, Any, Optional, Callable, List
+from typing import Dict, Any, Optional, Callable, List, Union
 
+from decimal import Decimal
 from gettext import gettext as _
 import datetime
 import re
@@ -18,11 +19,32 @@ from schwifty.exceptions import SchwiftyException
 from sshtunnel import SSHTunnelForwarder, BaseSSHTunnelForwarderError
 
 from memmer.gui import Layout
-from memmer.orm import Member
+from memmer.orm import Member, Session, OneTimeFee, FeeOverride
 from memmer.utils import nominal_year_diff
 
-from sqlalchemy.orm import Session
-from sqlalchemy import create_engine, URL
+from sqlalchemy.orm import Session as SQLSession
+from sqlalchemy import create_engine, URL, select, delete, event
+
+
+@event.listens_for(SQLSession, "after_flush")
+def log_flush(session, flush_context):
+    session.info["flushed"] = True
+
+
+@event.listens_for(SQLSession, "after_commit")
+@event.listens_for(SQLSession, "after_rollback")
+def reset_flushed(session):
+    if "flushed" in session.info:
+        del session.info["flushed"]
+
+
+def has_uncommitted_changes(session: SQLSession):
+    return (
+        any(session.new)
+        or any(session.deleted)
+        or any([x for x in session.dirty if session.is_modified(x)])
+        or session.info.get("flushed", False)
+    )
 
 
 def set_validation_state(element, valid: bool) -> None:
@@ -34,6 +56,10 @@ def set_validation_state(element, valid: bool) -> None:
         default_bg = sg.theme_background_color()
 
     element.update(background_color="red" if not valid else default_bg)
+    if element.metadata is None:
+        element.metadata = {"valid": valid}
+    else:
+        element.metadata["valid"] = valid
 
 
 def validate_email(element):
@@ -98,6 +124,11 @@ def validate_iban(element) -> Optional[IBAN]:
         set_validation_state(element, False)
 
 
+ONETIMEFEE_REASON_WIDTH: int = 40
+ONETIMEFEE_AMOUNT_WIDTH: int = 10
+MAX_ONETIME_FEES: int = 3
+
+
 class MemmerGUI:
     CONNECTOR_CONNECTIONTYPE_COMBO: str = "-CONNECTOR_CONNECTIONTYPE_COMBO-"
     CONNECTOR_DB_FRAME: str = "-CONNECTOR_DB_FRAME-"
@@ -154,14 +185,17 @@ class MemmerGUI:
     USEREDIT_MONTHLYFEE_INPUT: str = "-USEREDIT_MONTHLYFEE_INPUT-"
     USEREDIT_FEEOVERWRITE_CHECK: str = "-USEREDIT_FEEOVERWRITE_CHECK-"
     USEREDIT_ONETIMEFEES_CONTAINER: str = "-USEREDIT_ONETIMEFEES_CONTAINER-"
-    USEREDIT_ONETIMEFEEADD_BUTTON: str = "-USEREDIT_ONETIMEFEEADD_BUTTON-"
+    USEREDIT_CANCEL_BUTTON: str = "-USEREDIT_CANCEL_BUTTON-"
+    USEREDIT_SAVE_BUTTON: str = "-USEREDIT_SAVE_BUTTON-"
+    USEREDIT_DELETE_BUTTON: str = "-USEREDIT_DELETE_BUTTON-"
+    USEREDIT_TABGROUP: str = "-USEREDIT_TABGROUP-"
     USEREDITOR_COLUMN: str = "-USEREDITOR_COLUMN-"
 
     def __init__(self):
         self.layout: Layout = [[]]
         self.event_processors: Dict[str, List[Callable[[Dict[Any, Any]], Any]]] = {}
         self.ssh_tunnel: Optional[SSHTunnelForwarder] = None
-        self.session: Optional[Session] = None
+        self.session: Optional[SQLSession] = None
 
         self.create_connector()
         self.create_overview()
@@ -176,9 +210,9 @@ class MemmerGUI:
 
     def prompted_commit(self):
         if self.session:
-            if self.session.new or self.session.dirty or self.session.deleted:
+            if has_uncommitted_changes(self.session):
                 # There are uncommitted changes
-                result = sg.PopupYesNo(
+                result = sg.popup_yes_no(
                     _("Do you want to persist your modifications?"),
                     title=_("Persist changes?"),
                 )
@@ -346,7 +380,7 @@ class MemmerGUI:
 
                 self.ssh_tunnel.start()
             except BaseSSHTunnelForwarderError as e:
-                sg.PopupOK(_("Failed to establish ssh tunnel: ") + str(e))
+                sg.popup_ok(_("Failed to establish ssh tunnel: ") + str(e))
                 return
 
         # Process DB backend that shall be used
@@ -397,7 +431,7 @@ class MemmerGUI:
 
             engine = create_engine(connect_url)
 
-            self.session = Session(bind=engine)
+            self.session = SQLSession(bind=engine)
 
             # Switch to overview
             self.window[self.CONNECTOR_COLUMN].update(visible=False)
@@ -505,14 +539,26 @@ class MemmerGUI:
     def open_management(self):
         self.window[self.MANAGEMENT_COLUMN].update(visible=True)
 
-        # TODO: Create list of members and put them into the listbox
+        assert self.session is not None
+
+        # Populate member and session lists
+
+        members = self.session.scalars(select(Member)).all()
+
         self.window[self.MANAGEMENT_MEMBER_LISTBOX].update(
-            values=["Test Arthuis", "Jemma Tellar"]
+            values=[
+                "{}, {}".format(current.first_name, current.last_name)
+                for current in members
+            ]
         )
+        self.window[self.MANAGEMENT_MEMBER_LISTBOX].metadata = members
 
-        # TODO: Create list of sessions and put them to the listbox
+        sessions = self.session.scalars(select(Session)).all()
 
-        # TODO: Store full list of entries in metadata variable on listbox
+        self.window[self.MANAGEMENT_SESSION_LISTBOX].update(
+            values=[current.name for current in sessions]
+        )
+        self.window[self.MANAGEMENT_SESSION_LISTBOX].metadata = sessions
 
     def on_addmember_button_pressed(self, values: Dict[Any, Any]):
         self.window[self.MANAGEMENT_COLUMN].update(visible=False)
@@ -667,7 +713,8 @@ class MemmerGUI:
                         [sg.Text(_("Monthly fee:"))],
                         [sg.Text(_("One-time fees:"))],
                         [sg.VPush()],
-                    ]
+                    ],
+                    expand_y=True,
                 ),
                 sg.Column(
                     layout=[
@@ -687,15 +734,33 @@ class MemmerGUI:
                         ],
                         [
                             sg.Column(
-                                layout=[[]],
-                                visible=False,
+                                layout=[
+                                    [
+                                        sg.Text(
+                                            text=_("Reason"),
+                                            size=(ONETIMEFEE_REASON_WIDTH, 1),
+                                        ),
+                                        sg.Text(
+                                            text=_("Amount"),
+                                            size=(ONETIMEFEE_AMOUNT_WIDTH, 1),
+                                        ),
+                                    ],
+                                    [sg.HorizontalSeparator()],
+                                    *[
+                                        [
+                                            sg.Input(
+                                                size=(ONETIMEFEE_REASON_WIDTH, 1),
+                                                key="-onetimefee_reason_{}-".format(i),
+                                            ),
+                                            sg.Input(
+                                                size=(ONETIMEFEE_AMOUNT_WIDTH, 1),
+                                                key="-onetimefee_amount_{}-".format(i),
+                                            ),
+                                        ]
+                                        for i in range(MAX_ONETIME_FEES)
+                                    ],
+                                ],
                                 key=self.USEREDIT_ONETIMEFEES_CONTAINER,
-                            )
-                        ],
-                        [
-                            sg.Button(
-                                button_text=_("Add"),
-                                key=self.USEREDIT_ONETIMEFEEADD_BUTTON,
                             )
                         ],
                     ]
@@ -717,9 +782,6 @@ class MemmerGUI:
         self.connect(self.USEREDIT_MONTHLYFEE_INPUT, self.on_member_monthly_fee_changed)
         self.connect(
             self.USEREDIT_FEEOVERWRITE_CHECK, self.on_member_fee_overwrite_changed
-        )
-        self.connect(
-            self.USEREDIT_ONETIMEFEEADD_BUTTON, self.on_member_onetime_fee_add_clicked
         )
 
         sessions_tab: Layout = [[]]
@@ -745,16 +807,23 @@ class MemmerGUI:
                                 key=self.USEREDITOR_SESSIONS_TAB,
                             ),
                         ]
-                    ]
+                    ],
+                    key=self.USEREDIT_TABGROUP,
+                    expand_x=True,
+                    expand_y=True,
                 ),
             ],
             [
                 sg.Push(),
-                sg.Button(button_text=_("Cancel")),
-                sg.Button(button_text=_("Save")),
-                sg.Button(button_text=_("Delete")),
+                sg.Button(button_text=_("Cancel"), key=self.USEREDIT_CANCEL_BUTTON),
+                sg.Button(button_text=_("Save"), key=self.USEREDIT_SAVE_BUTTON),
+                sg.Button(button_text=_("Delete"), key=self.USEREDIT_DELETE_BUTTON),
             ],
         ]
+
+        self.connect(self.USEREDIT_CANCEL_BUTTON, self.on_useredit_cancel_pressed)
+        self.connect(self.USEREDIT_SAVE_BUTTON, self.on_useredit_save_pressed)
+        self.connect(self.USEREDIT_DELETE_BUTTON, self.on_useredit_delete_pressed)
 
         self.layout[0].append(
             sg.Column(
@@ -767,13 +836,44 @@ class MemmerGUI:
         )
 
     def open_usereditor(self, user: Optional[Member] = None):
+        # Clear elements
+        for current in [
+            self.USEREDIT_FIRSTNAME_INPUT,
+            self.USEREDIT_LASTNAME_INPUT,
+            self.USEREDIT_BIRTHDAY_INPUT,
+            self.USEREDIT_STREET_INPUT,
+            self.USEREDIT_STREETNUM_INPUT,
+            self.USEREDIT_CITY_INPUT,
+            self.USEREDIT_PHONE_INPUT,
+            self.USEREDIT_EMAIL_INPUT,
+            self.USEREDIT_ENTRYDATE_INPUT,
+            self.USEREDIT_EXITDATE_INPUT,
+            self.USEREDIT_SEPAMANDATEDATE_INPUT,
+            self.USEREDIT_IBAN_INPUT,
+            self.USEREDIT_CREDITINSTITUTE_INPUT,
+            self.USEREDIT_ACCOUNTOWNER_INPUT,
+            *["-onetimefee_reason_{}-".format(i) for i in range(MAX_ONETIME_FEES)],
+            *["-onetimefee_amount_{}-".format(i) for i in range(MAX_ONETIME_FEES)],
+        ]:
+            self.window[current].update(value="")
+            set_validation_state(self.window[current], True)
+            self.window[current].metadata = None
+
+        self.window[self.USEREDIT_HONORABLEMEMBER_CHECKBOX].update(value=False)
+        self.window[self.USEREDIT_FEEOVERWRITE_CHECK].update(value=False)
+
+        self.window[self.USEREDITOR_GENERAL_TAB].select()  # type: ignore
+
         if user is not None:
             # TODO: Populate fields with user's data
-            pass
+            self.window[self.USEREDIT_TABGROUP].metadata = user
+            self.window[self.USEREDIT_DELETE_BUTTON].update(disabled=False)
         else:
-            # TODO: Clear all fields
-            # Setup admission fee
-            pass
+            # TODO: Setup admission fee
+            self.window[self.USEREDIT_TABGROUP].metadata = None
+            self.window[self.USEREDIT_DELETE_BUTTON].update(disabled=True)
+
+        # TODO: Set calculated monthly fee for this member
 
         self.window[self.USEREDITOR_COLUMN].update(visible=True)
 
@@ -864,18 +964,157 @@ class MemmerGUI:
             # TODO: Re-compute regular monthly fee and write that into the respective field
             self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(disabled=True)
 
-    def on_member_onetime_fee_add_clicked(self, values: Dict[Any, Any]):
-        sg.PopupOK("One-time fee handling not yet implemented")
+    def on_useredit_cancel_pressed(self, values: Dict[Any, Any]):
+        self.window[self.USEREDITOR_COLUMN].update(visible=False)
+        self.open_management()
+
+    def on_useredit_save_pressed(self, values: Dict[Any, Any]):
+        assert self.session is not None
+
+        field_map = {
+            "first_name": self.USEREDIT_FIRSTNAME_INPUT,
+            "last_name": self.USEREDIT_LASTNAME_INPUT,
+            "birthday": self.USEREDIT_BIRTHDAY_INPUT,
+            "street": self.USEREDIT_STREET_INPUT,
+            "street_number": self.USEREDIT_STREETNUM_INPUT,
+            "postal_code": self.USEREDIT_POSTALCODE_INPUT,
+            "city": self.USEREDIT_CITY_INPUT,
+            "phone_number": self.USEREDIT_PHONE_INPUT,
+            "email_address": self.USEREDIT_EMAIL_INPUT,
+            "iban": self.USEREDIT_IBAN_INPUT,
+            "bic": self.USEREDIT_BIC_INPUT,
+            "account_owner": self.USEREDIT_ACCOUNTOWNER_INPUT,
+            "sepa_mandate_date": self.USEREDIT_SEPAMANDATEDATE_INPUT,
+            "entry_date": self.USEREDIT_ENTRYDATE_INPUT,
+            "exit_date": self.USEREDIT_EXITDATE_INPUT,
+            "is_honorary_member": self.USEREDIT_HONORABLEMEMBER_CHECKBOX,
+        }
+
+        # TODO: handle IBAN-stuff only allowed to be empty, if mandate date is empty
+        optional_fields: List[str] = [
+            "phone_number",
+            "email_address",
+            "exit_date",
+            "sepa_mandate_date",
+            "iban",
+            "bic",
+            "account_owner",
+        ]
+
+        value_map: Dict[str, Optional[Union[str, bool, datetime.date]]] = {}
+
+        for current in field_map.keys():
+            if type(
+                self.window[field_map[current]].metadata
+            ) == dict and not self.window[field_map[current]].metadata.get(
+                "valid", True
+            ):
+                # In case the metadata is of type bool, we assume it represents the validness of the field
+                sg.popup_ok(
+                    _("The selected value for the '{}' property is not valid").format(
+                        current
+                    )
+                )
+                return
+
+            value: Optional[Union[str, bool, datetime.date]] = self.window[
+                field_map[current]
+            ].get()
+
+            if type(value) == str:
+                value = value.strip()
+
+                if value == "":
+                    if current in optional_fields:
+                        value = None
+                    else:
+                        sg.PopupOK(_("Missing value for property '{}'".format(current)))
+                        return
+                else:
+                    if current.endswith("_date") or current == "birthday":
+                        # Convert to date
+                        value = datetime.datetime.fromisoformat(value).date()
+
+            value_map[current] = value
+
+        # TODO: Validate remaining fields
+
+        member: Optional[Member] = self.window[self.USEREDIT_TABGROUP].metadata
+
+        if member is None:
+            # Create a new member
+            member = Member(**value_map)
+            self.session.add(member)
+        else:
+            for current in value_map.keys():
+                setattr(member, current, value_map[current])
+
+        # Handle fee overrides
+        self.session.execute(
+            delete(FeeOverride).where(FeeOverride.member_id == member.id)
+        )
+        if self.window[self.USEREDIT_FEEOVERWRITE_CHECK].get():
+            self.session.add(
+                FeeOverride(
+                    member_id=member.id,
+                    amount=Decimal(self.window[self.USEREDIT_MONTHLYFEE_INPUT].get()),
+                )
+            )
+
+        # Handle one-time fees
+        self.session.execute(
+            delete(OneTimeFee).where(OneTimeFee.member_id == member.id)
+        )
+        for i in range(MAX_ONETIME_FEES):
+            reason = self.window["-onetimefee_reason_{}-".format(i)].get()
+            amount = self.window["-onetimefee_amount_{}-".format(i)].get()
+
+            if reason.strip() == "" or amount.strip() == "":
+                continue
+
+            amount = Decimal(amount)
+
+            self.session.add(
+                OneTimeFee(member_id=member.id, reason=reason, amount=amount)
+            )
+
+        # TODO: Handle sessions
+
+        self.window[self.USEREDITOR_COLUMN].update(visible=False)
+        self.open_management()
+
+    def on_useredit_delete_pressed(self, values: Dict[Any, Any]):
+        if self.window[self.USEREDIT_TABGROUP].metadata is None:
+            # This should not have happened -> treat it as a cancel event
+            sg.popup_ok(_("No active user set - this should not have been possible"))
+        else:
+            result = sg.popup_yes_no(_("Are you sure you want to delete this user?"))
+            # TODO: handle translation
+            if not result == "Yes":
+                return
+
+            user = self.window[self.USEREDIT_TABGROUP].metadata
+            assert type(user) == Member
+            assert self.session is not None
+
+            self.session.execute(delete(Member).where(Member.id == user.id))
+
+        self.window[self.USEREDITOR_COLUMN].update(visible=False)
+        self.open_management()
 
     def show_and_execute(self):
         self.window: sg.Window = sg.Window(
-            _("Memmer"), self.layout, resizable=True, finalize=True
+            _("Memmer"),
+            self.layout,
+            resizable=True,
+            finalize=True,
         )
 
         while True:
             event, values = self.window.read()  # type: ignore
 
             if event in [sg.WIN_CLOSED]:
+                self.prompted_commit()
                 break
 
             if event in self.event_processors:
@@ -883,8 +1122,6 @@ class MemmerGUI:
                     current(values)
 
             print("Event: ", event)
-
-        self.prompted_commit()
 
         self.window.close()
 
