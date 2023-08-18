@@ -5,13 +5,15 @@
 
 from typing import Dict, Any, Optional, Callable, List, Union
 
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from gettext import gettext as _
 import datetime
 import re
 from pathlib import Path
 
 import PySimpleGUI as sg
+
+import pgeocode
 
 from schwifty import IBAN
 from schwifty.exceptions import SchwiftyException
@@ -24,6 +26,8 @@ from memmer.utils import nominal_year_diff
 
 from sqlalchemy.orm import Session as SQLSession
 from sqlalchemy import create_engine, URL, select, delete, event
+
+zip_code_locator = pgeocode.Nominatim(country="de")
 
 
 @event.listens_for(SQLSession, "after_flush")
@@ -121,6 +125,37 @@ def validate_iban(element) -> Optional[IBAN]:
         return iban
 
     except SchwiftyException:
+        set_validation_state(element, False)
+
+
+def validate_amount(element) -> Optional[Decimal]:
+    if not validate_non_empty(element):
+        return None
+
+    try:
+        decimal = Decimal(element.get())
+
+        if 100 * decimal - int(decimal * 100) != Decimal("0"):
+            # We only want to decimal places
+            set_validation_state(element, False)
+            return None
+
+        set_validation_state(element, True)
+
+        return decimal
+    except InvalidOperation:
+        set_validation_state(element, False)
+        return None
+
+
+def validate_int(element) -> Optional[int]:
+    try:
+        code = int(element.get())
+
+        set_validation_state(element, True)
+
+        return code
+    except ValueError:
         set_validation_state(element, False)
 
 
@@ -603,8 +638,12 @@ class MemmerGUI:
                     layout=[
                         [sg.Input(key=self.USEREDIT_STREET_INPUT)],
                         [sg.Input(key=self.USEREDIT_STREETNUM_INPUT)],
-                        [sg.Input(key=self.USEREDIT_POSTALCODE_INPUT)],
-                        [sg.Input(key=self.USEREDIT_CITY_INPUT)],
+                        [
+                            sg.Input(
+                                key=self.USEREDIT_POSTALCODE_INPUT, enable_events=True
+                            )
+                        ],
+                        [sg.Input(key=self.USEREDIT_CITY_INPUT, disabled=True)],
                     ]
                 ),
             ]
@@ -663,6 +702,7 @@ class MemmerGUI:
         self.connect(self.USEREDIT_EMAIL_INPUT, self.on_member_email_changed)
         self.connect(self.USEREDIT_ENTRYDATE_INPUT, self.on_member_entrydate_changed)
         self.connect(self.USEREDIT_EXITDATE_INPUT, self.on_member_exitdate_changed)
+        self.connect(self.USEREDIT_POSTALCODE_INPUT, self.on_postal_code_changed)
 
         general_tab: Layout = [
             [sg.Frame(title=_("Personal"), layout=personal, expand_x=True)],
@@ -755,6 +795,7 @@ class MemmerGUI:
                                             sg.Input(
                                                 size=(ONETIMEFEE_AMOUNT_WIDTH, 1),
                                                 key="-onetimefee_amount_{}-".format(i),
+                                                enable_events=True,
                                             ),
                                         ]
                                         for i in range(MAX_ONETIME_FEES)
@@ -783,6 +824,9 @@ class MemmerGUI:
         self.connect(
             self.USEREDIT_FEEOVERWRITE_CHECK, self.on_member_fee_overwrite_changed
         )
+        for i in range(MAX_ONETIME_FEES):
+            self.connect("-onetimefee_reason_{}-".format(i), self.on_onetimefee_changed)
+            self.connect("-onetimefee_amount_{}-".format(i), self.on_onetimefee_changed)
 
         sessions_tab: Layout = [[]]
 
@@ -909,6 +953,20 @@ class MemmerGUI:
         else:
             validate_date(self.window[self.USEREDIT_EXITDATE_INPUT])
 
+    def on_postal_code_changed(self, values: Dict[Any, Any]):
+        global zip_code_locator
+
+        code = validate_int(self.window[self.USEREDIT_POSTALCODE_INPUT])
+        if not code is None:
+            zip_code = zip_code_locator.query_postal_code(code)
+
+            city = zip_code["place_name"]
+
+            if type(city) == str:
+                self.window[self.USEREDIT_CITY_INPUT].update(value=city, disabled=True)
+            else:
+                self.window[self.USEREDIT_CITY_INPUT].update(disabled=False)
+
     def on_member_sepa_mandate_date_changed(self, values: Dict[Any, Any]):
         if values[self.USEREDIT_SEPAMANDATEDATE_INPUT] == "":
             # Leaving this empty is allowed
@@ -951,11 +1009,7 @@ class MemmerGUI:
                     )
 
     def on_member_monthly_fee_changed(self, values: Dict[Any, Any]):
-        try:
-            float(values[self.USEREDIT_MONTHLYFEE_INPUT])
-            set_validation_state(self.window[self.USEREDIT_MONTHLYFEE_INPUT], True)
-        except ValueError:
-            set_validation_state(self.window[self.USEREDIT_MONTHLYFEE_INPUT], False)
+        validate_amount(self.window[self.USEREDIT_MONTHLYFEE_INPUT])
 
     def on_member_fee_overwrite_changed(self, values: Dict[Any, Any]):
         if values[self.USEREDIT_FEEOVERWRITE_CHECK]:
@@ -964,12 +1018,61 @@ class MemmerGUI:
             # TODO: Re-compute regular monthly fee and write that into the respective field
             self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(disabled=True)
 
+    def on_onetimefee_changed(self, values: Dict[Any, Any]):
+        for i in range(MAX_ONETIME_FEES):
+            reason = self.window["-onetimefee_reason_{}-".format(i)]
+            amount = self.window["-onetimefee_amount_{}-".format(i)]
+
+            if reason.get().strip() != "":
+                validate_non_empty(amount)
+            if amount.get().strip() != "":
+                validate_non_empty(reason)
+                validate_amount(amount)
+
     def on_useredit_cancel_pressed(self, values: Dict[Any, Any]):
         self.window[self.USEREDITOR_COLUMN].update(visible=False)
         self.open_management()
 
+    def validate_useredit_contents(self) -> Optional[str]:
+        # Check presence of mandatory fields
+        if self.window[self.USEREDIT_FIRSTNAME_INPUT].get().strip() == "":
+            return _("Missing first name")
+        elif self.window[self.USEREDIT_LASTNAME_INPUT].get().strip() == "":
+            return _("Missing last name")
+        elif self.window[self.USEREDIT_BIRTHDAY_INPUT].get().strip() == "":
+            return _("Missing birthday")
+        elif self.window[self.USEREDIT_STREET_INPUT].get().strip() == "":
+            return _("Missing street")
+        elif self.window[self.USEREDIT_STREETNUM_INPUT].get().strip() == "":
+            return _("Missing street number")
+        elif self.window[self.USEREDIT_POSTALCODE_INPUT].get().strip() == "":
+            return _("Missing postal code")
+        elif self.window[self.USEREDIT_CITY_INPUT].get().strip() == "":
+            return _("Missing city")
+        elif self.window[self.USEREDIT_ENTRYDATE_INPUT].get().strip() == "":
+            return _("Missing entry date")
+
+        if self.window[self.USEREDIT_SEPAMANDATEDATE_INPUT].get().strip() != "":
+            if self.window[self.USEREDIT_IBAN_INPUT].get().strip() == "":
+                return _("If a SEPA mandate is configured, an IBAN is required")
+            elif self.window[self.USEREDIT_BIC_INPUT].get().strip() == "":
+                return _("If a SEPA mandate is configured, the BIC is required")
+            elif self.window[self.USEREDIT_ACCOUNTOWNER_INPUT].get().strip() == "":
+                return _(
+                    "If a SEPA mandate is configured, the account owner is required"
+                )
+
+        return None
+
     def on_useredit_save_pressed(self, values: Dict[Any, Any]):
         assert self.session is not None
+
+        error_msg = self.validate_useredit_contents()
+        if not error_msg is None:
+            sg.popup_ok(
+                _("Invalid member data: {}").format(error_msg), title=_("Invalid data")
+            )
+            return
 
         field_map = {
             "first_name": self.USEREDIT_FIRSTNAME_INPUT,
@@ -990,33 +1093,24 @@ class MemmerGUI:
             "is_honorary_member": self.USEREDIT_HONORABLEMEMBER_CHECKBOX,
         }
 
-        # TODO: handle IBAN-stuff only allowed to be empty, if mandate date is empty
-        optional_fields: List[str] = [
-            "phone_number",
-            "email_address",
-            "exit_date",
-            "sepa_mandate_date",
-            "iban",
-            "bic",
-            "account_owner",
-        ]
-
         value_map: Dict[str, Optional[Union[str, bool, datetime.date]]] = {}
 
-        for current in field_map.keys():
+        validated_fields = list(field_map.values())
+        for i in range(MAX_ONETIME_FEES):
+            validated_fields.append("-onetimefee_reason_{}-".format(i))
+            validated_fields.append("-onetimefee_amount_{}-".format(i))
+
+        for current in validated_fields:
             if type(
                 self.window[field_map[current]].metadata
             ) == dict and not self.window[field_map[current]].metadata.get(
                 "valid", True
             ):
-                # In case the metadata is of type bool, we assume it represents the validness of the field
-                sg.popup_ok(
-                    _("The selected value for the '{}' property is not valid").format(
-                        current
-                    )
-                )
+                # This field has been considered invalid
+                sg.popup_ok(_("There are fields with invalid data").format(current))
                 return
 
+        for current in field_map.keys():
             value: Optional[Union[str, bool, datetime.date]] = self.window[
                 field_map[current]
             ].get()
@@ -1025,19 +1119,13 @@ class MemmerGUI:
                 value = value.strip()
 
                 if value == "":
-                    if current in optional_fields:
-                        value = None
-                    else:
-                        sg.PopupOK(_("Missing value for property '{}'".format(current)))
-                        return
+                    value = None
                 else:
                     if current.endswith("_date") or current == "birthday":
                         # Convert to date
                         value = datetime.datetime.fromisoformat(value).date()
 
             value_map[current] = value
-
-        # TODO: Validate remaining fields
 
         member: Optional[Member] = self.window[self.USEREDIT_TABGROUP].metadata
 
@@ -1057,7 +1145,9 @@ class MemmerGUI:
             self.session.add(
                 FeeOverride(
                     member_id=member.id,
-                    amount=Decimal(self.window[self.USEREDIT_MONTHLYFEE_INPUT].get()),
+                    amount=Decimal(
+                        self.window[self.USEREDIT_MONTHLYFEE_INPUT].get().strip()
+                    ),
                 )
             )
 

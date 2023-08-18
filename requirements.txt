@@ -2,3 +2,4 @@ SQLAlchemy >= 2.0
 PySimpleGUI
 schwifty
 sshtunnel
+pgeocode
