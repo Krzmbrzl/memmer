@@ -10,12 +10,18 @@ import datetime
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
+from sqlalchemy import CheckConstraint
 
 from .Base import Base
 
 
 class Member(Base):
     __tablename__ = "members"
+    __table_args__ = (
+        CheckConstraint("iban IS NOT NULL OR sepa_mandate_date IS NULL"),
+        CheckConstraint("bic IS NOT NULL OR sepa_mandate_date IS NULL"),
+        CheckConstraint("account_owner IS NOT NULL OR sepa_mandate_date IS NULL"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
 
@@ -35,9 +41,9 @@ class Member(Base):
     email_address: Mapped[Optional[str]]
 
     # Account details
-    iban: Mapped[str]
-    bic: Mapped[str]
-    account_owner: Mapped[str]
+    iban: Mapped[Optional[str]]
+    bic: Mapped[Optional[str]]
+    account_owner: Mapped[Optional[str]]
 
     sepa_mandate_date: Mapped[Optional[datetime.date]]
 
