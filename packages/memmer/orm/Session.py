@@ -23,8 +23,13 @@ class Session(Base):
 
     # Relations
     members: Mapped[List["Member"]] = relationship(  # type:ignore
-        back_populates="participating_sessions", secondary="participations"
+        back_populates="participating_sessions",
+        secondary="participations",
+        passive_deletes=True,
     )
     trainers: Mapped[List["Member"]] = relationship(  # type: ignore
-        back_populates="trained_sessions", secondary="trainers"
+        back_populates="trained_sessions", secondary="trainers", passive_deletes=True
     )
+
+    def __str__(self):
+        return self.name

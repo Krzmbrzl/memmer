@@ -22,4 +22,4 @@ class FeeOverride(Base):
     )
     amount: Mapped[Decimal]
 
-    member: Mapped[Member] = relationship()
+    member: Mapped[Member] = relationship(passive_deletes=True)

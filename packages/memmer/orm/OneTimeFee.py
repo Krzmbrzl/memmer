@@ -24,4 +24,4 @@ class OneTimeFee(Base):
     reason: Mapped[str]
     amount: Mapped[Decimal]
 
-    member: Mapped[Member] = relationship()
+    member: Mapped[Member] = relationship(passive_deletes=True)

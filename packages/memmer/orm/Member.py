@@ -55,12 +55,15 @@ class Member(Base):
 
     # Relations
     participating_sessions: Mapped[List["Session"]] = relationship(  # type: ignore
-        back_populates="members", secondary="participations"
+        back_populates="members", secondary="participations", passive_deletes=True
     )
     trained_sessions: Mapped[List["Session"]] = relationship(  # type: ignore
-        back_populates="trainers", secondary="trainers"
+        back_populates="trainers", secondary="trainers", passive_deletes=True
     )
 
     one_time_fees: Mapped[List["OneTimeFee"]] = relationship(  # type:ignore
-        back_populates="member"
+        back_populates="member", passive_deletes=True
     )
+
+    def __str__(self):
+        return "{}, {} ({})".format(self.last_name, self.first_name, self.city)
