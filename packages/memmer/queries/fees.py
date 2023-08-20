@@ -74,35 +74,40 @@ def compute_monthly_fee(
     # (only siblings < 18 years old are considered)
     if account_for_siblings and member_age < 18:
         relatives = get_relatives(session=session, member=member)
-        today = datetime.now().date()
-        relatives = [x for x in relatives if nominal_year_diff(x.birthday, today) < 18]
-        relative_fees = [
-            compute_monthly_fee(
-                session=session, member=current, account_for_siblings=False
-            )
-            for current in relatives
-        ]
-
-        if max(relative_fees) > fee:
-            fee /= 2
-        elif max(relative_fees) == fee:
-            # There is a tie in terms of the fee -> now we have to uniquely determine
-            # the sibling who has to pay fully
-            candidates = [
-                relatives[i] for i in range(len(relatives)) if relative_fees[i] == fee
+        if len(relatives) > 0:
+            today = datetime.now().date()
+            relatives = [
+                x for x in relatives if nominal_year_diff(x.birthday, today) < 18
             ]
-            candidates.append(member)
-
-            candidate_names = [
-                current.first_name + current.last_name for current in candidates
+            relative_fees = [
+                compute_monthly_fee(
+                    session=session, member=current, account_for_siblings=False
+                )
+                for current in relatives
             ]
-            # We assume that there are no duplicates in here
-            assert len(candidate_names) == len(set(candidate_names))
 
-            full_paying_name = sorted(candidate_names)[0]
-
-            if member.first_name + member.last_name != full_paying_name:
+            if max(relative_fees) > fee:
                 fee /= 2
+            elif max(relative_fees) == fee:
+                # There is a tie in terms of the fee -> now we have to uniquely determine
+                # the sibling who has to pay fully
+                candidates = [
+                    relatives[i]
+                    for i in range(len(relatives))
+                    if relative_fees[i] == fee
+                ]
+                candidates.append(member)
+
+                candidate_names = [
+                    current.first_name + current.last_name for current in candidates
+                ]
+                # We assume that there are no duplicates in here
+                assert len(candidate_names) == len(set(candidate_names))
+
+                full_paying_name = sorted(candidate_names)[0]
+
+                if member.first_name + member.last_name != full_paying_name:
+                    fee /= 2
 
     return fee
 
