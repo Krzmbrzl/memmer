@@ -7,11 +7,11 @@
 
 from memmer.gui import MemmerGUI
 
+
 def main():
     gui = MemmerGUI()
 
     gui.show_and_execute()
-
 
 
 if __name__ == "__main__":
