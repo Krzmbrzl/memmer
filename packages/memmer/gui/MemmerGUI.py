@@ -10,6 +10,8 @@ from gettext import gettext as _
 import datetime
 import re
 from pathlib import Path
+import json
+import os
 
 import PySimpleGUI as sg
 
@@ -28,6 +30,9 @@ from sqlalchemy.orm import Session as SQLSession
 from sqlalchemy import create_engine, URL, select, delete, event
 
 zip_code_locator = pgeocode.Nominatim(country="de")
+
+
+config_path = Path.joinpath(Path.home(), ".memmer_config.json")
 
 
 @event.listens_for(SQLSession, "after_flush")
@@ -175,7 +180,7 @@ class MemmerGUI:
     CONNECTOR_PASSWORD_INPUT: str = "-CONNECTOR_PASSWORD_FIELD-"
     CONNECTOR_PORT_INPUT: str = "-CONNECTOR_PORT_INPUT-"
     CONNECTOR_DBNAME_INPUT: str = "-CONNECTOR_DBNAME_INPUT-"
-    CONNECTOR_SSHUSER_INPUT: str = "-CONNECTOR_SSHUSER_INPUT_"
+    CONNECTOR_SSHUSER_INPUT: str = "-CONNECTOR_SSHUSER_INPUT-"
     CONNECTOR_SSHPORT_INPUT: str = "-CONNECTOR_SSHPORT_INPUT-"
     CONNECTOR_SSHPASSWORD_INPUT: str = "-CONNECTOR_SSHPASSWORD_INPUT-"
     CONNECTOR_SSHPRIVATEKEY_INPUT: str = "-CONNECTOR_SSHPRIVATEKEY_INPUT-"
@@ -231,6 +236,7 @@ class MemmerGUI:
         self.event_processors: Dict[str, List[Callable[[Dict[Any, Any]], Any]]] = {}
         self.ssh_tunnel: Optional[SSHTunnelForwarder] = None
         self.session: Optional[SQLSession] = None
+        self.config: Optional[Dict[str, str]] = None
 
         self.create_connector()
         self.create_overview()
@@ -256,6 +262,38 @@ class MemmerGUI:
                 if result == "Yes":
                     self.session.commit()
 
+    def write_to_config(self, key: str, value: Optional[str]):
+        if self.config is None:
+            self.config = {}
+
+        if value is None and key in self.config:
+            del self.config[key]
+        elif value is not None:
+            self.config[key] = value
+
+    def get_config(self) -> Optional[Dict[str, str]]:
+        if not self.config is None:
+            return self.config
+
+        if not Path.is_file(config_path):
+            return {}
+
+        with open(config_path, "r") as config_file:
+            try:
+                self.config = json.load(config_file)
+
+                return self.config
+            except ValueError as e:
+                sg.popup_ok(
+                    _("Failed to parse config file ('{}'): {}").format(config_path, e),
+                    title=_("Malformatted config"),
+                )
+                # Get rid of that malformed file
+                try:
+                    os.remove(config_path)
+                except:
+                    pass
+
     def create_connector(self):
         db_labels: Layout = [
             [sg.Text(_("Backend:"))],
@@ -277,7 +315,7 @@ class MemmerGUI:
                 )
             ],
             [sg.Input(key=self.CONNECTOR_USER_INPUT)],
-            [sg.Input(key=self.CONNECTOR_PASSWORD_INPUT)],
+            [sg.Input(key=self.CONNECTOR_PASSWORD_INPUT, password_char="*")],
             [sg.Input(key=self.CONNECTOR_HOST_INPUT)],
             [sg.Input(key=self.CONNECTOR_PORT_INPUT)],
             [sg.Input(key=self.CONNECTOR_DBNAME_INPUT)],
@@ -293,7 +331,7 @@ class MemmerGUI:
         ssh_inputs: Layout = [
             [sg.Input(key=self.CONNECTOR_SSHUSER_INPUT)],
             [sg.Input(key=self.CONNECTOR_SSHPORT_INPUT)],
-            [sg.Input(key=self.CONNECTOR_SSHPASSWORD_INPUT)],
+            [sg.Input(key=self.CONNECTOR_SSHPASSWORD_INPUT, password_char="*")],
             [
                 sg.Input(key=self.CONNECTOR_SSHPRIVATEKEY_INPUT),
                 sg.FileBrowse(
@@ -347,12 +385,61 @@ class MemmerGUI:
         self.layout[0].append(
             sg.Column(
                 layout=connector_layout,
-                visible=True,
+                visible=False,
                 key=self.CONNECTOR_COLUMN,
                 expand_x=True,
                 expand_y=True,
             )
         )
+
+    def set_value_and_fire_event(self, key: str, value: Any):
+        self.window[key].update(value=value)
+        self.window.write_event_value(key, value)
+
+    def open_connector(self):
+        config = self.get_config()
+
+        if config is not None:
+            connect_type = config.get("connector_type", None)
+            db_backend = config.get("connector_db_backend", None)
+            db_user = config.get("connector_db_user", None)
+            db_host = config.get("connector_db_host")
+            db_port = config.get("connector_db_port")
+            db_name = config.get("connector_db_name")
+            ssh_user = config.get("connector_ssh_user")
+            ssh_port = config.get("connector_ssh_port")
+            ssh_key = config.get("connector_ssh_key")
+
+            if connect_type is not None and connect_type in ["Regular", "SSH-Tunnel"]:
+                self.set_value_and_fire_event(
+                    self.CONNECTOR_CONNECTIONTYPE_COMBO, connect_type
+                )
+            if db_backend is not None and db_backend in [
+                "SQLite",
+                "MySQL",
+                "PostgreSQL",
+            ]:
+                self.set_value_and_fire_event(
+                    self.CONNECTOR_DBBACKEND_COMBO, db_backend
+                )
+            if db_user is not None:
+                self.set_value_and_fire_event(self.CONNECTOR_USER_INPUT, db_user)
+            if db_host is not None:
+                self.set_value_and_fire_event(self.CONNECTOR_HOST_INPUT, db_host)
+            if db_port is not None:
+                self.set_value_and_fire_event(self.CONNECTOR_PORT_INPUT, db_port)
+            if db_name is not None:
+                self.set_value_and_fire_event(self.CONNECTOR_DBNAME_INPUT, db_name)
+            if ssh_user is not None:
+                self.set_value_and_fire_event(self.CONNECTOR_SSHUSER_INPUT, ssh_user)
+            if ssh_port is not None:
+                self.set_value_and_fire_event(self.CONNECTOR_SSHPORT_INPUT, ssh_port)
+            if ssh_key is not None:
+                self.set_value_and_fire_event(
+                    self.CONNECTOR_SSHPRIVATEKEY_INPUT, ssh_key
+                )
+
+        self.window[self.CONNECTOR_COLUMN].update(visible=True)
 
     def on_connection_type_changed(self, values: Dict[Any, Any]):
         selected_type = values[self.CONNECTOR_CONNECTIONTYPE_COMBO]
@@ -467,6 +554,29 @@ class MemmerGUI:
             engine = create_engine(connect_url)
 
             self.session = SQLSession(bind=engine)
+
+            # Save connection values
+            self.write_to_config(
+                "connector_type", values[self.CONNECTOR_CONNECTIONTYPE_COMBO]
+            )
+            self.write_to_config(
+                "connector_db_backend", values[self.CONNECTOR_DBBACKEND_COMBO]
+            )
+            self.write_to_config("connector_db_user", values[self.CONNECTOR_USER_INPUT])
+            self.write_to_config("connector_db_host", values[self.CONNECTOR_HOST_INPUT])
+            self.write_to_config("connector_db_port", values[self.CONNECTOR_PORT_INPUT])
+            self.write_to_config(
+                "connector_db_name", values[self.CONNECTOR_DBNAME_INPUT]
+            )
+            self.write_to_config(
+                "connector_ssh_user", values[self.CONNECTOR_SSHUSER_INPUT]
+            )
+            self.write_to_config(
+                "connector_ssh_port", values[self.CONNECTOR_SSHPORT_INPUT]
+            )
+            self.write_to_config(
+                "connector_ssh_key", values[self.CONNECTOR_SSHPRIVATEKEY_INPUT]
+            )
 
             # Switch to overview
             self.window[self.CONNECTOR_COLUMN].update(visible=False)
@@ -1200,6 +1310,8 @@ class MemmerGUI:
             finalize=True,
         )
 
+        self.open_connector()
+
         while True:
             event, values = self.window.read()  # type: ignore
 
@@ -1217,3 +1329,11 @@ class MemmerGUI:
 
         if not self.ssh_tunnel is None:
             self.ssh_tunnel.stop()
+
+        if not self.config is None:
+            # Write config to disk
+            try:
+                global config_path
+                json.dump(self.config, open(config_path, "w"))
+            except:
+                print("Failed to persist config")
