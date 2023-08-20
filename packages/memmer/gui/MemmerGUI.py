@@ -23,8 +23,10 @@ from schwifty.exceptions import SchwiftyException
 from sshtunnel import SSHTunnelForwarder, BaseSSHTunnelForwarderError
 
 from memmer.gui import Layout
-from memmer.orm import Member, Session, OneTimeFee, FeeOverride
+from memmer.orm import Member, Session, OneTimeFee, FeeOverride, FixedCost
 from memmer.utils import nominal_year_diff
+from memmer.queries import compute_monthly_fee
+from memmer import AdmissionFeeKey
 
 from sqlalchemy.orm import Session as SQLSession
 from sqlalchemy import create_engine, URL, select, delete, event
@@ -229,6 +231,9 @@ class MemmerGUI:
     USEREDIT_SAVE_BUTTON: str = "-USEREDIT_SAVE_BUTTON-"
     USEREDIT_DELETE_BUTTON: str = "-USEREDIT_DELETE_BUTTON-"
     USEREDIT_TABGROUP: str = "-USEREDIT_TABGROUP-"
+    USEREDIT_SESSION_NAME_LABEL: str = "-USEREDIT_SESSION_SESSION_LABEL-"
+    USEREDIT_SESSION_PARTICIPANT_LABEL: str = "-USEREDIT_SESSION_PARTICIPANT_LABEL-"
+    USEREDIT_SESSION_TRAINER_LABEL: str = "-USEREDIT_SESSION_TRAINER_LABEL-"
     USEREDITOR_COLUMN: str = "-USEREDITOR_COLUMN-"
 
     def __init__(self):
@@ -670,6 +675,11 @@ class MemmerGUI:
         ]
 
         self.connect(self.MANAGEMENT_ADDMEMBER_BUTTON, self.on_addmember_button_pressed)
+        self.connect(
+            self.MANAGEMENT_ADDSESSION_BUTTON, self.on_addsession_button_pressed
+        )
+        self.connect(self.MANAGEMENT_MEMBER_LISTBOX, self.on_memberlist_activated)
+        self.connect(self.MANAGEMENT_SESSION_LISTBOX, self.on_sessionlist_activated)
 
         self.layout[0].append(
             sg.Column(
@@ -690,13 +700,7 @@ class MemmerGUI:
 
         members = self.session.scalars(select(Member)).all()
 
-        self.window[self.MANAGEMENT_MEMBER_LISTBOX].update(
-            values=[
-                "{}, {}".format(current.first_name, current.last_name)
-                for current in members
-            ]
-        )
-        self.window[self.MANAGEMENT_MEMBER_LISTBOX].metadata = members
+        self.window[self.MANAGEMENT_MEMBER_LISTBOX].update(values=members)
 
         sessions = self.session.scalars(select(Session)).all()
 
@@ -708,6 +712,37 @@ class MemmerGUI:
     def on_addmember_button_pressed(self, values: Dict[Any, Any]):
         self.window[self.MANAGEMENT_COLUMN].update(visible=False)
         self.open_usereditor()
+
+    def on_addsession_button_pressed(self, values: Dict[Any, Any]):
+        sg.popup_ok("Adding sessions not yet implemented")
+
+    def on_memberlist_activated(self, values: Dict[Any, Any]):
+        selected_entries = len(values[self.MANAGEMENT_MEMBER_LISTBOX])
+
+        if selected_entries == 0:
+            return
+        elif selected_entries > 1:
+            sg.popup_ok(_("Selecting more than one member at once is not implemented"))
+            return
+
+        assert selected_entries == 1
+
+        # Open user editor for that user
+        self.window[self.MANAGEMENT_COLUMN].update(visible=False)
+        self.open_usereditor(values[self.MANAGEMENT_MEMBER_LISTBOX][0])
+
+    def on_sessionlist_activated(self, values: Dict[Any, Any]):
+        selected_entries = len(values[self.MANAGEMENT_SESSION_LISTBOX])
+
+        if selected_entries == 0:
+            return
+        elif selected_entries > 1:
+            sg.popup_ok(_("Selecting more than one session at once is not implemented"))
+            return
+
+        assert selected_entries == 1
+
+        sg.popup_ok("Editing sessions not yet implemented")
 
     def create_usereditor(self):
         personal: Layout = [
@@ -938,7 +973,32 @@ class MemmerGUI:
             self.connect("-onetimefee_reason_{}-".format(i), self.on_onetimefee_changed)
             self.connect("-onetimefee_amount_{}-".format(i), self.on_onetimefee_changed)
 
-        sessions_tab: Layout = [[]]
+        name_width: int = 40
+        participant_width: int = len(_("Participant"))
+        trainer_width: int = len(_("Trainer"))
+
+        sessions_tab: Layout = [
+            [
+                sg.Text(
+                    text=_("Session"),
+                    size=(name_width, 1),
+                    key=self.USEREDIT_SESSION_NAME_LABEL,
+                ),
+                sg.Text(
+                    text=_("Participant"),
+                    size=(participant_width, 1),
+                    key=self.USEREDIT_SESSION_PARTICIPANT_LABEL,
+                ),
+                sg.Text(
+                    text=_("Trainer"),
+                    size=(trainer_width, 1),
+                    key=self.USEREDIT_SESSION_TRAINER_LABEL,
+                ),
+            ],
+            [sg.HorizontalSeparator()],
+        ]
+
+        # TODO: Allow relationships to be  specified
 
         editor: Layout = [
             [
@@ -959,12 +1019,19 @@ class MemmerGUI:
                                 title=_("Sessions"),
                                 layout=sessions_tab,
                                 key=self.USEREDITOR_SESSIONS_TAB,
+                                metadata={
+                                    "number_of_sessions": 0,
+                                    "name_width": 40,
+                                    "participant_width": len(_("Participant")),
+                                    "trainer_width": len(_("Trainer")),
+                                },
                             ),
                         ]
                     ],
                     key=self.USEREDIT_TABGROUP,
                     expand_x=True,
                     expand_y=True,
+                    metadata={},
                 ),
             ],
             [
@@ -990,6 +1057,8 @@ class MemmerGUI:
         )
 
     def open_usereditor(self, user: Optional[Member] = None):
+        assert self.session is not None
+
         # Clear elements
         for current in [
             self.USEREDIT_FIRSTNAME_INPUT,
@@ -1016,20 +1085,184 @@ class MemmerGUI:
         self.window[self.USEREDIT_HONORABLEMEMBER_CHECKBOX].update(value=False)
         self.window[self.USEREDIT_FEEOVERWRITE_CHECK].update(value=False)
 
+        for i in range(
+            self.window[self.USEREDITOR_SESSIONS_TAB].metadata["number_of_sessions"]
+        ):
+            self.window["-user_session_name_{}-".format(i)].update(
+                visible=False, value=""
+            )
+            self.window["-user_session_name_{}-".format(i)].metadata = None
+            self.window["-user_session_participant_{}-".format(i)].update(
+                visible=False, value=False
+            )
+            self.window["-user_session_trainer_{}-".format(i)].update(
+                visible=False, value=False
+            )
+
         self.window[self.USEREDITOR_GENERAL_TAB].select()  # type: ignore
 
         if user is not None:
-            # TODO: Populate fields with user's data
-            self.window[self.USEREDIT_TABGROUP].metadata = user
+            # Populate general data
+            self.window[self.USEREDIT_FIRSTNAME_INPUT].update(value=user.first_name)
+            self.window[self.USEREDIT_LASTNAME_INPUT].update(value=user.last_name)
+            self.window[self.USEREDIT_BIRTHDAY_INPUT].update(
+                value=user.birthday.isoformat()
+            )
+            self.window[self.USEREDIT_STREET_INPUT].update(value=user.street)
+            self.window[self.USEREDIT_POSTALCODE_INPUT].update(value=user.postal_code)
+            self.window[self.USEREDIT_CITY_INPUT].update(value=user.city)
+            self.window[self.USEREDIT_PHONE_INPUT].update(
+                value=user.phone_number if user.phone_number is not None else ""
+            )
+            self.window[self.USEREDIT_EMAIL_INPUT].update(
+                value=user.email_address if user.email_address is not None else ""
+            )
+            self.window[self.USEREDIT_ENTRYDATE_INPUT].update(
+                value=user.entry_date.isoformat()
+            )
+            self.window[self.USEREDIT_EXITDATE_INPUT].update(
+                value=user.exit_date.isoformat() if user.exit_date is not None else ""
+            )
+            self.window[self.USEREDIT_HONORABLEMEMBER_CHECKBOX].update(
+                value=user.is_honorary_member
+            )
+
+            # Populate payment data
+            self.window[self.USEREDIT_HONORABLEMEMBER_CHECKBOX].update(
+                value=user.is_honorary_member
+            )
+            if user.sepa_mandate_date is not None:
+                self.window[self.USEREDIT_SEPAMANDATEDATE_INPUT].update(
+                    value=user.sepa_mandate_date.isoformat()
+                )
+                self.set_value_and_fire_event(self.USEREDIT_IBAN_INPUT, user.iban)
+                self.window[self.USEREDIT_BIC_INPUT].update(value=user.bic)
+                self.window[self.USEREDIT_ACCOUNTOWNER_INPUT].update(
+                    value=user.account_owner
+                )
+
+            fee_overwrite = self.session.scalar(
+                select(FeeOverride).where(FeeOverride.member_id == user.id)
+            )
+            if fee_overwrite is not None:
+                self.window[self.USEREDIT_FEEOVERWRITE_CHECK].update(value=True)
+                self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(
+                    value="{:.2f}".format(fee_overwrite.amount)
+                )
+            else:
+                self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(
+                    value="{:.2f}".format(
+                        compute_monthly_fee(session=self.session, member=user)
+                    )
+                )
+
+            onetime_fees = self.session.scalars(
+                select(OneTimeFee).where(OneTimeFee.member_id == user.id)
+            ).all()
+            assert (
+                len(onetime_fees) <= MAX_ONETIME_FEES
+            ), "Amount of one-time fees ({}) exceeds assumed max. amount ({})".format(
+                len(onetime_fees), MAX_ONETIME_FEES
+            )
+            for i, fee in enumerate(onetime_fees):
+                self.window["-onetimefee_reason_{}-".format(i)].update(value=fee.reason)
+                self.window["-onetimefee_amount_{}-".format(i)].update(
+                    value="{:.2f}".format(fee.amount)
+                )
+
+            # Note: sessions are populated below by populate_user_sessions
+
+            self.window[self.USEREDIT_TABGROUP].metadata = {"user": user}
             self.window[self.USEREDIT_DELETE_BUTTON].update(disabled=False)
         else:
-            # TODO: Setup admission fee
-            self.window[self.USEREDIT_TABGROUP].metadata = None
+            # Setup admission fee, if there is any
+            admission_fee = self.session.scalar(
+                select(FixedCost).where(FixedCost.name == AdmissionFeeKey)
+            )
+            if admission_fee is not None and admission_fee.cost != 0:
+                self.window["-onetimefee_reason_0-"].update(value=_("Admission fee"))
+                self.window["-onetimefee_amount_0-"].update(
+                    value="{:.2f}".format(admission_fee.cost)
+                )
+
+            self.window[self.USEREDIT_TABGROUP].metadata = {}
             self.window[self.USEREDIT_DELETE_BUTTON].update(disabled=True)
 
-        # TODO: Set calculated monthly fee for this member
+            self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(
+                value=_("Save and re-load to compute fee")
+            )
+
+        self.populate_user_sessions(user)
 
         self.window[self.USEREDITOR_COLUMN].update(visible=True)
+
+    def populate_user_sessions(self, member: Optional[Member]):
+        assert self.session is not None
+
+        sessions = self.session.scalars(select(Session)).all()
+
+        n_existing_rows: int = self.window[self.USEREDITOR_SESSIONS_TAB].metadata[
+            "number_of_sessions"
+        ]
+
+        name_width: int = self.window[self.USEREDITOR_SESSIONS_TAB].metadata[
+            "name_width"
+        ]
+        participant_width: int = self.window[self.USEREDITOR_SESSIONS_TAB].metadata[
+            "participant_width"
+        ]
+        trainer_width: int = self.window[self.USEREDITOR_SESSIONS_TAB].metadata[
+            "trainer_width"
+        ]
+
+        if len(sessions) > n_existing_rows:
+            # Create missing rows
+            for i in range(n_existing_rows, len(sessions)):
+                self.window.extend_layout(
+                    self.window[self.USEREDITOR_SESSIONS_TAB],
+                    [
+                        [
+                            sg.Text(
+                                text="",
+                                size=(name_width, 1),
+                                key="-user_session_name_{}-".format(i),
+                            ),
+                            sg.Checkbox(
+                                text="",
+                                size=(participant_width, 1),
+                                key="-user_session_participant_{}-".format(i),
+                            ),
+                            sg.Checkbox(
+                                text="",
+                                size=(trainer_width, 1),
+                                key="-user_session_trainer_{}-".format(i),
+                            ),
+                        ]
+                    ],
+                )
+            self.window[self.USEREDITOR_SESSIONS_TAB].metadata[
+                "number_of_sessions"
+            ] = len(sessions)
+            n_existing_rows = len(sessions)
+
+        # Actually populate the rows with contents
+        for i, current_session in enumerate(sessions):
+            self.window["-user_session_name_{}-".format(i)].update(
+                value=current_session.name
+            )
+            self.window["-user_session_name_{}-".format(i)].metadata = {
+                "session_id": current_session.id
+            }
+            self.window["-user_session_participant_{}-".format(i)].update(
+                value=current_session in member.participating_sessions
+                if member is not None
+                else False
+            )
+            self.window["-user_session_trainer_{}-".format(i)].update(
+                value=current_session in member.trained_sessions
+                if member is not None
+                else False
+            )
 
     def on_member_birthday_changed(self, values: Dict[Any, Any]):
         date = validate_date(self.window[self.USEREDIT_BIRTHDAY_INPUT])
@@ -1127,6 +1360,9 @@ class MemmerGUI:
         else:
             # TODO: Re-compute regular monthly fee and write that into the respective field
             self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(disabled=True)
+            self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(
+                value=_("Save and re-load to compute fee")
+            )
 
     def on_onetimefee_changed(self, values: Dict[Any, Any]):
         for i in range(MAX_ONETIME_FEES):
@@ -1211,11 +1447,9 @@ class MemmerGUI:
             validated_fields.append("-onetimefee_amount_{}-".format(i))
 
         for current in validated_fields:
-            if type(
-                self.window[field_map[current]].metadata
-            ) == dict and not self.window[field_map[current]].metadata.get(
-                "valid", True
-            ):
+            if type(self.window[current].metadata) == dict and not self.window[
+                current
+            ].metadata.get("valid", True):
                 # This field has been considered invalid
                 sg.popup_ok(_("There are fields with invalid data").format(current))
                 return
@@ -1237,7 +1471,9 @@ class MemmerGUI:
 
             value_map[current] = value
 
-        member: Optional[Member] = self.window[self.USEREDIT_TABGROUP].metadata
+        member: Optional[Member] = self.window[self.USEREDIT_TABGROUP].metadata.get(
+            "user", None
+        )
 
         if member is None:
             # Create a new member
@@ -1284,20 +1520,22 @@ class MemmerGUI:
         self.open_management()
 
     def on_useredit_delete_pressed(self, values: Dict[Any, Any]):
-        if self.window[self.USEREDIT_TABGROUP].metadata is None:
+        if "user" not in self.window[self.USEREDIT_TABGROUP].metadata:
             # This should not have happened -> treat it as a cancel event
             sg.popup_ok(_("No active user set - this should not have been possible"))
         else:
-            result = sg.popup_yes_no(_("Are you sure you want to delete this user?"))
+            user = self.window[self.USEREDIT_TABGROUP].metadata["user"]
+            assert type(user) == Member
+            assert self.session is not None
+
+            result = sg.popup_yes_no(
+                _('Are you sure you want to delete "{}"?').format(user)
+            )
             # TODO: handle translation
             if not result == "Yes":
                 return
 
-            user = self.window[self.USEREDIT_TABGROUP].metadata
-            assert type(user) == Member
-            assert self.session is not None
-
-            self.session.execute(delete(Member).where(Member.id == user.id))
+            self.session.delete(user)
 
         self.window[self.USEREDITOR_COLUMN].update(visible=False)
         self.open_management()
