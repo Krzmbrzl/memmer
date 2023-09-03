@@ -25,7 +25,7 @@ from sshtunnel import SSHTunnelForwarder, BaseSSHTunnelForwarderError
 from memmer.gui import Layout
 from memmer.orm import Member, Session, OneTimeFee, FeeOverride, FixedCost
 from memmer.utils import nominal_year_diff
-from memmer.queries import compute_monthly_fee
+from memmer.queries import compute_monthly_fee, get_relatives, set_relatives
 from memmer import AdmissionFeeKey
 
 from sqlalchemy.orm import Session as SQLSession
@@ -234,6 +234,13 @@ class MemmerGUI:
     USEREDIT_SESSION_NAME_LABEL: str = "-USEREDIT_SESSION_SESSION_LABEL-"
     USEREDIT_SESSION_PARTICIPANT_LABEL: str = "-USEREDIT_SESSION_PARTICIPANT_LABEL-"
     USEREDIT_SESSION_TRAINER_LABEL: str = "-USEREDIT_SESSION_TRAINER_LABEL-"
+    USEREDIT_RELATIVES_TAB: str = "-USEREDIT_RELATIVES_TAB-"
+    USEREDIT_RELATIVES_LISTBOX: str = "-USEREDIT_RELATIVES_LISTBOX-"
+    USEREDIT_LIKELYRELATIVES_LISTBOX: str = "-USEREDIT_LIKELYRELATIVES_LISTBOX-"
+    USEREDIT_POTENTIALRELATIVES_LISTBOX: str = "-USEREDIT_POTENTIALRELATIVES_LISTBOX-"
+    USEREDIT_POTENTIALRELATIVESSEARCH_INPUT: str = (
+        "-USEREDIT_POTENTIALRELATIVESSEARCH_INPUT-"
+    )
     USEREDITOR_COLUMN: str = "-USEREDITOR_COLUMN-"
 
     def __init__(self):
@@ -998,7 +1005,59 @@ class MemmerGUI:
             [sg.HorizontalSeparator()],
         ]
 
-        # TODO: Allow relationships to be  specified
+        relatives_tab: Layout = [
+            [sg.Text(text=_("Relatives"))],
+            [
+                sg.Listbox(
+                    values=[],
+                    select_mode="LISTBOX_SELECT_MODE_SINGLE",
+                    key=self.USEREDIT_RELATIVES_LISTBOX,
+                    bind_return_key=True,
+                    expand_x=True,
+                    expand_y=True,
+                )
+            ],
+            [sg.HorizontalSeparator()],
+            [sg.Text(text=_("Likely relatives"))],
+            [
+                sg.Listbox(
+                    values=[],
+                    select_mode="LISTBOX_SELECT_MODE_SINGLE",
+                    key=self.USEREDIT_LIKELYRELATIVES_LISTBOX,
+                    bind_return_key=True,
+                    expand_x=True,
+                    expand_y=True,
+                )
+            ],
+            [sg.HorizontalSeparator()],
+            [
+                sg.Text(text=_("Search:")),
+                sg.Input(key=self.USEREDIT_POTENTIALRELATIVESSEARCH_INPUT),
+            ],
+            [sg.Text(text=_("Potential relatives"))],
+            [
+                sg.Listbox(
+                    values=[],
+                    select_mode="LISTBOX_SELECT_MODE_SINGLE",
+                    key=self.USEREDIT_POTENTIALRELATIVES_LISTBOX,
+                    bind_return_key=True,
+                    expand_x=True,
+                    expand_y=True,
+                )
+            ],
+        ]
+
+        self.connect(
+            self.USEREDIT_RELATIVES_LISTBOX, self.on_useredit_relatives_list_activated
+        )
+        self.connect(
+            self.USEREDIT_LIKELYRELATIVES_LISTBOX,
+            self.on_useredit_likelyrelatives_list_activated,
+        )
+        self.connect(
+            self.USEREDIT_POTENTIALRELATIVES_LISTBOX,
+            self.on_useredit_potentialrelatives_list_activated,
+        )
 
         editor: Layout = [
             [
@@ -1026,12 +1085,18 @@ class MemmerGUI:
                                     "trainer_width": len(_("Trainer")),
                                 },
                             ),
+                            sg.Tab(
+                                title=_("Relatives"),
+                                layout=relatives_tab,
+                                key=self.USEREDIT_RELATIVES_TAB,
+                            ),
                         ]
                     ],
                     key=self.USEREDIT_TABGROUP,
                     expand_x=True,
                     expand_y=True,
                     metadata={},
+                    enable_events=True,
                 ),
             ],
             [
@@ -1041,6 +1106,10 @@ class MemmerGUI:
                 sg.Button(button_text=_("Delete"), key=self.USEREDIT_DELETE_BUTTON),
             ],
         ]
+
+        self.connect(
+            self.USEREDIT_RELATIVES_TAB, self.on_useredit_relatives_tab_activated
+        )
 
         self.connect(self.USEREDIT_CANCEL_BUTTON, self.on_useredit_cancel_pressed)
         self.connect(self.USEREDIT_SAVE_BUTTON, self.on_useredit_save_pressed)
@@ -1082,6 +1151,13 @@ class MemmerGUI:
             self.window[current].update(value="")
             set_validation_state(self.window[current], True)
             self.window[current].metadata = None
+
+        for current in [
+            self.USEREDIT_RELATIVES_LISTBOX,
+            self.USEREDIT_LIKELYRELATIVES_LISTBOX,
+            self.USEREDIT_POTENTIALRELATIVES_LISTBOX,
+        ]:
+            self.window[current].update(values=[])
 
         self.window[self.USEREDIT_HONORABLEMEMBER_CHECKBOX].update(value=False)
         self.window[self.USEREDIT_FEEOVERWRITE_CHECK].update(value=False)
@@ -1195,6 +1271,7 @@ class MemmerGUI:
             )
 
         self.populate_user_sessions(user)
+        self.populate_user_relatives(user)
 
         self.window[self.USEREDITOR_COLUMN].update(visible=True)
 
@@ -1265,6 +1342,21 @@ class MemmerGUI:
                 if member is not None
                 else False
             )
+
+    def populate_user_relatives(self, user: Optional[Member]):
+        assert self.session is not None
+        # At this point we'll only populate the actual relatives and put everyone else
+        # in the "potential relatives" box. The decision whether or not someone might be
+        # a "likely relative" will be made once the relatives tab is opened
+        if user is not None:
+            relatives = get_relatives(session=self.session, member=user)
+            self.window[self.USEREDIT_RELATIVES_LISTBOX].update(values=relatives)
+        else:
+            relatives = []
+
+        members = self.session.scalars(select(Member).order_by(Member.last_name))
+        members = [x for x in members if not x in relatives and not x == user]
+        self.window[self.USEREDIT_POTENTIALRELATIVES_LISTBOX].update(values=members)
 
     def on_member_birthday_changed(self, values: Dict[Any, Any]):
         date = validate_date(self.window[self.USEREDIT_BIRTHDAY_INPUT])
@@ -1516,6 +1608,13 @@ class MemmerGUI:
                 OneTimeFee(member_id=member.id, reason=reason, amount=amount)
             )
 
+        # Handle relatives
+        set_relatives(
+            session=self.session,
+            member=member,
+            relatives=self.window[self.USEREDIT_RELATIVES_LISTBOX].get_list_values(),  # type: ignore
+        )
+
         # TODO: Handle sessions
 
         self.window[self.USEREDITOR_COLUMN].update(visible=False)
@@ -1542,6 +1641,93 @@ class MemmerGUI:
         self.window[self.USEREDITOR_COLUMN].update(visible=False)
         self.open_management()
 
+    def on_useredit_relatives_tab_activated(self, values: Dict[Any, Any]):
+        assert self.session is not None
+
+        potential_relatives: List[Member] = self.window[
+            self.USEREDIT_POTENTIALRELATIVES_LISTBOX
+        ].get_list_values()  # type: ignore
+        potential_relatives += self.window[
+            self.USEREDIT_LIKELYRELATIVES_LISTBOX
+        ].get_list_values()  # type: ignore
+        likely_relatives: List[Member] = []
+
+        current_city = self.window[self.USEREDIT_CITY_INPUT].get()
+        current_street = self.window[self.USEREDIT_STREET_INPUT].get()
+        current_streetnum = self.window[self.USEREDIT_STREETNUM_INPUT].get()
+        current_iban = self.window[self.USEREDIT_IBAN_INPUT].get()
+
+        for current_member in potential_relatives:
+            if current_member.iban == current_iban or (
+                current_member.city == current_city
+                and current_member.street == current_street
+                and current_member.street_number == current_streetnum
+            ):
+                # We consider people to likely be related if their fee is paid from the
+                # same account or their address is the same
+                likely_relatives.append(current_member)
+
+                # Also add current_member's relatives as likely relatives
+                for relative in get_relatives(self.session, current_member):
+                    if relative in potential_relatives:
+                        likely_relatives.append(relative)
+
+        # Remove duplicates
+        likely_relatives = list(set(likely_relatives))
+
+        self.window[self.USEREDIT_LIKELYRELATIVES_LISTBOX].update(
+            values=likely_relatives
+        )
+        self.window[self.USEREDIT_POTENTIALRELATIVES_LISTBOX].update(
+            values=[x for x in potential_relatives if not x in likely_relatives]
+        )
+
+    def on_useredit_relatives_list_activated(self, values: Dict[Any, Any]):
+        selection = self.window[self.USEREDIT_RELATIVES_LISTBOX].get()
+        assert len(selection) in [0, 1]
+
+        if len(selection) == 0:
+            return
+
+        selected_relative: Member = selection[0]  # type: ignore
+
+        # Remove that entry from the list of relatives and clear selection
+        relatives = self.window[self.USEREDIT_RELATIVES_LISTBOX].get_list_values()  # type: ignore
+        relatives.remove(selected_relative)
+        self.window[self.USEREDIT_RELATIVES_LISTBOX].update(values=relatives)
+        self.window[self.USEREDIT_RELATIVES_LISTBOX].set_value([])  # type: ignore
+
+        # Add it to the likely relatives instead
+        likely_relatives = self.window[self.USEREDIT_LIKELYRELATIVES_LISTBOX].get_list_values()  # type: ignore
+        likely_relatives.append(selected_relative)
+        self.window[self.USEREDIT_LIKELYRELATIVES_LISTBOX].update(likely_relatives)
+
+    def handle_add_relative(self, list_key: str):
+        selection = self.window[list_key].get()
+        assert len(selection) in [0, 1]
+
+        if len(selection) == 0:
+            return
+
+        selected_member: Member = selection[0]  # type: ignore
+
+        # Add it as a relative
+        relatives = self.window[self.USEREDIT_RELATIVES_LISTBOX].get_list_values()  # type: ignore
+        relatives.append(selected_member)
+        self.window[self.USEREDIT_RELATIVES_LISTBOX].update(values=relatives)
+
+        # Remove it from the original list and clear selection
+        original = self.window[list_key].get_list_values()  # type: ignore
+        original.remove(selected_member)
+        self.window[list_key].update(values=original)
+        self.window[list_key].set_value([])  # type: ignore
+
+    def on_useredit_likelyrelatives_list_activated(self, values: Dict[Any, Any]):
+        self.handle_add_relative(self.USEREDIT_LIKELYRELATIVES_LISTBOX)
+
+    def on_useredit_potentialrelatives_list_activated(self, values: Dict[Any, Any]):
+        self.handle_add_relative(self.USEREDIT_POTENTIALRELATIVES_LISTBOX)
+
     def show_and_execute(self):
         self.window: sg.Window = sg.Window(
             _("Memmer"),
@@ -1562,6 +1748,14 @@ class MemmerGUI:
             if event in self.event_processors:
                 for current in self.event_processors[event]:
                     current(values)
+
+            selected_element = self.window.Find(event, silent_on_error=True)
+            if selected_element is not None and type(selected_element) is sg.TabGroup:
+                selected_tab: str = selected_element.get()  # type: ignore
+
+                if selected_tab in self.event_processors:
+                    for current in self.event_processors[selected_tab]:
+                        current(values)
 
             print("Event: ", event)
 
