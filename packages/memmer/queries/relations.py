@@ -8,7 +8,7 @@ from typing import List
 from sqlalchemy.orm import Session
 from sqlalchemy import exists
 from sqlalchemy import or_
-from sqlalchemy import select
+from sqlalchemy import select, delete
 
 from memmer.orm import Member, Relation
 
@@ -76,3 +76,20 @@ def drop_relation(session: Session, first: Member, second: Member) -> None:
 
     if not relation is None:
         session.delete(relation)
+
+
+def clear_relations(session: Session, member: Member):
+    """Clears all of the given member's relationships"""
+    session.execute(
+        delete(Relation).where(
+            or_(Relation.first_id == member.id, Relation.second_id == member.id)
+        )
+    )
+
+
+def set_relatives(session: Session, member: Member, relatives: List[Member]):
+    """Sets the given member's relatives"""
+    clear_relations(session, member)
+
+    for current in relatives:
+        make_relation(session, member, current)
