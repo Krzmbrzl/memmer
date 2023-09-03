@@ -267,6 +267,13 @@ class MemmerGUI:
     )
     USEREDITOR_COLUMN: str = "-USEREDITOR_COLUMN-"
 
+    SESSIONEDIT_NAME_INPUT: str = "-SESSIONEDIT_NAME_INPUT-"
+    SESSIONEDIT_FEE_INPUT: str = "-SESSIONEDIT_FEE_INPUT-"
+    SESSIONEDIT_CANCEL_BUTTON: str = "-SESSIONEDIT_CANCEL_BUTTON-"
+    SESSIONEDIT_SAVE_BUTTON: str = "-SESSIONEDIT_SAVE_BUTTON-"
+    SESSIONEDIT_DELETE_BUTTON: str = "-SESSIONEDIT_DELETE_BUTTON-"
+    SESSIONEDIT_COLUMN: str = "-SESSIONEDIT_COLUMN-"
+
     def __init__(self):
         self.layout: Layout = [[]]
         self.event_processors: Dict[str, List[Callable[[Dict[Any, Any]], Any]]] = {}
@@ -278,6 +285,7 @@ class MemmerGUI:
         self.create_overview()
         self.create_management()
         self.create_usereditor()
+        self.create_sessioneditor()
 
     def connect(self, event: str, processor: Callable[[Dict[Any, Any]], Any]):
         if not event in self.event_processors:
@@ -756,9 +764,7 @@ class MemmerGUI:
 
         sessions = self.session.scalars(select(Session)).all()
 
-        self.window[self.MANAGEMENT_SESSION_LISTBOX].update(
-            values=[current.name for current in sessions]
-        )
+        self.window[self.MANAGEMENT_SESSION_LISTBOX].update(values=sessions)
         self.window[self.MANAGEMENT_SESSION_LISTBOX].metadata = sessions
 
     def on_addmember_button_pressed(self, values: Dict[Any, Any]):
@@ -766,7 +772,8 @@ class MemmerGUI:
         self.open_usereditor()
 
     def on_addsession_button_pressed(self, values: Dict[Any, Any]):
-        sg.popup_ok("Adding sessions not yet implemented")
+        self.window[self.MANAGEMENT_COLUMN].update(visible=False)
+        self.open_sessioneditor()
 
     def on_memberlist_activated(self, values: Dict[Any, Any]):
         selected_entries = len(values[self.MANAGEMENT_MEMBER_LISTBOX])
@@ -794,7 +801,9 @@ class MemmerGUI:
 
         assert selected_entries == 1
 
-        sg.popup_ok("Editing sessions not yet implemented")
+        # Open session editor for that session
+        self.window[self.MANAGEMENT_COLUMN].update(visible=False)
+        self.open_sessioneditor(values[self.MANAGEMENT_SESSION_LISTBOX][0])
 
     def create_usereditor(self):
         personal: Layout = [
@@ -1782,6 +1791,150 @@ class MemmerGUI:
 
     def on_useredit_potentialrelatives_list_activated(self, values: Dict[Any, Any]):
         self.handle_add_relative(self.USEREDIT_POTENTIALRELATIVES_LISTBOX)
+
+    def create_sessioneditor(self):
+        editor: Layout = [
+            [
+                sg.Column(
+                    layout=[
+                        [sg.Text(text=_("Name:"))],
+                        [sg.Text(text=_("Membership fee:"))],
+                    ]
+                ),
+                sg.Column(
+                    layout=[
+                        [sg.Input(key=self.SESSIONEDIT_NAME_INPUT, enable_events=True)],
+                        [sg.Input(key=self.SESSIONEDIT_FEE_INPUT, enable_events=True)],
+                    ]
+                ),
+            ],
+            [sg.VPush()],
+            [
+                sg.Push(),
+                sg.Button(button_text=_("Cancel"), key=self.SESSIONEDIT_CANCEL_BUTTON),
+                sg.Button(button_text=_("Save"), key=self.SESSIONEDIT_SAVE_BUTTON),
+                sg.Button(button_text=_("Delete"), key=self.SESSIONEDIT_DELETE_BUTTON),
+            ],
+        ]
+
+        self.connect(self.SESSIONEDIT_NAME_INPUT, self.on_sessionedit_name_changed)
+        self.connect(self.SESSIONEDIT_FEE_INPUT, self.on_sessionedit_fee_changed)
+        self.connect(self.SESSIONEDIT_CANCEL_BUTTON, self.on_sessionedit_cancel_pressed)
+        self.connect(self.SESSIONEDIT_SAVE_BUTTON, self.on_sessionedit_save_pressed)
+        self.connect(self.SESSIONEDIT_DELETE_BUTTON, self.on_sessionedit_delete_pressed)
+
+        self.layout[0].append(
+            sg.Column(
+                layout=editor,
+                visible=False,
+                key=self.SESSIONEDIT_COLUMN,
+                expand_x=True,
+                expand_y=True,
+                metadata={},
+            )
+        )
+
+    def open_sessioneditor(self, session: Optional[Session] = None):
+        # Clear fields
+        for field in [self.SESSIONEDIT_NAME_INPUT, self.SESSIONEDIT_FEE_INPUT]:
+            self.window[field].update(value="")
+
+        self.window[self.SESSIONEDIT_COLUMN].metadata["session"] = None
+
+        if not session is None:
+            self.window[self.SESSIONEDIT_NAME_INPUT].update(value=session.name)
+            self.window[self.SESSIONEDIT_FEE_INPUT].update(
+                value="{:.2f}".format(session.membership_fee)
+            )
+
+            self.window[self.SESSIONEDIT_COLUMN].metadata["session"] = session
+
+        self.window[self.SESSIONEDIT_DELETE_BUTTON].update(disabled=session is None)
+
+        self.window[self.SESSIONEDIT_COLUMN].update(visible=True)
+
+    def on_sessionedit_name_changed(self, values: Dict[Any, Any]):
+        validate_non_empty(self.window[self.SESSIONEDIT_NAME_INPUT], strip=False)
+
+    def on_sessionedit_fee_changed(self, values: Dict[Any, Any]):
+        validate_amount(self.window[self.SESSIONEDIT_FEE_INPUT])
+
+    def on_sessionedit_cancel_pressed(self, values: Dict[Any, Any]):
+        self.window[self.SESSIONEDIT_COLUMN].update(visible=False)
+        self.open_management()
+
+    def validate_sessionedit_contents(self):
+        # Check presence of mandatory data
+        if self.window[self.SESSIONEDIT_NAME_INPUT].get().strip() == "":
+            return _("Missing session name")
+        elif self.window[self.SESSIONEDIT_FEE_INPUT].get().strip() == "":
+            return _("Missing session fee")
+
+    def on_sessionedit_save_pressed(self, values: Dict[Any, Any]):
+        assert self.session is not None
+
+        error_msg = self.validate_sessionedit_contents()
+        if not error_msg is None:
+            sg.popup_ok(
+                _("Invalid session data: {}").format(error_msg), title=_("Invalid data")
+            )
+            return
+
+        field_map: Dict[str, Any] = {
+            "name": self.SESSIONEDIT_NAME_INPUT,
+            "membership_fee": self.SESSIONEDIT_FEE_INPUT,
+        }
+
+        validated_fields = list(field_map.values())
+        for current in validated_fields:
+            if type(self.window[current].metadata) == dict and not self.window[
+                current
+            ].metadata.get("valid", True):
+                # This field has been considered invalid
+                sg.popup_ok(_("There are fields with invalid data").format(current))
+                return
+
+        for current in field_map.keys():
+            if current.endswith("_fee"):
+                field_map[current] = Decimal(self.window[field_map[current]].get())
+            else:
+                field_map[current] = self.window[field_map[current]].get().strip()
+
+        session: Optional[Session] = self.window[self.SESSIONEDIT_COLUMN].metadata.get(
+            "session", None
+        )
+
+        if session is None:
+            # Create a new session
+            session = Session(**field_map)
+            self.session.add(session)
+        else:
+            for current in field_map.keys():
+                setattr(session, current, field_map[current])
+
+        self.window[self.SESSIONEDIT_COLUMN].update(visible=False)
+        self.open_management()
+
+    def on_sessionedit_delete_pressed(self, values: Dict[Any, Any]):
+        if "session" not in self.window[self.SESSIONEDIT_COLUMN].metadata:
+            # This should not have happened -> treat it as a cancel event
+            sg.popup_ok(_("No active session set - this should not have been possible"))
+        else:
+            session = self.window[self.SESSIONEDIT_COLUMN].metadata["session"]
+            assert type(session) == Session
+            assert self.session is not None
+
+            result = sg.popup_yes_no(
+                _('Are you sure you want to delete "{}"?').format(session)
+            )
+            # TODO: handle translation
+            if not result == "Yes":
+                return
+
+            self.session.delete(session)
+
+        self.window[self.SESSIONEDIT_COLUMN].update(visible=False)
+        self.open_management()
 
     def show_and_execute(self):
         self.window: sg.Window = sg.Window(
