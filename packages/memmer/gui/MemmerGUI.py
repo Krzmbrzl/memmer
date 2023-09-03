@@ -1066,6 +1066,7 @@ class MemmerGUI:
             self.USEREDIT_BIRTHDAY_INPUT,
             self.USEREDIT_STREET_INPUT,
             self.USEREDIT_STREETNUM_INPUT,
+            self.USEREDIT_POSTALCODE_INPUT,
             self.USEREDIT_CITY_INPUT,
             self.USEREDIT_PHONE_INPUT,
             self.USEREDIT_EMAIL_INPUT,
