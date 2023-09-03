@@ -166,6 +166,30 @@ def validate_int(element) -> Optional[int]:
         set_validation_state(element, False)
 
 
+def filter_list(list_element, filter_string: str, data_key: str = "all_values"):
+    filter_string = filter_string.lower()
+    dict_metadata = False
+    all_values: Optional[List[Any]] = None
+
+    if list_element.metadata is not None and type(list_element.metadata) is dict:
+        dict_metadata = True
+        all_values = list_element.metadata.get(data_key, None)
+
+    if all_values is None:
+        all_values = list_element.get_list_values()
+
+    # Apply filter
+    assert all_values is not None
+    filtered = [x for x in all_values if filter_string in str(x).lower()]
+
+    list_element.update(values=filtered)
+
+    if dict_metadata:
+        list_element.metadata[data_key] = all_values
+    elif list_element.metadata is None:
+        list_element.metadata = {data_key: all_values}
+
+
 ONETIMEFEE_REASON_WIDTH: int = 40
 ONETIMEFEE_AMOUNT_WIDTH: int = 10
 MAX_ONETIME_FEES: int = 3
@@ -634,7 +658,10 @@ class MemmerGUI:
         user_management: Layout = [
             [sg.Button(_("Add member"), key=self.MANAGEMENT_ADDMEMBER_BUTTON)],
             [sg.HorizontalSeparator()],
-            [sg.Text(_("Search:")), sg.Input(key=self.MANAGEMENT_MEMBERSEARCH_INPUT)],
+            [
+                sg.Text(_("Search:")),
+                sg.Input(key=self.MANAGEMENT_MEMBERSEARCH_INPUT, enable_events=True),
+            ],
             [
                 sg.Listbox(
                     values=[],
@@ -649,7 +676,10 @@ class MemmerGUI:
         session_management: Layout = [
             [sg.Button(_("Add session"), key=self.MANAGEMENT_ADDSESSION_BUTTON)],
             [sg.HorizontalSeparator()],
-            [sg.Text(_("Search:")), sg.Input(key=self.MANAGEMENT_SESSIONSEARCH_INPUT)],
+            [
+                sg.Text(_("Search:")),
+                sg.Input(key=self.MANAGEMENT_SESSIONSEARCH_INPUT, enable_events=True),
+            ],
             [
                 sg.Listbox(
                     values=[],
@@ -680,6 +710,21 @@ class MemmerGUI:
                 )
             ],
         ]
+
+        self.connect(
+            self.MANAGEMENT_MEMBERSEARCH_INPUT,
+            lambda values: filter_list(
+                self.window[self.MANAGEMENT_MEMBER_LISTBOX],
+                values[self.MANAGEMENT_MEMBERSEARCH_INPUT],
+            ),
+        )
+        self.connect(
+            self.MANAGEMENT_SESSIONSEARCH_INPUT,
+            lambda values: filter_list(
+                self.window[self.MANAGEMENT_SESSION_LISTBOX],
+                values[self.MANAGEMENT_SESSIONSEARCH_INPUT],
+            ),
+        )
 
         self.connect(self.MANAGEMENT_ADDMEMBER_BUTTON, self.on_addmember_button_pressed)
         self.connect(
@@ -1032,7 +1077,9 @@ class MemmerGUI:
             [sg.HorizontalSeparator()],
             [
                 sg.Text(text=_("Search:")),
-                sg.Input(key=self.USEREDIT_POTENTIALRELATIVESSEARCH_INPUT),
+                sg.Input(
+                    key=self.USEREDIT_POTENTIALRELATIVESSEARCH_INPUT, enable_events=True
+                ),
             ],
             [sg.Text(text=_("Potential relatives"))],
             [
@@ -1046,6 +1093,14 @@ class MemmerGUI:
                 )
             ],
         ]
+
+        self.connect(
+            self.USEREDIT_POTENTIALRELATIVESSEARCH_INPUT,
+            lambda values: filter_list(
+                self.window[self.USEREDIT_POTENTIALRELATIVES_LISTBOX],
+                values[self.USEREDIT_POTENTIALRELATIVESSEARCH_INPUT],
+            ),
+        )
 
         self.connect(
             self.USEREDIT_RELATIVES_LISTBOX, self.on_useredit_relatives_list_activated
