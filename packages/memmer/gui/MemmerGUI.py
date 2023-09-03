@@ -1110,6 +1110,7 @@ class MemmerGUI:
                 value=user.birthday.isoformat()
             )
             self.window[self.USEREDIT_STREET_INPUT].update(value=user.street)
+            self.window[self.USEREDIT_STREETNUM_INPUT].update(value=user.street_number)
             self.window[self.USEREDIT_POSTALCODE_INPUT].update(value=user.postal_code)
             self.window[self.USEREDIT_CITY_INPUT].update(value=user.city)
             self.window[self.USEREDIT_PHONE_INPUT].update(
