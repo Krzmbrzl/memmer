@@ -1390,21 +1390,23 @@ class MemmerGUI:
 
         # Actually populate the rows with contents
         for i, current_session in enumerate(sessions):
-            self.window["-user_session_name_{}-".format(i)].update(
-                value=current_session.name
-            )
-            self.window["-user_session_name_{}-".format(i)].metadata = {
-                "session_id": current_session.id
-            }
-            self.window["-user_session_participant_{}-".format(i)].update(
-                value=current_session in member.participating_sessions
+            session_name = self.window["-user_session_name_{}-".format(i)]
+            session_name.update(value=current_session.name, visible=True)
+            session_name.metadata = {"session_id": current_session.id}
+            member_takes_part_in_session = (
+                current_session in member.participating_sessions
                 if member is not None
                 else False
+            )
+            self.window["-user_session_participant_{}-".format(i)].update(
+                value=member_takes_part_in_session,
+                visible=True,
             )
             self.window["-user_session_trainer_{}-".format(i)].update(
                 value=current_session in member.trained_sessions
                 if member is not None
-                else False
+                else False,
+                visible=True,
             )
 
     def populate_user_relatives(self, user: Optional[Member]):
@@ -1679,7 +1681,31 @@ class MemmerGUI:
             relatives=self.window[self.USEREDIT_RELATIVES_LISTBOX].get_list_values(),  # type: ignore
         )
 
-        # TODO: Handle sessions
+        # Handle sessions
+        sessions = self.session.scalars(select(Session)).all()
+        participating_sessions = []
+        trained_sessions = []
+        for i in range(len(sessions)):
+            if not self.window["-user_session_name_{}-".format(i)].visible:
+                # As soon as we start seeing the first invisible session row, we have reached
+                # the end of existing sessions
+                break
+
+            session_id: int = self.window["-user_session_name_{}-".format(i)].metadata[
+                "session_id"
+            ]
+            takes_part = self.window["-user_session_participant_{}-".format(i)].get()
+            trains = self.window["-user_session_trainer_{}-".format(i)].get()
+
+            if takes_part:
+                participating_sessions.append(session_id)
+            if trains:
+                trained_sessions.append(session_id)
+
+        participating_sessions = [x for x in sessions if x.id in participating_sessions]
+        trained_sessions = [x for x in sessions if x.id in trained_sessions]
+        member.participating_sessions = participating_sessions
+        member.trained_sessions = trained_sessions
 
         self.window[self.USEREDITOR_COLUMN].update(visible=False)
         self.open_management()
