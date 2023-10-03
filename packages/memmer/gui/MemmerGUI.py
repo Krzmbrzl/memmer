@@ -178,16 +178,19 @@ def filter_list(list_element, filter_string: str, data_key: str = "all_values"):
     if all_values is None:
         all_values = list_element.get_list_values()
 
+    print(type(list_element.metadata))
+    if dict_metadata:
+        print("Storing all values")
+        list_element.metadata[data_key] = all_values
+    elif list_element.metadata is None:
+        print("Storing all values")
+        list_element.metadata = {data_key: all_values}
+
     # Apply filter
     assert all_values is not None
     filtered = [x for x in all_values if filter_string in str(x).lower()]
 
     list_element.update(values=filtered)
-
-    if dict_metadata:
-        list_element.metadata[data_key] = all_values
-    elif list_element.metadata is None:
-        list_element.metadata = {data_key: all_values}
 
 
 ONETIMEFEE_REASON_WIDTH: int = 40
@@ -765,7 +768,6 @@ class MemmerGUI:
         sessions = self.session.scalars(select(Session)).all()
 
         self.window[self.MANAGEMENT_SESSION_LISTBOX].update(values=sessions)
-        self.window[self.MANAGEMENT_SESSION_LISTBOX].metadata = sessions
 
     def on_addmember_button_pressed(self, values: Dict[Any, Any]):
         self.window[self.MANAGEMENT_COLUMN].update(visible=False)
