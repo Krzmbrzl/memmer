@@ -1206,6 +1206,7 @@ class MemmerGUI:
             self.USEREDIT_EXITDATE_INPUT,
             self.USEREDIT_SEPAMANDATEDATE_INPUT,
             self.USEREDIT_IBAN_INPUT,
+            self.USEREDIT_BIC_INPUT,
             self.USEREDIT_CREDITINSTITUTE_INPUT,
             self.USEREDIT_ACCOUNTOWNER_INPUT,
             *["-onetimefee_reason_{}-".format(i) for i in range(MAX_ONETIME_FEES)],
