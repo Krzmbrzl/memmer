@@ -178,12 +178,9 @@ def filter_list(list_element, filter_string: str, data_key: str = "all_values"):
     if all_values is None:
         all_values = list_element.get_list_values()
 
-    print(type(list_element.metadata))
     if dict_metadata:
-        print("Storing all values")
         list_element.metadata[data_key] = all_values
     elif list_element.metadata is None:
-        print("Storing all values")
         list_element.metadata = {data_key: all_values}
 
     # Apply filter
