@@ -3,3 +3,4 @@ PySimpleGUI
 schwifty
 sshtunnel
 pgeocode
+xsdata
