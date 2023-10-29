@@ -25,12 +25,14 @@ from sshtunnel import SSHTunnelForwarder, BaseSSHTunnelForwarderError
 
 from memmer.gui import Layout
 from memmer.orm import Member, Session, OneTimeFee, FeeOverride, FixedCost, Setting
-from memmer.utils import (
-    nominal_year_diff,
+from memmer.utils import nominal_year_diff
+from memmer.queries import (
+    compute_monthly_fee,
+    get_relatives,
+    set_relatives,
     create_sepa_payment_initiation_message,
     CreditorInfo,
 )
-from memmer.queries import compute_monthly_fee, get_relatives, set_relatives
 from memmer import AdmissionFeeKey
 
 from sqlalchemy.orm import Session as SQLSession

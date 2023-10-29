@@ -12,7 +12,7 @@ from decimal import Decimal
 from memmer.generated.pain import *
 from memmer.generated.pain import __NAMESPACE__
 from memmer.orm import Member, Setting
-from memmer.queries import compute_total_fee
+from .fees import compute_total_fee
 
 from sqlalchemy.orm import Session
 from sqlalchemy import select
@@ -56,7 +56,7 @@ def create_sepa_transactions(
                 DirectDebitTransactionInformation9(
                     pmt_id=PaymentIdentification1(end_to_end_id=e2e_id),
                     instd_amt=ActiveOrHistoricCurrencyAndAmount(
-                        ccy="EUR", value="{:.2f}".format(fee) # type: ignore
+                        ccy="EUR", value="{:.2f}".format(fee)  # type: ignore
                     ),
                     drct_dbt_tx=DirectDebitTransaction6(
                         mndt_rltd_inf=MandateRelatedInformation6(
@@ -120,7 +120,7 @@ def create_sepa_payment_initiation_message(
             offset=0,
         ),
         nb_of_txs=str(len(transactions)),
-        ctrl_sum="{:.2f}".format(total_sum), # type: ignore
+        ctrl_sum="{:.2f}".format(total_sum),  # type: ignore
         initg_pty=PartyIdentification32(nm=creditor_info.name),
     )
 
@@ -154,7 +154,7 @@ def create_sepa_payment_initiation_message(
         pmt_mtd=PaymentMethod2Code.DD,
         btch_bookg=True,
         nb_of_txs=str(len(transactions)),
-        ctrl_sum="{:.2f}".format(total_sum), # type: ignore
+        ctrl_sum="{:.2f}".format(total_sum),  # type: ignore
         pmt_tp_inf=payment_type,
         reqd_colltn_dt=XmlDate(
             year=collection_date.year,
