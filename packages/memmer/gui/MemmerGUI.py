@@ -535,6 +535,12 @@ class MemmerGUI:
                 if not self.ssh_tunnel is None:
                     self.ssh_tunnel.stop()
 
+                remote_port = (
+                    int(values[self.CONNECTOR_PORT_INPUT])
+                    if values[self.CONNECTOR_PORT_INPUT] != ""
+                    else 80
+                )
+
                 self.ssh_tunnel = SSHTunnelForwarder(
                     ssh_address_or_host=values[self.CONNECTOR_HOST_INPUT],
                     ssh_port=int(values[self.CONNECTOR_SSHPORT_INPUT])
@@ -547,7 +553,7 @@ class MemmerGUI:
                     ssh_pkey=values[self.CONNECTOR_SSHPRIVATEKEY_INPUT],
                     remote_bind_address=(
                         "127.0.0.1",
-                        int(values[self.CONNECTOR_PORT_INPUT]),
+                        remote_port,
                     ),
                 )
 
