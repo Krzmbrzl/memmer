@@ -12,6 +12,7 @@ import re
 from pathlib import Path
 import json
 import os
+from datetime import date
 
 import PySimpleGUI as sg
 
@@ -23,8 +24,12 @@ from schwifty.exceptions import SchwiftyException
 from sshtunnel import SSHTunnelForwarder, BaseSSHTunnelForwarderError
 
 from memmer.gui import Layout
-from memmer.orm import Member, Session, OneTimeFee, FeeOverride, FixedCost
-from memmer.utils import nominal_year_diff
+from memmer.orm import Member, Session, OneTimeFee, FeeOverride, FixedCost, Setting
+from memmer.utils import (
+    nominal_year_diff,
+    create_sepa_payment_initiation_message,
+    CreditorInfo,
+)
 from memmer.queries import compute_monthly_fee, get_relatives, set_relatives
 from memmer import AdmissionFeeKey
 
@@ -660,7 +665,52 @@ class MemmerGUI:
         self.open_management()
 
     def on_tally_button_pressed(self, values: Dict[Any, Any]):
-        sg.popup_ok(_("Not yet implemented"))
+        assert self.session != None
+
+        creditor_name = (
+            self.session.scalars(
+                select(Setting).where(Setting.name == Setting.TALLY_CREDITOR_NAME)
+            )
+            .one()
+            .value
+        )
+        creditor_iban = (
+            self.session.scalars(
+                select(Setting).where(Setting.name == Setting.TALLY_CREDITOR_IBAN)
+            )
+            .one()
+            .value
+        )
+        creditor_bic = (
+            self.session.scalars(
+                select(Setting).where(Setting.name == Setting.TALLY_CREDITOR_BIC)
+            )
+            .one()
+            .value
+        )
+        creditor_id = (
+            self.session.scalars(
+                select(Setting).where(Setting.name == Setting.TALLY_CREDITOR_ID)
+            )
+            .one()
+            .value
+        )
+
+        message = create_sepa_payment_initiation_message(
+            session=self.session,
+            msg_id="TODO-Find-better-id",
+            creditor_info=CreditorInfo(
+                name=creditor_name,
+                iban=creditor_iban,
+                bic=creditor_bic,
+                identification=creditor_id,
+            ),
+            collection_date=date(year=2023, month=11, day=1),
+        )
+
+        print(message)
+
+        # sg.popup_ok(_("Not yet implemented"))
 
     def create_management(self):
         user_management: Layout = [
