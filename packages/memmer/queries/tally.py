@@ -72,7 +72,7 @@ def create_sepa_transactions(
                     ),
                     dbtr_agt=BranchAndFinancialInstitutionIdentification4(
                         fin_instn_id=FinancialInstitutionIdentification7(
-                            othr=GenericFinancialIdentification1(id="NOTROVIDED")
+                            othr=GenericFinancialIdentification1(id="NOTPROVIDED")
                         )
                     ),
                     dbtr=PartyIdentification32(nm=current_member.last_name),
