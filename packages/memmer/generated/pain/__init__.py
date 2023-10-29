@@ -1,4 +1,5 @@
 from .pain_008_001_02 import (
+    __NAMESPACE__,
     AccountIdentification4Choice,
     AccountSchemeName1Choice,
     ActiveOrHistoricCurrencyAndAmount,
