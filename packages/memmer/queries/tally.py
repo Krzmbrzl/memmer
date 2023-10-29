@@ -75,7 +75,7 @@ def create_sepa_transactions(
                             othr=GenericFinancialIdentification1(id="NOTPROVIDED")
                         )
                     ),
-                    dbtr=PartyIdentification32(nm=current_member.last_name),
+                    dbtr=PartyIdentification32(nm=current_member.account_owner),
                     dbtr_acct=CashAccount16(
                         id=AccountIdentification4Choice(iban=current_member.iban)
                     ),
