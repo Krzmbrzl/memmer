@@ -1686,6 +1686,9 @@ class MemmerGUI:
                     if current.endswith("_date") or current == "birthday":
                         # Convert to date
                         value = datetime.datetime.fromisoformat(value).date()
+                    elif current == "iban":
+                        # While we want to display IBANs with spaces, we want to save them without
+                        value = value.replace(" ", "")
 
             value_map[current] = value
 
