@@ -52,6 +52,17 @@ def create_sepa_transactions(
             mandate_signed = current_member.sepa_mandate_date
             assert mandate_signed != None
 
+            if (
+                not current_member.account_owner is None
+                and len(current_member.account_owner) > 0
+            ):
+                account_owner = current_member.account_owner
+            else:
+                # Shouldn't happen, but as a fallback we can always use the member's name
+                account_owner = "{} {}".format(
+                    current_member.first_name, current_member.last_name
+                )
+
             transactions.append(
                 DirectDebitTransactionInformation9(
                     pmt_id=PaymentIdentification1(end_to_end_id=e2e_id),
@@ -75,7 +86,7 @@ def create_sepa_transactions(
                             othr=GenericFinancialIdentification1(id="NOTPROVIDED")
                         )
                     ),
-                    dbtr=PartyIdentification32(nm=current_member.account_owner),
+                    dbtr=PartyIdentification32(nm=account_owner),
                     dbtr_acct=CashAccount16(
                         id=AccountIdentification4Choice(iban=current_member.iban)
                     ),
