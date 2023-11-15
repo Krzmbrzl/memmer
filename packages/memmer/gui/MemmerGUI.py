@@ -1272,6 +1272,7 @@ class MemmerGUI:
             self.USEREDIT_FIRSTNAME_INPUT,
             self.USEREDIT_LASTNAME_INPUT,
             self.USEREDIT_BIRTHDAY_INPUT,
+            self.USEREDIT_AGE_LABEL,
             self.USEREDIT_STREET_INPUT,
             self.USEREDIT_STREETNUM_INPUT,
             self.USEREDIT_POSTALCODE_INPUT,
@@ -1322,8 +1323,8 @@ class MemmerGUI:
             # Populate general data
             self.window[self.USEREDIT_FIRSTNAME_INPUT].update(value=user.first_name)
             self.window[self.USEREDIT_LASTNAME_INPUT].update(value=user.last_name)
-            self.window[self.USEREDIT_BIRTHDAY_INPUT].update(
-                value=user.birthday.isoformat()
+            self.set_value_and_fire_event(
+                self.USEREDIT_BIRTHDAY_INPUT, user.birthday.isoformat()
             )
             self.window[self.USEREDIT_STREET_INPUT].update(value=user.street)
             self.window[self.USEREDIT_STREETNUM_INPUT].update(value=user.street_number)
