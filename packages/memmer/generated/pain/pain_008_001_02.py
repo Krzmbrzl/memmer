@@ -17,7 +17,7 @@ class AccountSchemeName1Choice:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 4,
-        }
+        },
     )
     prtry: Optional[str] = field(
         default=None,
@@ -27,7 +27,7 @@ class AccountSchemeName1Choice:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -40,7 +40,7 @@ class ActiveOrHistoricCurrencyAndAmount:
             "min_inclusive": Decimal("0"),
             "total_digits": 18,
             "fraction_digits": 5,
-        }
+        },
     )
     ccy: Optional[str] = field(
         default=None,
@@ -49,7 +49,7 @@ class ActiveOrHistoricCurrencyAndAmount:
             "type": "Attribute",
             "required": True,
             "pattern": r"[A-Z]{3,3}",
-        }
+        },
     )
 
 
@@ -98,7 +98,7 @@ class CategoryPurpose1Choice:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 4,
-        }
+        },
     )
     prtry: Optional[str] = field(
         default=None,
@@ -108,7 +108,7 @@ class CategoryPurpose1Choice:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -129,7 +129,7 @@ class ClearingSystemIdentification2Choice:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 5,
-        }
+        },
     )
     prtry: Optional[str] = field(
         default=None,
@@ -139,7 +139,7 @@ class ClearingSystemIdentification2Choice:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -157,7 +157,7 @@ class DateAndPlaceOfBirth:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
-        }
+        },
     )
     prvc_of_birth: Optional[str] = field(
         default=None,
@@ -167,7 +167,7 @@ class DateAndPlaceOfBirth:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     city_of_birth: Optional[str] = field(
         default=None,
@@ -178,7 +178,7 @@ class DateAndPlaceOfBirth:
             "required": True,
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     ctry_of_birth: Optional[str] = field(
         default=None,
@@ -188,7 +188,7 @@ class DateAndPlaceOfBirth:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
             "pattern": r"[A-Z]{2,2}",
-        }
+        },
     )
 
 
@@ -201,7 +201,7 @@ class DatePeriodDetails:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
-        }
+        },
     )
     to_dt: Optional[XmlDate] = field(
         default=None,
@@ -210,7 +210,7 @@ class DatePeriodDetails:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
-        }
+        },
     )
 
 
@@ -251,7 +251,7 @@ class FinancialIdentificationSchemeName1Choice:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 4,
-        }
+        },
     )
     prtry: Optional[str] = field(
         default=None,
@@ -261,7 +261,7 @@ class FinancialIdentificationSchemeName1Choice:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -286,7 +286,7 @@ class LocalInstrument2Choice:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     prtry: Optional[str] = field(
         default=None,
@@ -296,7 +296,7 @@ class LocalInstrument2Choice:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -317,7 +317,7 @@ class OrganisationIdentificationSchemeName1Choice:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 4,
-        }
+        },
     )
     prtry: Optional[str] = field(
         default=None,
@@ -327,7 +327,7 @@ class OrganisationIdentificationSchemeName1Choice:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -341,7 +341,7 @@ class PaymentIdentification1:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     end_to_end_id: Optional[str] = field(
         default=None,
@@ -352,7 +352,7 @@ class PaymentIdentification1:
             "required": True,
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -370,7 +370,7 @@ class PersonIdentificationSchemeName1Choice:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 4,
-        }
+        },
     )
     prtry: Optional[str] = field(
         default=None,
@@ -380,7 +380,7 @@ class PersonIdentificationSchemeName1Choice:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -399,7 +399,7 @@ class Purpose2Choice:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 4,
-        }
+        },
     )
     prtry: Optional[str] = field(
         default=None,
@@ -409,7 +409,7 @@ class Purpose2Choice:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -423,7 +423,7 @@ class RegulatoryAuthority2:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 140,
-        }
+        },
     )
     ctry: Optional[str] = field(
         default=None,
@@ -432,7 +432,7 @@ class RegulatoryAuthority2:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "pattern": r"[A-Z]{2,2}",
-        }
+        },
     )
 
 
@@ -468,7 +468,7 @@ class ServiceLevel8Choice:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 4,
-        }
+        },
     )
     prtry: Optional[str] = field(
         default=None,
@@ -478,7 +478,7 @@ class ServiceLevel8Choice:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -492,7 +492,7 @@ class TaxAuthorisation1:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     nm: Optional[str] = field(
         default=None,
@@ -502,7 +502,7 @@ class TaxAuthorisation1:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 140,
-        }
+        },
     )
 
 
@@ -516,7 +516,7 @@ class TaxParty1:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     regn_id: Optional[str] = field(
         default=None,
@@ -526,7 +526,7 @@ class TaxParty1:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     tax_tp: Optional[str] = field(
         default=None,
@@ -536,7 +536,7 @@ class TaxParty1:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -569,7 +569,7 @@ class Authorisation1Choice:
             "name": "Cd",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     prtry: Optional[str] = field(
         default=None,
@@ -579,7 +579,7 @@ class Authorisation1Choice:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 128,
-        }
+        },
     )
 
 
@@ -591,7 +591,7 @@ class CashAccountType2:
             "name": "Cd",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     prtry: Optional[str] = field(
         default=None,
@@ -601,7 +601,7 @@ class CashAccountType2:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -613,7 +613,7 @@ class ClearingSystemMemberIdentification2:
             "name": "ClrSysId",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     mmb_id: Optional[str] = field(
         default=None,
@@ -624,7 +624,7 @@ class ClearingSystemMemberIdentification2:
             "required": True,
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -636,7 +636,7 @@ class ContactDetails2:
             "name": "NmPrfx",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     nm: Optional[str] = field(
         default=None,
@@ -646,7 +646,7 @@ class ContactDetails2:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 140,
-        }
+        },
     )
     phne_nb: Optional[str] = field(
         default=None,
@@ -655,7 +655,7 @@ class ContactDetails2:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "pattern": r"\+[0-9]{1,3}-[0-9()+\-]{1,30}",
-        }
+        },
     )
     mob_nb: Optional[str] = field(
         default=None,
@@ -664,7 +664,7 @@ class ContactDetails2:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "pattern": r"\+[0-9]{1,3}-[0-9()+\-]{1,30}",
-        }
+        },
     )
     fax_nb: Optional[str] = field(
         default=None,
@@ -673,7 +673,7 @@ class ContactDetails2:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "pattern": r"\+[0-9]{1,3}-[0-9()+\-]{1,30}",
-        }
+        },
     )
     email_adr: Optional[str] = field(
         default=None,
@@ -683,7 +683,7 @@ class ContactDetails2:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 2048,
-        }
+        },
     )
     othr: Optional[str] = field(
         default=None,
@@ -693,7 +693,7 @@ class ContactDetails2:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -705,7 +705,7 @@ class CreditorReferenceType1Choice:
             "name": "Cd",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     prtry: Optional[str] = field(
         default=None,
@@ -715,7 +715,7 @@ class CreditorReferenceType1Choice:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -728,7 +728,7 @@ class DocumentAdjustment1:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
-        }
+        },
     )
     cdt_dbt_ind: Optional[CreditDebitCode] = field(
         default=None,
@@ -736,7 +736,7 @@ class DocumentAdjustment1:
             "name": "CdtDbtInd",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     rsn: Optional[str] = field(
         default=None,
@@ -746,7 +746,7 @@ class DocumentAdjustment1:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 4,
-        }
+        },
     )
     addtl_inf: Optional[str] = field(
         default=None,
@@ -756,7 +756,7 @@ class DocumentAdjustment1:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 140,
-        }
+        },
     )
 
 
@@ -771,7 +771,7 @@ class GenericAccountIdentification1:
             "required": True,
             "min_length": 1,
             "max_length": 34,
-        }
+        },
     )
     schme_nm: Optional[AccountSchemeName1Choice] = field(
         default=None,
@@ -779,7 +779,7 @@ class GenericAccountIdentification1:
             "name": "SchmeNm",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     issr: Optional[str] = field(
         default=None,
@@ -789,7 +789,7 @@ class GenericAccountIdentification1:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -804,7 +804,7 @@ class GenericFinancialIdentification1:
             "required": True,
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     schme_nm: Optional[FinancialIdentificationSchemeName1Choice] = field(
         default=None,
@@ -812,7 +812,7 @@ class GenericFinancialIdentification1:
             "name": "SchmeNm",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     issr: Optional[str] = field(
         default=None,
@@ -822,7 +822,7 @@ class GenericFinancialIdentification1:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -837,7 +837,7 @@ class GenericOrganisationIdentification1:
             "required": True,
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     schme_nm: Optional[OrganisationIdentificationSchemeName1Choice] = field(
         default=None,
@@ -845,7 +845,7 @@ class GenericOrganisationIdentification1:
             "name": "SchmeNm",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     issr: Optional[str] = field(
         default=None,
@@ -855,7 +855,7 @@ class GenericOrganisationIdentification1:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -870,7 +870,7 @@ class GenericPersonIdentification1:
             "required": True,
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     schme_nm: Optional[PersonIdentificationSchemeName1Choice] = field(
         default=None,
@@ -878,7 +878,7 @@ class GenericPersonIdentification1:
             "name": "SchmeNm",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     issr: Optional[str] = field(
         default=None,
@@ -888,7 +888,7 @@ class GenericPersonIdentification1:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -900,7 +900,7 @@ class PaymentTypeInformation20:
             "name": "InstrPrty",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     svc_lvl: Optional[ServiceLevel8Choice] = field(
         default=None,
@@ -908,7 +908,7 @@ class PaymentTypeInformation20:
             "name": "SvcLvl",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     lcl_instrm: Optional[LocalInstrument2Choice] = field(
         default=None,
@@ -916,7 +916,7 @@ class PaymentTypeInformation20:
             "name": "LclInstrm",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     seq_tp: Optional[SequenceType1Code] = field(
         default=None,
@@ -924,7 +924,7 @@ class PaymentTypeInformation20:
             "name": "SeqTp",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     ctgy_purp: Optional[CategoryPurpose1Choice] = field(
         default=None,
@@ -932,7 +932,7 @@ class PaymentTypeInformation20:
             "name": "CtgyPurp",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
 
 
@@ -944,7 +944,7 @@ class PostalAddress6:
             "name": "AdrTp",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     dept: Optional[str] = field(
         default=None,
@@ -954,7 +954,7 @@ class PostalAddress6:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 70,
-        }
+        },
     )
     sub_dept: Optional[str] = field(
         default=None,
@@ -964,7 +964,7 @@ class PostalAddress6:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 70,
-        }
+        },
     )
     strt_nm: Optional[str] = field(
         default=None,
@@ -974,7 +974,7 @@ class PostalAddress6:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 70,
-        }
+        },
     )
     bldg_nb: Optional[str] = field(
         default=None,
@@ -984,7 +984,7 @@ class PostalAddress6:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 16,
-        }
+        },
     )
     pst_cd: Optional[str] = field(
         default=None,
@@ -994,7 +994,7 @@ class PostalAddress6:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 16,
-        }
+        },
     )
     twn_nm: Optional[str] = field(
         default=None,
@@ -1004,7 +1004,7 @@ class PostalAddress6:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     ctry_sub_dvsn: Optional[str] = field(
         default=None,
@@ -1014,7 +1014,7 @@ class PostalAddress6:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     ctry: Optional[str] = field(
         default=None,
@@ -1023,7 +1023,7 @@ class PostalAddress6:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "pattern": r"[A-Z]{2,2}",
-        }
+        },
     )
     adr_line: List[str] = field(
         default_factory=list,
@@ -1034,7 +1034,7 @@ class PostalAddress6:
             "max_occurs": 7,
             "min_length": 1,
             "max_length": 70,
-        }
+        },
     )
 
 
@@ -1046,7 +1046,7 @@ class ReferredDocumentType1Choice:
             "name": "Cd",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     prtry: Optional[str] = field(
         default=None,
@@ -1056,7 +1056,7 @@ class ReferredDocumentType1Choice:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -1070,7 +1070,7 @@ class StructuredRegulatoryReporting3:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     dt: Optional[XmlDate] = field(
         default=None,
@@ -1078,7 +1078,7 @@ class StructuredRegulatoryReporting3:
             "name": "Dt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     ctry: Optional[str] = field(
         default=None,
@@ -1087,7 +1087,7 @@ class StructuredRegulatoryReporting3:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "pattern": r"[A-Z]{2,2}",
-        }
+        },
     )
     cd: Optional[str] = field(
         default=None,
@@ -1097,7 +1097,7 @@ class StructuredRegulatoryReporting3:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 10,
-        }
+        },
     )
     amt: Optional[ActiveOrHistoricCurrencyAndAmount] = field(
         default=None,
@@ -1105,7 +1105,7 @@ class StructuredRegulatoryReporting3:
             "name": "Amt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     inf: List[str] = field(
         default_factory=list,
@@ -1115,7 +1115,7 @@ class StructuredRegulatoryReporting3:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -1129,7 +1129,7 @@ class TaxParty2:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     regn_id: Optional[str] = field(
         default=None,
@@ -1139,7 +1139,7 @@ class TaxParty2:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     tax_tp: Optional[str] = field(
         default=None,
@@ -1149,7 +1149,7 @@ class TaxParty2:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     authstn: Optional[TaxAuthorisation1] = field(
         default=None,
@@ -1157,7 +1157,7 @@ class TaxParty2:
             "name": "Authstn",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
 
 
@@ -1169,7 +1169,7 @@ class TaxPeriod1:
             "name": "Yr",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     tp: Optional[TaxRecordPeriod1Code] = field(
         default=None,
@@ -1177,7 +1177,7 @@ class TaxPeriod1:
             "name": "Tp",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     fr_to_dt: Optional[DatePeriodDetails] = field(
         default=None,
@@ -1185,7 +1185,7 @@ class TaxPeriod1:
             "name": "FrToDt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
 
 
@@ -1198,7 +1198,7 @@ class AccountIdentification4Choice:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "pattern": r"[A-Z]{2,2}[0-9]{2,2}[a-zA-Z0-9]{1,30}",
-        }
+        },
     )
     othr: Optional[GenericAccountIdentification1] = field(
         default=None,
@@ -1206,7 +1206,7 @@ class AccountIdentification4Choice:
             "name": "Othr",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
 
 
@@ -1220,7 +1220,7 @@ class BranchData2:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     nm: Optional[str] = field(
         default=None,
@@ -1230,7 +1230,7 @@ class BranchData2:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 140,
-        }
+        },
     )
     pstl_adr: Optional[PostalAddress6] = field(
         default=None,
@@ -1238,7 +1238,7 @@ class BranchData2:
             "name": "PstlAdr",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
 
 
@@ -1251,7 +1251,7 @@ class CreditorReferenceType2:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
-        }
+        },
     )
     issr: Optional[str] = field(
         default=None,
@@ -1261,7 +1261,7 @@ class CreditorReferenceType2:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -1274,7 +1274,7 @@ class FinancialInstitutionIdentification7:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "pattern": r"[A-Z]{6,6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3,3}){0,1}",
-        }
+        },
     )
     clr_sys_mmb_id: Optional[ClearingSystemMemberIdentification2] = field(
         default=None,
@@ -1282,7 +1282,7 @@ class FinancialInstitutionIdentification7:
             "name": "ClrSysMmbId",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     nm: Optional[str] = field(
         default=None,
@@ -1292,7 +1292,7 @@ class FinancialInstitutionIdentification7:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 140,
-        }
+        },
     )
     pstl_adr: Optional[PostalAddress6] = field(
         default=None,
@@ -1300,7 +1300,7 @@ class FinancialInstitutionIdentification7:
             "name": "PstlAdr",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     othr: Optional[GenericFinancialIdentification1] = field(
         default=None,
@@ -1308,7 +1308,7 @@ class FinancialInstitutionIdentification7:
             "name": "Othr",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
 
 
@@ -1323,7 +1323,7 @@ class NameAndAddress10:
             "required": True,
             "min_length": 1,
             "max_length": 140,
-        }
+        },
     )
     adr: Optional[PostalAddress6] = field(
         default=None,
@@ -1332,7 +1332,7 @@ class NameAndAddress10:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
-        }
+        },
     )
 
 
@@ -1345,7 +1345,7 @@ class OrganisationIdentification4:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "pattern": r"[A-Z]{6,6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3,3}){0,1}",
-        }
+        },
     )
     othr: List[GenericOrganisationIdentification1] = field(
         default_factory=list,
@@ -1353,7 +1353,7 @@ class OrganisationIdentification4:
             "name": "Othr",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
 
 
@@ -1365,7 +1365,7 @@ class PersonIdentification5:
             "name": "DtAndPlcOfBirth",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     othr: List[GenericPersonIdentification1] = field(
         default_factory=list,
@@ -1373,7 +1373,7 @@ class PersonIdentification5:
             "name": "Othr",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
 
 
@@ -1386,7 +1386,7 @@ class ReferredDocumentType2:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
-        }
+        },
     )
     issr: Optional[str] = field(
         default=None,
@@ -1396,7 +1396,7 @@ class ReferredDocumentType2:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -1408,7 +1408,7 @@ class RegulatoryReporting3:
             "name": "DbtCdtRptgInd",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     authrty: Optional[RegulatoryAuthority2] = field(
         default=None,
@@ -1416,7 +1416,7 @@ class RegulatoryReporting3:
             "name": "Authrty",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     dtls: List[StructuredRegulatoryReporting3] = field(
         default_factory=list,
@@ -1424,7 +1424,7 @@ class RegulatoryReporting3:
             "name": "Dtls",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
 
 
@@ -1436,7 +1436,7 @@ class RemittanceAmount1:
             "name": "DuePyblAmt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     dscnt_apld_amt: Optional[ActiveOrHistoricCurrencyAndAmount] = field(
         default=None,
@@ -1444,7 +1444,7 @@ class RemittanceAmount1:
             "name": "DscntApldAmt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     cdt_note_amt: Optional[ActiveOrHistoricCurrencyAndAmount] = field(
         default=None,
@@ -1452,7 +1452,7 @@ class RemittanceAmount1:
             "name": "CdtNoteAmt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     tax_amt: Optional[ActiveOrHistoricCurrencyAndAmount] = field(
         default=None,
@@ -1460,7 +1460,7 @@ class RemittanceAmount1:
             "name": "TaxAmt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     adjstmnt_amt_and_rsn: List[DocumentAdjustment1] = field(
         default_factory=list,
@@ -1468,7 +1468,7 @@ class RemittanceAmount1:
             "name": "AdjstmntAmtAndRsn",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     rmtd_amt: Optional[ActiveOrHistoricCurrencyAndAmount] = field(
         default=None,
@@ -1476,7 +1476,7 @@ class RemittanceAmount1:
             "name": "RmtdAmt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
 
 
@@ -1488,7 +1488,7 @@ class TaxRecordDetails1:
             "name": "Prd",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     amt: Optional[ActiveOrHistoricCurrencyAndAmount] = field(
         default=None,
@@ -1497,7 +1497,7 @@ class TaxRecordDetails1:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
-        }
+        },
     )
 
 
@@ -1510,7 +1510,7 @@ class BranchAndFinancialInstitutionIdentification4:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
-        }
+        },
     )
     brnch_id: Optional[BranchData2] = field(
         default=None,
@@ -1518,7 +1518,7 @@ class BranchAndFinancialInstitutionIdentification4:
             "name": "BrnchId",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
 
 
@@ -1531,7 +1531,7 @@ class CashAccount16:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
-        }
+        },
     )
     tp: Optional[CashAccountType2] = field(
         default=None,
@@ -1539,7 +1539,7 @@ class CashAccount16:
             "name": "Tp",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     ccy: Optional[str] = field(
         default=None,
@@ -1548,7 +1548,7 @@ class CashAccount16:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "pattern": r"[A-Z]{3,3}",
-        }
+        },
     )
     nm: Optional[str] = field(
         default=None,
@@ -1558,7 +1558,7 @@ class CashAccount16:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 70,
-        }
+        },
     )
 
 
@@ -1570,7 +1570,7 @@ class CreditorReferenceInformation2:
             "name": "Tp",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     ref: Optional[str] = field(
         default=None,
@@ -1580,7 +1580,7 @@ class CreditorReferenceInformation2:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
 
 
@@ -1592,7 +1592,7 @@ class Party6Choice:
             "name": "OrgId",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     prvt_id: Optional[PersonIdentification5] = field(
         default=None,
@@ -1600,7 +1600,7 @@ class Party6Choice:
             "name": "PrvtId",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
 
 
@@ -1612,7 +1612,7 @@ class ReferredDocumentInformation3:
             "name": "Tp",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     nb: Optional[str] = field(
         default=None,
@@ -1622,7 +1622,7 @@ class ReferredDocumentInformation3:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     rltd_dt: Optional[XmlDate] = field(
         default=None,
@@ -1630,7 +1630,7 @@ class ReferredDocumentInformation3:
             "name": "RltdDt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
 
 
@@ -1644,7 +1644,7 @@ class RemittanceLocation2:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     rmt_lctn_mtd: Optional[RemittanceLocationMethod2Code] = field(
         default=None,
@@ -1652,7 +1652,7 @@ class RemittanceLocation2:
             "name": "RmtLctnMtd",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     rmt_lctn_elctrnc_adr: Optional[str] = field(
         default=None,
@@ -1662,7 +1662,7 @@ class RemittanceLocation2:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 2048,
-        }
+        },
     )
     rmt_lctn_pstl_adr: Optional[NameAndAddress10] = field(
         default=None,
@@ -1670,7 +1670,7 @@ class RemittanceLocation2:
             "name": "RmtLctnPstlAdr",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
 
 
@@ -1684,7 +1684,7 @@ class TaxAmount1:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "total_digits": 11,
             "fraction_digits": 10,
-        }
+        },
     )
     taxbl_base_amt: Optional[ActiveOrHistoricCurrencyAndAmount] = field(
         default=None,
@@ -1692,7 +1692,7 @@ class TaxAmount1:
             "name": "TaxblBaseAmt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     ttl_amt: Optional[ActiveOrHistoricCurrencyAndAmount] = field(
         default=None,
@@ -1700,7 +1700,7 @@ class TaxAmount1:
             "name": "TtlAmt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     dtls: List[TaxRecordDetails1] = field(
         default_factory=list,
@@ -1708,7 +1708,7 @@ class TaxAmount1:
             "name": "Dtls",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
 
 
@@ -1722,7 +1722,7 @@ class PartyIdentification32:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 140,
-        }
+        },
     )
     pstl_adr: Optional[PostalAddress6] = field(
         default=None,
@@ -1730,7 +1730,7 @@ class PartyIdentification32:
             "name": "PstlAdr",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     id: Optional[Party6Choice] = field(
         default=None,
@@ -1738,7 +1738,7 @@ class PartyIdentification32:
             "name": "Id",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     ctry_of_res: Optional[str] = field(
         default=None,
@@ -1747,7 +1747,7 @@ class PartyIdentification32:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "pattern": r"[A-Z]{2,2}",
-        }
+        },
     )
     ctct_dtls: Optional[ContactDetails2] = field(
         default=None,
@@ -1755,7 +1755,7 @@ class PartyIdentification32:
             "name": "CtctDtls",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
 
 
@@ -1769,7 +1769,7 @@ class TaxRecord1:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     ctgy: Optional[str] = field(
         default=None,
@@ -1779,7 +1779,7 @@ class TaxRecord1:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     ctgy_dtls: Optional[str] = field(
         default=None,
@@ -1789,7 +1789,7 @@ class TaxRecord1:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     dbtr_sts: Optional[str] = field(
         default=None,
@@ -1799,7 +1799,7 @@ class TaxRecord1:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     cert_id: Optional[str] = field(
         default=None,
@@ -1809,7 +1809,7 @@ class TaxRecord1:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     frms_cd: Optional[str] = field(
         default=None,
@@ -1819,7 +1819,7 @@ class TaxRecord1:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     prd: Optional[TaxPeriod1] = field(
         default=None,
@@ -1827,7 +1827,7 @@ class TaxRecord1:
             "name": "Prd",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     tax_amt: Optional[TaxAmount1] = field(
         default=None,
@@ -1835,7 +1835,7 @@ class TaxRecord1:
             "name": "TaxAmt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     addtl_inf: Optional[str] = field(
         default=None,
@@ -1845,7 +1845,7 @@ class TaxRecord1:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 140,
-        }
+        },
     )
 
 
@@ -1859,7 +1859,7 @@ class AmendmentInformationDetails6:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     orgnl_cdtr_schme_id: Optional[PartyIdentification32] = field(
         default=None,
@@ -1867,7 +1867,7 @@ class AmendmentInformationDetails6:
             "name": "OrgnlCdtrSchmeId",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     orgnl_cdtr_agt: Optional[BranchAndFinancialInstitutionIdentification4] = field(
         default=None,
@@ -1875,7 +1875,7 @@ class AmendmentInformationDetails6:
             "name": "OrgnlCdtrAgt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     orgnl_cdtr_agt_acct: Optional[CashAccount16] = field(
         default=None,
@@ -1883,7 +1883,7 @@ class AmendmentInformationDetails6:
             "name": "OrgnlCdtrAgtAcct",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     orgnl_dbtr: Optional[PartyIdentification32] = field(
         default=None,
@@ -1891,7 +1891,7 @@ class AmendmentInformationDetails6:
             "name": "OrgnlDbtr",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     orgnl_dbtr_acct: Optional[CashAccount16] = field(
         default=None,
@@ -1899,7 +1899,7 @@ class AmendmentInformationDetails6:
             "name": "OrgnlDbtrAcct",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     orgnl_dbtr_agt: Optional[BranchAndFinancialInstitutionIdentification4] = field(
         default=None,
@@ -1907,7 +1907,7 @@ class AmendmentInformationDetails6:
             "name": "OrgnlDbtrAgt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     orgnl_dbtr_agt_acct: Optional[CashAccount16] = field(
         default=None,
@@ -1915,7 +1915,7 @@ class AmendmentInformationDetails6:
             "name": "OrgnlDbtrAgtAcct",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     orgnl_fnl_colltn_dt: Optional[XmlDate] = field(
         default=None,
@@ -1923,7 +1923,7 @@ class AmendmentInformationDetails6:
             "name": "OrgnlFnlColltnDt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     orgnl_frqcy: Optional[Frequency1Code] = field(
         default=None,
@@ -1931,7 +1931,7 @@ class AmendmentInformationDetails6:
             "name": "OrgnlFrqcy",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
 
 
@@ -1946,7 +1946,7 @@ class GroupHeader39:
             "required": True,
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     cre_dt_tm: Optional[XmlDateTime] = field(
         default=None,
@@ -1955,7 +1955,7 @@ class GroupHeader39:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
-        }
+        },
     )
     authstn: List[Authorisation1Choice] = field(
         default_factory=list,
@@ -1964,7 +1964,7 @@ class GroupHeader39:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "max_occurs": 2,
-        }
+        },
     )
     nb_of_txs: Optional[str] = field(
         default=None,
@@ -1974,7 +1974,7 @@ class GroupHeader39:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
             "pattern": r"[0-9]{1,15}",
-        }
+        },
     )
     ctrl_sum: Optional[Decimal] = field(
         default=None,
@@ -1984,7 +1984,7 @@ class GroupHeader39:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "total_digits": 18,
             "fraction_digits": 17,
-        }
+        },
     )
     initg_pty: Optional[PartyIdentification32] = field(
         default=None,
@@ -1993,7 +1993,7 @@ class GroupHeader39:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
-        }
+        },
     )
     fwdg_agt: Optional[BranchAndFinancialInstitutionIdentification4] = field(
         default=None,
@@ -2001,7 +2001,7 @@ class GroupHeader39:
             "name": "FwdgAgt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
 
 
@@ -2013,7 +2013,7 @@ class StructuredRemittanceInformation7:
             "name": "RfrdDocInf",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     rfrd_doc_amt: Optional[RemittanceAmount1] = field(
         default=None,
@@ -2021,7 +2021,7 @@ class StructuredRemittanceInformation7:
             "name": "RfrdDocAmt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     cdtr_ref_inf: Optional[CreditorReferenceInformation2] = field(
         default=None,
@@ -2029,7 +2029,7 @@ class StructuredRemittanceInformation7:
             "name": "CdtrRefInf",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     invcr: Optional[PartyIdentification32] = field(
         default=None,
@@ -2037,7 +2037,7 @@ class StructuredRemittanceInformation7:
             "name": "Invcr",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     invcee: Optional[PartyIdentification32] = field(
         default=None,
@@ -2045,7 +2045,7 @@ class StructuredRemittanceInformation7:
             "name": "Invcee",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     addtl_rmt_inf: List[str] = field(
         default_factory=list,
@@ -2056,7 +2056,7 @@ class StructuredRemittanceInformation7:
             "max_occurs": 3,
             "min_length": 1,
             "max_length": 140,
-        }
+        },
     )
 
 
@@ -2068,7 +2068,7 @@ class TaxInformation3:
             "name": "Cdtr",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     dbtr: Optional[TaxParty2] = field(
         default=None,
@@ -2076,7 +2076,7 @@ class TaxInformation3:
             "name": "Dbtr",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     admstn_zn: Optional[str] = field(
         default=None,
@@ -2086,7 +2086,7 @@ class TaxInformation3:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     ref_nb: Optional[str] = field(
         default=None,
@@ -2096,7 +2096,7 @@ class TaxInformation3:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 140,
-        }
+        },
     )
     mtd: Optional[str] = field(
         default=None,
@@ -2106,7 +2106,7 @@ class TaxInformation3:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     ttl_taxbl_base_amt: Optional[ActiveOrHistoricCurrencyAndAmount] = field(
         default=None,
@@ -2114,7 +2114,7 @@ class TaxInformation3:
             "name": "TtlTaxblBaseAmt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     ttl_tax_amt: Optional[ActiveOrHistoricCurrencyAndAmount] = field(
         default=None,
@@ -2122,7 +2122,7 @@ class TaxInformation3:
             "name": "TtlTaxAmt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     dt: Optional[XmlDate] = field(
         default=None,
@@ -2130,7 +2130,7 @@ class TaxInformation3:
             "name": "Dt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     seq_nb: Optional[Decimal] = field(
         default=None,
@@ -2140,7 +2140,7 @@ class TaxInformation3:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "total_digits": 18,
             "fraction_digits": 0,
-        }
+        },
     )
     rcrd: List[TaxRecord1] = field(
         default_factory=list,
@@ -2148,7 +2148,7 @@ class TaxInformation3:
             "name": "Rcrd",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
 
 
@@ -2162,7 +2162,7 @@ class MandateRelatedInformation6:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     dt_of_sgntr: Optional[XmlDate] = field(
         default=None,
@@ -2170,7 +2170,7 @@ class MandateRelatedInformation6:
             "name": "DtOfSgntr",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     amdmnt_ind: Optional[bool] = field(
         default=None,
@@ -2178,7 +2178,7 @@ class MandateRelatedInformation6:
             "name": "AmdmntInd",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     amdmnt_inf_dtls: Optional[AmendmentInformationDetails6] = field(
         default=None,
@@ -2186,7 +2186,7 @@ class MandateRelatedInformation6:
             "name": "AmdmntInfDtls",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     elctrnc_sgntr: Optional[str] = field(
         default=None,
@@ -2196,7 +2196,7 @@ class MandateRelatedInformation6:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 1025,
-        }
+        },
     )
     frst_colltn_dt: Optional[XmlDate] = field(
         default=None,
@@ -2204,7 +2204,7 @@ class MandateRelatedInformation6:
             "name": "FrstColltnDt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     fnl_colltn_dt: Optional[XmlDate] = field(
         default=None,
@@ -2212,7 +2212,7 @@ class MandateRelatedInformation6:
             "name": "FnlColltnDt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     frqcy: Optional[Frequency1Code] = field(
         default=None,
@@ -2220,7 +2220,7 @@ class MandateRelatedInformation6:
             "name": "Frqcy",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
 
 
@@ -2234,7 +2234,7 @@ class RemittanceInformation5:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 140,
-        }
+        },
     )
     strd: List[StructuredRemittanceInformation7] = field(
         default_factory=list,
@@ -2242,7 +2242,7 @@ class RemittanceInformation5:
             "name": "Strd",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
 
 
@@ -2254,7 +2254,7 @@ class DirectDebitTransaction6:
             "name": "MndtRltdInf",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     cdtr_schme_id: Optional[PartyIdentification32] = field(
         default=None,
@@ -2262,7 +2262,7 @@ class DirectDebitTransaction6:
             "name": "CdtrSchmeId",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     pre_ntfctn_id: Optional[str] = field(
         default=None,
@@ -2272,7 +2272,7 @@ class DirectDebitTransaction6:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     pre_ntfctn_dt: Optional[XmlDate] = field(
         default=None,
@@ -2280,7 +2280,7 @@ class DirectDebitTransaction6:
             "name": "PreNtfctnDt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
 
 
@@ -2293,7 +2293,7 @@ class DirectDebitTransactionInformation9:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
-        }
+        },
     )
     pmt_tp_inf: Optional[PaymentTypeInformation20] = field(
         default=None,
@@ -2301,7 +2301,7 @@ class DirectDebitTransactionInformation9:
             "name": "PmtTpInf",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     instd_amt: Optional[ActiveOrHistoricCurrencyAndAmount] = field(
         default=None,
@@ -2310,7 +2310,7 @@ class DirectDebitTransactionInformation9:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
-        }
+        },
     )
     chrg_br: Optional[ChargeBearerType1Code] = field(
         default=None,
@@ -2318,7 +2318,7 @@ class DirectDebitTransactionInformation9:
             "name": "ChrgBr",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     drct_dbt_tx: Optional[DirectDebitTransaction6] = field(
         default=None,
@@ -2326,7 +2326,7 @@ class DirectDebitTransactionInformation9:
             "name": "DrctDbtTx",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     ultmt_cdtr: Optional[PartyIdentification32] = field(
         default=None,
@@ -2334,7 +2334,7 @@ class DirectDebitTransactionInformation9:
             "name": "UltmtCdtr",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     dbtr_agt: Optional[BranchAndFinancialInstitutionIdentification4] = field(
         default=None,
@@ -2343,7 +2343,7 @@ class DirectDebitTransactionInformation9:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
-        }
+        },
     )
     dbtr_agt_acct: Optional[CashAccount16] = field(
         default=None,
@@ -2351,7 +2351,7 @@ class DirectDebitTransactionInformation9:
             "name": "DbtrAgtAcct",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     dbtr: Optional[PartyIdentification32] = field(
         default=None,
@@ -2360,7 +2360,7 @@ class DirectDebitTransactionInformation9:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
-        }
+        },
     )
     dbtr_acct: Optional[CashAccount16] = field(
         default=None,
@@ -2369,7 +2369,7 @@ class DirectDebitTransactionInformation9:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
-        }
+        },
     )
     ultmt_dbtr: Optional[PartyIdentification32] = field(
         default=None,
@@ -2377,7 +2377,7 @@ class DirectDebitTransactionInformation9:
             "name": "UltmtDbtr",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     instr_for_cdtr_agt: Optional[str] = field(
         default=None,
@@ -2387,7 +2387,7 @@ class DirectDebitTransactionInformation9:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_length": 1,
             "max_length": 140,
-        }
+        },
     )
     purp: Optional[Purpose2Choice] = field(
         default=None,
@@ -2395,7 +2395,7 @@ class DirectDebitTransactionInformation9:
             "name": "Purp",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     rgltry_rptg: List[RegulatoryReporting3] = field(
         default_factory=list,
@@ -2404,7 +2404,7 @@ class DirectDebitTransactionInformation9:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "max_occurs": 10,
-        }
+        },
     )
     tax: Optional[TaxInformation3] = field(
         default=None,
@@ -2412,7 +2412,7 @@ class DirectDebitTransactionInformation9:
             "name": "Tax",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     rltd_rmt_inf: List[RemittanceLocation2] = field(
         default_factory=list,
@@ -2421,7 +2421,7 @@ class DirectDebitTransactionInformation9:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "max_occurs": 10,
-        }
+        },
     )
     rmt_inf: Optional[RemittanceInformation5] = field(
         default=None,
@@ -2429,7 +2429,7 @@ class DirectDebitTransactionInformation9:
             "name": "RmtInf",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
 
 
@@ -2444,7 +2444,7 @@ class PaymentInstructionInformation4:
             "required": True,
             "min_length": 1,
             "max_length": 35,
-        }
+        },
     )
     pmt_mtd: Optional[PaymentMethod2Code] = field(
         default=None,
@@ -2453,7 +2453,7 @@ class PaymentInstructionInformation4:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
-        }
+        },
     )
     btch_bookg: Optional[bool] = field(
         default=None,
@@ -2461,7 +2461,7 @@ class PaymentInstructionInformation4:
             "name": "BtchBookg",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     nb_of_txs: Optional[str] = field(
         default=None,
@@ -2470,7 +2470,7 @@ class PaymentInstructionInformation4:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "pattern": r"[0-9]{1,15}",
-        }
+        },
     )
     ctrl_sum: Optional[Decimal] = field(
         default=None,
@@ -2480,7 +2480,7 @@ class PaymentInstructionInformation4:
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "total_digits": 18,
             "fraction_digits": 17,
-        }
+        },
     )
     pmt_tp_inf: Optional[PaymentTypeInformation20] = field(
         default=None,
@@ -2488,7 +2488,7 @@ class PaymentInstructionInformation4:
             "name": "PmtTpInf",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     reqd_colltn_dt: Optional[XmlDate] = field(
         default=None,
@@ -2497,7 +2497,7 @@ class PaymentInstructionInformation4:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
-        }
+        },
     )
     cdtr: Optional[PartyIdentification32] = field(
         default=None,
@@ -2506,7 +2506,7 @@ class PaymentInstructionInformation4:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
-        }
+        },
     )
     cdtr_acct: Optional[CashAccount16] = field(
         default=None,
@@ -2515,7 +2515,7 @@ class PaymentInstructionInformation4:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
-        }
+        },
     )
     cdtr_agt: Optional[BranchAndFinancialInstitutionIdentification4] = field(
         default=None,
@@ -2524,7 +2524,7 @@ class PaymentInstructionInformation4:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
-        }
+        },
     )
     cdtr_agt_acct: Optional[CashAccount16] = field(
         default=None,
@@ -2532,7 +2532,7 @@ class PaymentInstructionInformation4:
             "name": "CdtrAgtAcct",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     ultmt_cdtr: Optional[PartyIdentification32] = field(
         default=None,
@@ -2540,7 +2540,7 @@ class PaymentInstructionInformation4:
             "name": "UltmtCdtr",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     chrg_br: Optional[ChargeBearerType1Code] = field(
         default=None,
@@ -2548,7 +2548,7 @@ class PaymentInstructionInformation4:
             "name": "ChrgBr",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     chrgs_acct: Optional[CashAccount16] = field(
         default=None,
@@ -2556,7 +2556,7 @@ class PaymentInstructionInformation4:
             "name": "ChrgsAcct",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     chrgs_acct_agt: Optional[BranchAndFinancialInstitutionIdentification4] = field(
         default=None,
@@ -2564,7 +2564,7 @@ class PaymentInstructionInformation4:
             "name": "ChrgsAcctAgt",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     cdtr_schme_id: Optional[PartyIdentification32] = field(
         default=None,
@@ -2572,7 +2572,7 @@ class PaymentInstructionInformation4:
             "name": "CdtrSchmeId",
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-        }
+        },
     )
     drct_dbt_tx_inf: List[DirectDebitTransactionInformation9] = field(
         default_factory=list,
@@ -2581,7 +2581,7 @@ class PaymentInstructionInformation4:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_occurs": 1,
-        }
+        },
     )
 
 
@@ -2594,7 +2594,7 @@ class CustomerDirectDebitInitiationV02:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "required": True,
-        }
+        },
     )
     pmt_inf: List[PaymentInstructionInformation4] = field(
         default_factory=list,
@@ -2603,7 +2603,7 @@ class CustomerDirectDebitInitiationV02:
             "type": "Element",
             "namespace": "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
             "min_occurs": 1,
-        }
+        },
     )
 
 
@@ -2618,5 +2618,5 @@ class Document:
             "name": "CstmrDrctDbtInitn",
             "type": "Element",
             "required": True,
-        }
+        },
     )
