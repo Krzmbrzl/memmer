@@ -830,6 +830,18 @@ class MemmerGUI:
 
         self.window[self.MANAGEMENT_SESSION_LISTBOX].update(values=sessions)
 
+        # Restore search state
+        member_search = self.window[self.MANAGEMENT_MEMBERSEARCH_INPUT].get()
+        session_search = self.window[self.MANAGEMENT_SESSIONSEARCH_INPUT].get()
+        if len(member_search) > 0:
+            self.window.write_event_value(
+                self.MANAGEMENT_MEMBERSEARCH_INPUT, member_search
+            )
+        if len(session_search) > 0:
+            self.window.write_event_value(
+                self.MANAGEMENT_SESSIONSEARCH_INPUT, session_search
+            )
+
     def on_addmember_button_pressed(self, values: Dict[Any, Any]):
         self.window[self.MANAGEMENT_COLUMN].update(visible=False)
         self.open_usereditor()
