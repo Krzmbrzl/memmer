@@ -816,11 +816,17 @@ class MemmerGUI:
 
         # Populate member and session lists
 
-        members = self.session.scalars(select(Member)).all()
+        members = self.session.scalars(
+            select(Member)
+            .order_by(Member.last_name.asc())
+            .order_by(Member.first_name.asc())
+        ).all()
 
         self.window[self.MANAGEMENT_MEMBER_LISTBOX].update(values=members)
 
-        sessions = self.session.scalars(select(Session)).all()
+        sessions = self.session.scalars(
+            select(Session).order_by(Session.name.asc())
+        ).all()
 
         self.window[self.MANAGEMENT_SESSION_LISTBOX].update(values=sessions)
 
