@@ -9,7 +9,34 @@ from dataclasses import dataclass
 from datetime import datetime, date
 from decimal import Decimal
 
-from memmer.generated.pain import *
+from memmer.generated.pain import (
+    DirectDebitTransactionInformation9,
+    PaymentIdentification1,
+    ActiveOrHistoricCurrencyAndAmount,
+    DirectDebitTransaction6,
+    MandateRelatedInformation6,
+    AccountIdentification4Choice,
+    CashAccount16,
+    PartyIdentification32,
+    BranchAndFinancialInstitutionIdentification4,
+    FinancialInstitutionIdentification7,
+    RemittanceInformation5,
+    GroupHeader39,
+    PaymentTypeInformation20,
+    ServiceLevel8Choice,
+    LocalInstrument2Choice,
+    SequenceType1Code,
+    Party6Choice,
+    PersonIdentification5,
+    GenericPersonIdentification1,
+    GenericFinancialIdentification1,
+    PersonIdentificationSchemeName1Choice,
+    PaymentInstructionInformation4,
+    PaymentMethod2Code,
+    ChargeBearerType1Code,
+    CustomerDirectDebitInitiationV02,
+    Document,
+)
 from memmer.generated.pain import __NAMESPACE__
 from memmer.orm import Member, Setting
 from .fees import compute_total_fee
