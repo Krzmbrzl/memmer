@@ -1419,7 +1419,9 @@ class MemmerGUI:
     def populate_user_sessions(self, member: Optional[Member]):
         assert self.session is not None
 
-        sessions = self.session.scalars(select(Session)).all()
+        sessions = self.session.scalars(
+            select(Session).order_by(Session.name.asc())
+        ).all()
 
         n_existing_rows: int = self.window[self.USEREDITOR_SESSIONS_TAB].metadata[
             "number_of_sessions"
