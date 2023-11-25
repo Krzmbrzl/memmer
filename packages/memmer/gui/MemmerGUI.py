@@ -129,7 +129,7 @@ def validate_date(element) -> Optional[datetime.date]:
 
 def validate_iban(element) -> Optional[IBAN]:
     try:
-        iban: IBAN = IBAN(element.get().strip())
+        iban: IBAN = IBAN(element.get().strip())  # type: ignore
 
         set_validation_state(element, True)
 
