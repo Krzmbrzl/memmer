@@ -27,6 +27,9 @@ def compute_monthly_fee(
 ) -> Decimal:
     """Computes the given member's monthly fee"""
 
+    if member.exit_date is not None and member.exit_date <= target_date:
+        return Decimal(0)
+
     # First check if there exists a fee override for this member as this will make any of the below
     # superfluous
     override = session.scalar(
@@ -111,11 +114,13 @@ def compute_monthly_fee(
     return fee
 
 
-def compute_total_fee(session: Session, member: morm.Member) -> Decimal:
+def compute_total_fee(
+    session: Session, member: morm.Member, target_date: date = datetime.now().date()
+) -> Decimal:
     """Computes the current fee of the given member. The total fee consists of the
     monthly fee plus all outstanding one-time fees"""
 
-    fee = compute_monthly_fee(session, member)
+    fee = compute_monthly_fee(session=session, member=member, target_date=target_date)
 
     for current_fee in member.one_time_fees:
         fee += current_fee.amount

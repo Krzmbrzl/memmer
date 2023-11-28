@@ -321,6 +321,59 @@ class TestOperations(unittest.TestCase):
             self.assertEqual(compute_monthly_fee(session, sally), 0)
             self.assertEqual(compute_monthly_fee(session, sam), youth_base_fee + 16)
 
+    def test_ex_member(self):
+        with self.Session() as session:
+            sally, sam, _ = get_users(session)
+            shortSession, _, longSession = get_sessions(session)
+
+            print("Now")
+            sally.participating_sessions.append(longSession)
+            sam.participating_sessions.append(shortSession)
+
+            youth_base_fee = get_fixed_cost(session, BasicFeeYouthsKey)
+
+            before = datetime.datetime.now().date()
+            exitDate = before + datetime.timedelta(days=1)
+            sally.exit_date = exitDate
+            after = exitDate + datetime.timedelta(days=1)
+
+            # Before the exit, sibling discount works as expected
+            self.assertEqual(
+                compute_monthly_fee(session=session, member=sally, target_date=before),
+                youth_base_fee + 28,
+            )
+            self.assertEqual(
+                compute_monthly_fee(session=session, member=sam, target_date=before),
+                (youth_base_fee + 16) / 2,
+            )
+
+            # From the exit date on all regular fees must be gone
+            self.assertEqual(
+                compute_monthly_fee(session, sally, target_date=exitDate), 0
+            )
+            self.assertEqual(compute_total_fee(session, sally, target_date=exitDate), 0)
+            self.assertEqual(compute_monthly_fee(session, sally, target_date=after), 0)
+            self.assertEqual(compute_total_fee(session, sally, target_date=after), 0)
+
+            # But one-time fees should still be collected
+            sally.one_time_fees.append(OneTimeFee(reason="Dummy", amount=5))
+            self.assertEqual(
+                compute_monthly_fee(session, sally, target_date=exitDate), 0
+            )
+            self.assertEqual(compute_total_fee(session, sally, target_date=exitDate), 5)
+            self.assertEqual(compute_monthly_fee(session, sally, target_date=after), 0)
+            self.assertEqual(compute_total_fee(session, sally, target_date=after), 5)
+
+            # Once the sibling has exited, the sibling discount is gone as well
+            self.assertEqual(
+                compute_monthly_fee(session, sam, target_date=exitDate),
+                youth_base_fee + 16,
+            )
+            self.assertEqual(
+                compute_monthly_fee(session, sam, target_date=after),
+                youth_base_fee + 16,
+            )
+
     def test_honorary_member(self):
         with self.Session() as session:
             _, _, dirk = get_users(session)
