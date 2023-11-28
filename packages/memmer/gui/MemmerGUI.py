@@ -1827,7 +1827,8 @@ class MemmerGUI:
         current_city = self.window[self.USEREDIT_CITY_INPUT].get()
         current_street = self.window[self.USEREDIT_STREET_INPUT].get()
         current_streetnum = self.window[self.USEREDIT_STREETNUM_INPUT].get()
-        current_iban = self.window[self.USEREDIT_IBAN_INPUT].get()
+        # We store IBANs without spaces and thus we have to remove any spaces before we compare
+        current_iban = self.window[self.USEREDIT_IBAN_INPUT].get().replace(" ", "")
 
         for current_member in potential_relatives:
             if current_member.iban == current_iban or (
