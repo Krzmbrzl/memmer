@@ -39,7 +39,7 @@ def compute_monthly_fee(
     if not override is None:
         return override.amount
 
-    member_age: int = nominal_year_diff(member.birthday, datetime.now().date())
+    member_age: int = nominal_year_diff(member.birthday, target_date)
 
     fee: Decimal = Decimal(0)
 
@@ -77,13 +77,17 @@ def compute_monthly_fee(
     # (only siblings < 18 years old are considered)
     if account_for_siblings and member_age < 18:
         relatives = get_relatives(session=session, member=member)
-        today = datetime.now().date()
-        relatives = [x for x in relatives if nominal_year_diff(x.birthday, today) < 18]
+        relatives = [
+            x for x in relatives if nominal_year_diff(x.birthday, target_date) < 18
+        ]
 
         if len(relatives) > 0:
             relative_fees = [
                 compute_monthly_fee(
-                    session=session, member=current, account_for_siblings=False
+                    session=session,
+                    member=current,
+                    account_for_siblings=False,
+                    target_date=target_date,
                 )
                 for current in relatives
             ]
