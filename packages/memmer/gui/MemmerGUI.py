@@ -281,6 +281,13 @@ class MemmerGUI:
     SESSIONEDIT_DELETE_BUTTON: str = "-SESSIONEDIT_DELETE_BUTTON-"
     SESSIONEDIT_COLUMN: str = "-SESSIONEDIT_COLUMN-"
 
+    TALLY_YEAR_COMBO: str = "-TALLY_YEAR_COMBO-"
+    TALLY_MONTH_COMBO: str = "-TALLY_MONTH_COMBO-"
+    TALLY_COLLECTION_DATE_INPUT: str = "-TALLY_COLLECTION_DATE_INPUT-"
+    TALLY_CANCEL_BUTTON: str = "-TALLY_CANCEL_BUTTON-"
+    TALLY_CREATE_BUTTON: str = "-TALLY_CREATE_BUTTON-"
+    TALLY_COLUMN: str = "-TALLY_COLUM-"
+
     def __init__(self):
         self.layout: Layout = [[]]
         self.event_processors: Dict[str, List[Callable[[Dict[Any, Any]], Any]]] = {}
@@ -293,6 +300,7 @@ class MemmerGUI:
         self.create_management()
         self.create_usereditor()
         self.create_sessioneditor()
+        self.create_tally_creator()
 
     def connect(self, event: str, processor: Callable[[Dict[Any, Any]], Any]):
         if not event in self.event_processors:
@@ -673,52 +681,8 @@ class MemmerGUI:
         self.open_management()
 
     def on_tally_button_pressed(self, values: Dict[Any, Any]):
-        assert self.session != None
-
-        creditor_name = (
-            self.session.scalars(
-                select(Setting).where(Setting.name == Setting.TALLY_CREDITOR_NAME)
-            )
-            .one()
-            .value
-        )
-        creditor_iban = (
-            self.session.scalars(
-                select(Setting).where(Setting.name == Setting.TALLY_CREDITOR_IBAN)
-            )
-            .one()
-            .value
-        )
-        creditor_bic = (
-            self.session.scalars(
-                select(Setting).where(Setting.name == Setting.TALLY_CREDITOR_BIC)
-            )
-            .one()
-            .value
-        )
-        creditor_id = (
-            self.session.scalars(
-                select(Setting).where(Setting.name == Setting.TALLY_CREDITOR_ID)
-            )
-            .one()
-            .value
-        )
-
-        message = create_sepa_payment_initiation_message(
-            session=self.session,
-            msg_id="TODO-Find-better-id",
-            creditor_info=CreditorInfo(
-                name=creditor_name,
-                iban=creditor_iban,
-                bic=creditor_bic,
-                identification=creditor_id,
-            ),
-            collection_date=date(year=2023, month=11, day=1),
-        )
-
-        print(message)
-
-        # sg.popup_ok(_("Not yet implemented"))
+        self.window[self.OVERVIEW_COLUMN].update(visible=False)
+        self.open_tally_creator()
 
     def create_management(self):
         user_management: Layout = [
@@ -2044,6 +2008,166 @@ class MemmerGUI:
 
         self.window[self.SESSIONEDIT_COLUMN].update(visible=False)
         self.open_management()
+
+    def create_tally_creator(self):
+        labels: Layout = [
+            [sg.Text(_("Year:"))],
+            [sg.Text(_("For month:"))],
+            [sg.Text(_("Collection date:"))],
+        ]
+
+        months = [
+            _("January"),
+            _("February"),
+            _("March"),
+            _("April"),
+            _("May"),
+            _("June"),
+            _("July"),
+            _("August"),
+            _("September"),
+            _("October"),
+            _("November"),
+            _("December"),
+        ]
+
+        current_year = datetime.datetime.now().year
+
+        inputs: Layout = [
+            [
+                sg.Combo(
+                    [current_year, current_year + 1],
+                    expand_x=True,
+                    enable_events=True,
+                    key=self.TALLY_YEAR_COMBO,
+                    readonly=True,
+                )
+            ],
+            [
+                sg.Combo(
+                    months,
+                    expand_x=True,
+                    enable_events=True,
+                    key=self.TALLY_MONTH_COMBO,
+                    readonly=True,
+                )
+            ],
+            [
+                sg.Input(
+                    "",
+                    expand_x=True,
+                    disabled=True,
+                    key=self.TALLY_COLLECTION_DATE_INPUT,
+                )
+            ],
+        ]
+
+        creator_layout: Layout = [
+            [sg.Column(layout=labels), sg.Column(layout=inputs)],
+            [
+                sg.Push(),
+                sg.Button(button_text=_("Cancel"), key=self.TALLY_CANCEL_BUTTON),
+                sg.Button(button_text=_("Create"), key=self.TALLY_CREATE_BUTTON),
+            ],
+        ]
+
+        self.layout[0].append(
+            sg.Column(
+                layout=creator_layout,
+                visible=False,
+                key=self.TALLY_COLUMN,
+                expand_x=True,
+                expand_y=True,
+            )
+        )
+
+        self.connect(self.TALLY_YEAR_COMBO, self.on_tally_date_changed)
+        self.connect(self.TALLY_MONTH_COMBO, self.on_tally_date_changed)
+        self.connect(self.TALLY_CANCEL_BUTTON, self.on_tally_cancel_button_pressed)
+        self.connect(self.TALLY_CREATE_BUTTON, self.on_tally_create_button_pressed)
+
+    def open_tally_creator(self):
+        self.window[self.TALLY_COLUMN].update(visible=True)
+
+        day_threshold = 20
+
+        now = datetime.datetime.now()
+        if now.month == 12 and now.day > day_threshold:
+            # Select upcoming year
+            self.window[self.TALLY_YEAR_COMBO].update(set_to_index=1)
+        else:
+            # Select current year
+            self.window[self.TALLY_YEAR_COMBO].update(set_to_index=0)
+
+        month_idx = now.month - 1
+        if now.day > day_threshold:
+            # Select upcoming month
+            self.window[self.TALLY_MONTH_COMBO].update(
+                set_to_index=(month_idx + 1) % 12
+            )
+        else:
+            # Select current month
+            self.window[self.TALLY_MONTH_COMBO].update(set_to_index=month_idx)
+
+    def on_tally_date_changed(self, values: Dict[Any, Any]):
+        # TODO
+        pass
+
+    def on_tally_cancel_button_pressed(self, values: Dict[Any, Any]):
+        self.window[self.TALLY_COLUMN].update(visible=False)
+        self.open_overview()
+
+    def on_tally_create_button_pressed(self, values: Dict[Any, Any]):
+        # TODO
+        pass
+
+    def create_tally(self):
+        assert self.session != None
+
+        creditor_name = (
+            self.session.scalars(
+                select(Setting).where(Setting.name == Setting.TALLY_CREDITOR_NAME)
+            )
+            .one()
+            .value
+        )
+        creditor_iban = (
+            self.session.scalars(
+                select(Setting).where(Setting.name == Setting.TALLY_CREDITOR_IBAN)
+            )
+            .one()
+            .value
+        )
+        creditor_bic = (
+            self.session.scalars(
+                select(Setting).where(Setting.name == Setting.TALLY_CREDITOR_BIC)
+            )
+            .one()
+            .value
+        )
+        creditor_id = (
+            self.session.scalars(
+                select(Setting).where(Setting.name == Setting.TALLY_CREDITOR_ID)
+            )
+            .one()
+            .value
+        )
+
+        message = create_sepa_payment_initiation_message(
+            session=self.session,
+            msg_id="TODO-Find-better-id",
+            creditor_info=CreditorInfo(
+                name=creditor_name,
+                iban=creditor_iban,
+                bic=creditor_bic,
+                identification=creditor_id,
+            ),
+            collection_date=date(year=2023, month=11, day=1),
+        )
+
+        print(message)
+
+        # sg.popup_ok(_("Not yet implemented"))
 
     def show_and_execute(self):
         self.window: sg.Window = sg.Window(
