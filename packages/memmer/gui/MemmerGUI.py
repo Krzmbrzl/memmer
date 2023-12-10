@@ -286,6 +286,8 @@ class MemmerGUI:
     TALLY_COLLECTION_DATE_INPUT: str = "-TALLY_COLLECTION_DATE_INPUT-"
     TALLY_CANCEL_BUTTON: str = "-TALLY_CANCEL_BUTTON-"
     TALLY_CREATE_BUTTON: str = "-TALLY_CREATE_BUTTON-"
+    TALLY_OUT_DIR_INPUT: str = "-TALLY_OUT_DIR_INPUT-"
+    TALLY_OUT_DIR_BROWSE_BUTTON: str = "-TALLY_OUT_DIR_BROWSE_BUTTON-"
     TALLY_COLUMN: str = "-TALLY_COLUM-"
 
     def __init__(self):
@@ -2014,6 +2016,7 @@ class MemmerGUI:
             [sg.Text(_("Year:"))],
             [sg.Text(_("For month:"))],
             [sg.Text(_("Collection date:"))],
+            [sg.Text(_("Output dir:"))],
         ]
 
         months = [
@@ -2050,6 +2053,7 @@ class MemmerGUI:
                     enable_events=True,
                     key=self.TALLY_MONTH_COMBO,
                     readonly=True,
+                    metadata={"all_values": months},
                 )
             ],
             [
@@ -2059,6 +2063,14 @@ class MemmerGUI:
                     disabled=True,
                     key=self.TALLY_COLLECTION_DATE_INPUT,
                 )
+            ],
+            [
+                sg.Input(key=self.TALLY_OUT_DIR_INPUT),
+                sg.FolderBrowse(
+                    button_text="…",
+                    key=self.TALLY_OUT_DIR_BROWSE_BUTTON,
+                    initial_folder=Path.home(),
+                ),
             ],
         ]
 
@@ -2109,20 +2121,81 @@ class MemmerGUI:
             # Select current month
             self.window[self.TALLY_MONTH_COMBO].update(set_to_index=month_idx)
 
+        # Send event to update the collection date field
+        self.window.write_event_value(
+            self.TALLY_YEAR_COMBO, self.window[self.TALLY_YEAR_COMBO].get()
+        )
+
+        config = self.get_config()
+
+        if not config is None:
+            self.window[self.TALLY_OUT_DIR_INPUT].update(
+                value=config.get("tally_out_dir", "")
+            )
+
+    def determine_tally_collection_date(self, values: Dict[Any, Any]) -> datetime.date:
+        min_collection_date = (
+            datetime.datetime.now() + datetime.timedelta(days=2)
+        ).date()
+        selected_year: int = int(values[self.TALLY_YEAR_COMBO])
+        all_months = self.window[self.TALLY_MONTH_COMBO].metadata["all_values"]
+        selected_month: int = all_months.index(values[self.TALLY_MONTH_COMBO])
+
+        # Note that the entries here are 1-based - thus the +1
+        selected_date = datetime.date(
+            year=selected_year, month=selected_month + 1, day=1
+        )
+
+        # Collection date must be later or equal to min_collection_date
+        collection_date = max(min_collection_date, selected_date)
+
+        # Collection date can't be a Saturday or Sunday
+        day_offset = 0
+        if collection_date.weekday() >= 5:
+            day_offset = 7 - collection_date.weekday()
+            assert day_offset > 0
+
+        collection_date += datetime.timedelta(days=day_offset)
+
+        return collection_date
+
     def on_tally_date_changed(self, values: Dict[Any, Any]):
-        # TODO
-        pass
+        collection_date = self.determine_tally_collection_date(values)
+
+        # Set collection date
+        self.window[self.TALLY_COLLECTION_DATE_INPUT].update(
+            value=collection_date.isoformat()
+        )
 
     def on_tally_cancel_button_pressed(self, values: Dict[Any, Any]):
         self.window[self.TALLY_COLUMN].update(visible=False)
         self.open_overview()
 
     def on_tally_create_button_pressed(self, values: Dict[Any, Any]):
-        # TODO
-        pass
+        collection_date = self.determine_tally_collection_date(values)
 
-    def create_tally(self):
+        if not self.create_tally(
+            collection_date=collection_date, output_dir=values[self.TALLY_OUT_DIR_INPUT]
+        ):
+            return
+
+        self.write_to_config("tally_out_dir", values[self.TALLY_OUT_DIR_INPUT])
+
+        # TODO: Perform DB cleanup
+
+        self.window[self.TALLY_COLUMN].update(visible=False)
+        self.open_overview()
+
+    def create_tally(self, collection_date: datetime.date, output_dir: str) -> bool:
         assert self.session != None
+
+        if not os.path.isdir(output_dir):
+            sg.popup_error(
+                _("Output directory '{}' doesn't exist or isn't a directory").format(
+                    output_dir
+                )
+            )
+            return False
 
         creditor_name = (
             self.session.scalars(
@@ -2153,21 +2226,27 @@ class MemmerGUI:
             .value
         )
 
+        now = datetime.datetime.now()
+        message_id = "Memmer-{}-{:02d}-{:02d}-{:02d}".format(
+            now.date().isoformat(), now.hour, now.minute, now.second
+        )
+
         message = create_sepa_payment_initiation_message(
             session=self.session,
-            msg_id="TODO-Find-better-id",
+            msg_id=message_id,
             creditor_info=CreditorInfo(
                 name=creditor_name,
                 iban=creditor_iban,
                 bic=creditor_bic,
                 identification=creditor_id,
             ),
-            collection_date=date(year=2023, month=11, day=1),
+            collection_date=collection_date,
         )
 
-        print(message)
+        with open(os.path.join(output_dir, message_id + ".xml"), "w") as out_file:
+            out_file.write(message)
 
-        # sg.popup_ok(_("Not yet implemented"))
+        return True
 
     def show_and_execute(self):
         self.window: sg.Window = sg.Window(
