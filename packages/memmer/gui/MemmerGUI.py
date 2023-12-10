@@ -32,6 +32,7 @@ from memmer.queries import (
     set_relatives,
     create_sepa_payment_initiation_message,
     CreditorInfo,
+    clear_one_time_fees,
 )
 from memmer import AdmissionFeeKey
 
@@ -618,7 +619,7 @@ class MemmerGUI:
 
             print("Connecting DB via ", connect_url)
 
-            engine = create_engine(connect_url)
+            engine = create_engine(connect_url, echo=True)
 
             self.session = SQLSession(bind=engine)
 
@@ -2181,7 +2182,10 @@ class MemmerGUI:
 
         self.write_to_config("tally_out_dir", values[self.TALLY_OUT_DIR_INPUT])
 
-        # TODO: Perform DB cleanup
+        # TODO: The deletion is not tracked by our logic deciding whether or not to ask the user whether to commit changes
+        # thus the changes are always rolled back.
+        assert self.session is not None
+        clear_one_time_fees(session=self.session)
 
         self.window[self.TALLY_COLUMN].update(visible=False)
         self.open_overview()

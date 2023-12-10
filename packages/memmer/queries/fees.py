@@ -3,7 +3,7 @@
 # LICENSE file at the root of the source tree or at
 # <https://github.com/Krzmbrzl/memmer/blob/main/LICENSE>.
 
-from typing import List
+from typing import List, Optional
 
 from decimal import Decimal
 from datetime import date, datetime
@@ -135,9 +135,11 @@ def compute_total_fee(
     return fee
 
 
-def clear_one_time_fees(session: Session, member: morm.Member) -> None:
-    """Deletes all one-time fees associated with the given member"""
-    for current_fee in member.one_time_fees:
+def clear_one_time_fees(session: Session, member: Optional[morm.Member] = None) -> None:
+    """Deletes all one-time fees (associated with the given member, if provided)"""
+    if member is None:
+        session.execute(delete(morm.OneTimeFee))
+    else:
         session.execute(
-            delete(morm.OneTimeFee).where(morm.OneTimeFee.id == current_fee.id)
+            delete(morm.OneTimeFee).where(morm.OneTimeFee.member_id == member.id)
         )
