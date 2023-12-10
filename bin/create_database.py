@@ -6,7 +6,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from memmer.orm import Base, FixedCost, Setting
-from memmer import AdmissionFeeKey, BasicFeeAdultsKey, BasicFeeYouthsKey
+from memmer import (
+    AdmissionFeeKey,
+    BasicFeeAdultsKey,
+    BasicFeeYouthsKey,
+    BasicFeeTrainersKey,
+)
 
 
 def main():
@@ -20,6 +25,7 @@ def main():
                 FixedCost(name=AdmissionFeeKey, cost=Decimal("15")),
                 FixedCost(name=BasicFeeAdultsKey, cost=Decimal("5")),
                 FixedCost(name=BasicFeeYouthsKey, cost=Decimal("4")),
+                FixedCost(name=BasicFeeTrainersKey, cost=Decimal("1")),
             ]
         )
 
