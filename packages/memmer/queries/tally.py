@@ -48,6 +48,8 @@ from xsdata.models.datatype import XmlDateTime, XmlDate
 from xsdata.formats.dataclass.serializers import XmlSerializer
 from xsdata.formats.dataclass.serializers.config import SerializerConfig
 
+from unidecode import unidecode
+
 
 @dataclass
 class CreditorInfo:
@@ -55,6 +57,16 @@ class CreditorInfo:
     iban: str
     bic: str
     identification: str
+
+
+def sanitize(string: str) -> str:
+    # This needs to be done manually as unidecode doesn't want to use German transliteration rules as those letters
+    # are also used outside of German. However, we assume German names and thus use German rules.
+    string = string.replace("ä", "ae")
+    string = string.replace("ö", "oe")
+    string = string.replace("ü", "ue")
+
+    return unidecode(string)
 
 
 def create_sepa_transactions(
@@ -90,6 +102,11 @@ def create_sepa_transactions(
                     current_member.first_name, current_member.last_name
                 )
 
+            account_owner = sanitize(account_owner)
+            member_name = sanitize(
+                "{}, {}".format(current_member.last_name, current_member.first_name)
+            )
+
             transactions.append(
                 DirectDebitTransactionInformation9(
                     pmt_id=PaymentIdentification1(end_to_end_id=e2e_id),
@@ -117,11 +134,7 @@ def create_sepa_transactions(
                     dbtr_acct=CashAccount16(
                         id=AccountIdentification4Choice(iban=current_member.iban)
                     ),
-                    ultmt_dbtr=PartyIdentification32(
-                        nm="{}, {}".format(
-                            current_member.last_name, current_member.first_name
-                        )
-                    ),
+                    ultmt_dbtr=PartyIdentification32(nm=member_name),
                     rmt_inf=RemittanceInformation5(ustrd=[purpose]),
                 )
             )
@@ -159,7 +172,7 @@ def create_sepa_payment_initiation_message(
         ),
         nb_of_txs=str(len(transactions)),
         ctrl_sum="{:.2f}".format(total_sum),  # type: ignore
-        initg_pty=PartyIdentification32(nm=creditor_info.name),
+        initg_pty=PartyIdentification32(nm=sanitize(creditor_info.name)),
     )
 
     payment_type = PaymentTypeInformation20(
@@ -167,7 +180,7 @@ def create_sepa_payment_initiation_message(
         lcl_instrm=LocalInstrument2Choice(cd="CORE"),
         seq_tp=SequenceType1Code.RCUR,
     )
-    creditor = PartyIdentification32(nm=creditor_info.name)
+    creditor = PartyIdentification32(nm=sanitize(creditor_info.name))
     creditor_account = CashAccount16(
         id=AccountIdentification4Choice(iban=creditor_info.iban)
     )

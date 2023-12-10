@@ -4,3 +4,4 @@ schwifty
 sshtunnel
 pgeocode
 xsdata
+unidecode
