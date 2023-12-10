@@ -39,6 +39,7 @@ from memmer import (
     AdmissionFeeKey,
     BasicFeeAdultsKey,
     BasicFeeYouthsKey,
+    BasicFeeTrainersKey,
     ProcessingFeeKey,
 )
 
@@ -143,6 +144,7 @@ class TestOperations(unittest.TestCase):
                 FixedCost(name=BasicFeeAdultsKey, cost=5),
                 FixedCost(name=BasicFeeYouthsKey, cost=4),
                 FixedCost(name=ProcessingFeeKey, cost=15),
+                FixedCost(name=BasicFeeTrainersKey, cost=1),
             ]
             session.add_all(fixed_costs)
 
@@ -186,6 +188,7 @@ class TestOperations(unittest.TestCase):
 
             youth_base_fee = get_fixed_cost(session, BasicFeeYouthsKey)
             adult_base_fee = get_fixed_cost(session, BasicFeeAdultsKey)
+            trainer_base_fee = get_fixed_cost(session, BasicFeeTrainersKey)
 
             # Youth basic fee
             self.assertEqual(
@@ -202,6 +205,13 @@ class TestOperations(unittest.TestCase):
                 compute_monthly_fee(session, sam),
                 youth_base_fee / 2,
             )
+            # Trainer basic fee
+            dirk.trained_sessions = [shortSession]
+            self.assertEqual(
+                compute_monthly_fee(session, dirk),
+                trainer_base_fee,
+            )
+            dirk.trained_sessions = []
 
             # The most expensive sibling has to pay fully
             sam.participating_sessions.append(mediumSession)

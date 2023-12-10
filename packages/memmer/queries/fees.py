@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import delete, select
 
 import memmer.orm as morm
-from memmer import BasicFeeAdultsKey, BasicFeeYouthsKey
+from memmer import BasicFeeAdultsKey, BasicFeeYouthsKey, BasicFeeTrainersKey
 from memmer.queries import get_relatives
 from memmer.utils import nominal_year_diff
 
@@ -45,7 +45,10 @@ def compute_monthly_fee(
 
     if not member.is_honorary_member:
         # Base fee
-        if member_age < 18:
+        if len(member.trained_sessions) > 0:
+            # Trainer
+            fee += get_fixed_cost(session=session, key=BasicFeeTrainersKey)
+        elif member_age < 18:
             fee += get_fixed_cost(session=session, key=BasicFeeYouthsKey)
         else:
             fee += get_fixed_cost(session=session, key=BasicFeeAdultsKey)

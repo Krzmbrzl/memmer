@@ -6,4 +6,5 @@
 AdmissionFeeKey = "Admission fee"
 BasicFeeAdultsKey = "Basic fee (adults)"
 BasicFeeYouthsKey = "Basic fee (youths)"
+BasicFeeTrainersKey = "Basic fee (trainers)"
 ProcessingFeeKey = "Processing fee"
