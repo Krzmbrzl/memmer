@@ -241,6 +241,7 @@ class MemmerGUI:
     MANAGEMENT_SESSIONSEARCH_INPUT: str = "MANAGEMENT_SESSIONSEARCH_INPUT-"
     MANAGEMENT_SESSION_LISTBOX: str = "-MANAGEMENT_SESSION_LISTBOX-"
     MANAGEMENT_ADDSESSION_BUTTON: str = "-MANAGEMENT_ADDSESSION_BUTTON-"
+    MANAGEMENT_BACK_BUTTON: str = "-MANAGEMENT_BACK_BUTTON-"
     MANAGEMENT_COLUMN: str = "-MANAGEMENT_COLUMN-"
 
     USEREDITOR_GENERAL_TAB: str = "-USEREDITOR_GENERAL_TAB-"
@@ -750,6 +751,7 @@ class MemmerGUI:
                     expand_y=True,
                 )
             ],
+            [sg.Stretch(), sg.Button(_("Back"), key=self.MANAGEMENT_BACK_BUTTON)]
         ]
 
         self.connect(
@@ -773,6 +775,7 @@ class MemmerGUI:
         )
         self.connect(self.MANAGEMENT_MEMBER_LISTBOX, self.on_memberlist_activated)
         self.connect(self.MANAGEMENT_SESSION_LISTBOX, self.on_sessionlist_activated)
+        self.connect(self.MANAGEMENT_BACK_BUTTON, self.on_management_back_button_pressed)
 
         self.layout[0].append(
             sg.Column(
@@ -854,6 +857,10 @@ class MemmerGUI:
         # Open session editor for that session
         self.window[self.MANAGEMENT_COLUMN].update(visible=False)
         self.open_sessioneditor(values[self.MANAGEMENT_SESSION_LISTBOX][0])
+
+    def on_management_back_button_pressed(self, values: Dict[Any, Any]):
+        self.window[self.MANAGEMENT_COLUMN].update(visible=False)
+        self.open_overview()
 
     def create_usereditor(self):
         personal: Layout = [
