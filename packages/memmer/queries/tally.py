@@ -71,9 +71,7 @@ def sanitize(string: str) -> str:
 
 
 def create_sepa_transactions(
-    session: Session,
-    end_to_end_id: str,
-    purpose: str,
+    session: Session, end_to_end_id: str, purpose: str, collection_date: date
 ) -> Tuple[Decimal, List[DirectDebitTransactionInformation9]]:
     members = session.scalars(
         select(Member).where(Member.sepa_mandate_date != None).order_by(Member.id.asc())
@@ -83,7 +81,9 @@ def create_sepa_transactions(
     total = Decimal(0)
 
     for current_member in members:
-        fee = compute_total_fee(session=session, member=current_member)
+        fee = compute_total_fee(
+            session=session, member=current_member, target_date=collection_date
+        )
         total += fee
 
         if fee > 0:
@@ -158,7 +158,10 @@ def create_sepa_payment_initiation_message_object(
     ).one()
 
     total_sum, transactions = create_sepa_transactions(
-        session, e2e_id_template, purpose
+        session=session,
+        end_to_end_id=e2e_id_template,
+        purpose=purpose,
+        collection_date=collection_date,
     )
 
     group_header = GroupHeader39(
