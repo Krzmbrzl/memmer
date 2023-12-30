@@ -142,9 +142,9 @@ def create_sepa_transactions(
     return (total, transactions)
 
 
-def create_sepa_payment_initiation_message(
+def create_sepa_payment_initiation_message_object(
     session: Session, msg_id: str, creditor_info: CreditorInfo, collection_date: date
-) -> str:
+) -> Document:
     now = datetime.now()
 
     e2e_id_template = session.scalars(
@@ -225,11 +225,26 @@ def create_sepa_payment_initiation_message(
         pmt_inf=[payment_information],
     )
 
-    doc = Document(cstmr_drct_dbt_initn=init)
+    return Document(cstmr_drct_dbt_initn=init)
 
+
+def serialize_sepa_message(doc: Document) -> str:
     namespace = __NAMESPACE__
     config = SerializerConfig(
         pretty_print=True, schema_location=namespace + " pain.008.001.02.xsd"
     )
     serializer = XmlSerializer(config=config)
     return serializer.render(doc, ns_map={None: namespace})
+
+
+def create_sepa_payment_initiation_message(
+    session: Session, msg_id: str, creditor_info: CreditorInfo, collection_date: date
+) -> str:
+    return serialize_sepa_message(
+        create_sepa_payment_initiation_message_object(
+            session=session,
+            msg_id=msg_id,
+            creditor_info=creditor_info,
+            collection_date=collection_date,
+        )
+    )

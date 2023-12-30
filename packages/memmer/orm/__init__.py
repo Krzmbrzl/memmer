@@ -8,3 +8,4 @@ from .FixedCost import FixedCost
 from .OneTimeFee import OneTimeFee
 from .FeeOverride import FeeOverride
 from .Setting import Setting
+from .Tally import Tally

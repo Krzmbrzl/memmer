@@ -24,15 +24,23 @@ from schwifty.exceptions import SchwiftyException
 from sshtunnel import SSHTunnelForwarder, BaseSSHTunnelForwarderError
 
 from memmer.gui import Layout
-from memmer.orm import Member, Session, OneTimeFee, FeeOverride, FixedCost, Setting
+from memmer.orm import (
+    Member,
+    Session,
+    OneTimeFee,
+    FeeOverride,
+    FixedCost,
+    Setting,
+    Tally,
+)
 from memmer.utils import nominal_year_diff
 from memmer.queries import (
     compute_monthly_fee,
     get_relatives,
     set_relatives,
-    create_sepa_payment_initiation_message,
+    create_sepa_payment_initiation_message_object,
+    serialize_sepa_message,
     CreditorInfo,
-    clear_one_time_fees,
 )
 from memmer import AdmissionFeeKey
 
@@ -2249,7 +2257,7 @@ class MemmerGUI:
             now.date().isoformat(), now.hour, now.minute, now.second
         )
 
-        message = create_sepa_payment_initiation_message(
+        message = create_sepa_payment_initiation_message_object(
             session=self.session,
             msg_id=message_id,
             creditor_info=CreditorInfo(
@@ -2261,8 +2269,18 @@ class MemmerGUI:
             collection_date=collection_date,
         )
 
+        serialized_message = serialize_sepa_message(message)
+
         with open(os.path.join(output_dir, message_id + ".xml"), "w") as out_file:
-            out_file.write(message)
+            out_file.write(serialized_message)
+
+        tally = Tally(
+            creation_time=now,
+            collection_date=collection_date,
+            total_amount=Decimal(message.cstmr_drct_dbt_initn.grp_hdr.ctrl_sum),  # type: ignore
+            contents=serialized_message,
+        )
+        self.session.add(tally)
 
         return True
 
