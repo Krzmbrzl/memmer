@@ -2061,7 +2061,7 @@ class MemmerGUI:
                 sg.Input(
                     "",
                     expand_x=True,
-                    disabled=True,
+                    enable_events=True,
                     key=self.TALLY_COLLECTION_DATE_INPUT,
                 )
             ],
@@ -2096,6 +2096,7 @@ class MemmerGUI:
 
         self.connect(self.TALLY_YEAR_COMBO, self.on_tally_date_changed)
         self.connect(self.TALLY_MONTH_COMBO, self.on_tally_date_changed)
+        self.connect(self.TALLY_COLLECTION_DATE_INPUT, self.on_tally_collection_date_changed)
         self.connect(self.TALLY_CANCEL_BUTTON, self.on_tally_cancel_button_pressed)
         self.connect(self.TALLY_CREATE_BUTTON, self.on_tally_create_button_pressed)
 
@@ -2164,16 +2165,29 @@ class MemmerGUI:
         collection_date = self.determine_tally_collection_date(values)
 
         # Set collection date
-        self.window[self.TALLY_COLLECTION_DATE_INPUT].update(
-            value=collection_date.isoformat()
-        )
+        self.set_value_and_fire_event(self.TALLY_COLLECTION_DATE_INPUT, value=collection_date.isoformat())
+
+    def on_tally_collection_date_changed(self, values: Dict[Any,Any]):
+        validate_date(self.window[self.TALLY_COLLECTION_DATE_INPUT])
 
     def on_tally_cancel_button_pressed(self, values: Dict[Any, Any]):
         self.window[self.TALLY_COLUMN].update(visible=False)
         self.open_overview()
 
     def on_tally_create_button_pressed(self, values: Dict[Any, Any]):
-        collection_date = self.determine_tally_collection_date(values)
+        try:
+            collection_date = date.fromisoformat(
+                values[self.TALLY_COLLECTION_DATE_INPUT]
+            )
+        except Exception:
+            sg.popup_ok(
+                _(
+                    "The given collection date '{}' is not of ISO format".format(
+                        values[self.TALLY_COLLECTION_DATE_INPUT]
+                    )
+                )
+            )
+            return
 
         if not self.create_tally(
             collection_date=collection_date, output_dir=values[self.TALLY_OUT_DIR_INPUT]
