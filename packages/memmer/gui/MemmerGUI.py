@@ -619,7 +619,7 @@ class MemmerGUI:
 
             print("Connecting DB via ", connect_url)
 
-            engine = create_engine(connect_url, echo=True)
+            engine = create_engine(connect_url)
 
             self.session = SQLSession(bind=engine)
 
