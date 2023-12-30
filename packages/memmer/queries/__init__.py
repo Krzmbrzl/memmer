@@ -7,8 +7,8 @@ from .relations import (
     set_relatives,
 )
 from .fixed_costs import get_fixed_cost
-from .fees import compute_monthly_fee, clear_one_time_fees, compute_total_fee
-from .maintenance import clear_outdated_entries
+from .fees import compute_monthly_fee, compute_total_fee
+from .maintenance import clear_outdated_entries, archive_onetimecosts
 from .tally import (
     create_sepa_payment_initiation_message,
     create_sepa_payment_initiation_message_object,

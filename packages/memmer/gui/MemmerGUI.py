@@ -2204,11 +2204,6 @@ class MemmerGUI:
 
         self.write_to_config("tally_out_dir", values[self.TALLY_OUT_DIR_INPUT])
 
-        # TODO: The deletion is not tracked by our logic deciding whether or not to ask the user whether to commit changes
-        # thus the changes are always rolled back.
-        assert self.session is not None
-        clear_one_time_fees(session=self.session)
-
         self.window[self.TALLY_COLUMN].update(visible=False)
         self.open_overview()
 

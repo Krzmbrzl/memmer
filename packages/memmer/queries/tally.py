@@ -40,6 +40,7 @@ from memmer.generated.pain import (
 from memmer.generated.pain import __NAMESPACE__
 from memmer.orm import Member, Setting
 from .fees import compute_total_fee
+from .maintenance import archive_onetimecosts
 
 from sqlalchemy.orm import Session
 from sqlalchemy import select
@@ -86,6 +87,8 @@ def create_sepa_transactions(
         total += fee
 
         if fee > 0:
+            archive_onetimecosts(session=session, member=current_member)
+
             e2e_id = end_to_end_id.format(mem_id=current_member.id)
 
             mandate_signed = current_member.sepa_mandate_date

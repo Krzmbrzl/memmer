@@ -133,13 +133,3 @@ def compute_total_fee(
         fee += current_fee.amount
 
     return fee
-
-
-def clear_one_time_fees(session: Session, member: Optional[morm.Member] = None) -> None:
-    """Deletes all one-time fees (associated with the given member, if provided)"""
-    if member is None:
-        session.execute(delete(morm.OneTimeFee))
-    else:
-        session.execute(
-            delete(morm.OneTimeFee).where(morm.OneTimeFee.member_id == member.id)
-        )
