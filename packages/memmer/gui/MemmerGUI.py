@@ -751,7 +751,7 @@ class MemmerGUI:
                     expand_y=True,
                 )
             ],
-            [sg.Stretch(), sg.Button(_("Back"), key=self.MANAGEMENT_BACK_BUTTON)]
+            [sg.Stretch(), sg.Button(_("Back"), key=self.MANAGEMENT_BACK_BUTTON)],
         ]
 
         self.connect(
@@ -775,7 +775,9 @@ class MemmerGUI:
         )
         self.connect(self.MANAGEMENT_MEMBER_LISTBOX, self.on_memberlist_activated)
         self.connect(self.MANAGEMENT_SESSION_LISTBOX, self.on_sessionlist_activated)
-        self.connect(self.MANAGEMENT_BACK_BUTTON, self.on_management_back_button_pressed)
+        self.connect(
+            self.MANAGEMENT_BACK_BUTTON, self.on_management_back_button_pressed
+        )
 
         self.layout[0].append(
             sg.Column(
@@ -2112,7 +2114,9 @@ class MemmerGUI:
 
         self.connect(self.TALLY_YEAR_COMBO, self.on_tally_date_changed)
         self.connect(self.TALLY_MONTH_COMBO, self.on_tally_date_changed)
-        self.connect(self.TALLY_COLLECTION_DATE_INPUT, self.on_tally_collection_date_changed)
+        self.connect(
+            self.TALLY_COLLECTION_DATE_INPUT, self.on_tally_collection_date_changed
+        )
         self.connect(self.TALLY_CANCEL_BUTTON, self.on_tally_cancel_button_pressed)
         self.connect(self.TALLY_CREATE_BUTTON, self.on_tally_create_button_pressed)
 
@@ -2181,9 +2185,11 @@ class MemmerGUI:
         collection_date = self.determine_tally_collection_date(values)
 
         # Set collection date
-        self.set_value_and_fire_event(self.TALLY_COLLECTION_DATE_INPUT, value=collection_date.isoformat())
+        self.set_value_and_fire_event(
+            self.TALLY_COLLECTION_DATE_INPUT, value=collection_date.isoformat()
+        )
 
-    def on_tally_collection_date_changed(self, values: Dict[Any,Any]):
+    def on_tally_collection_date_changed(self, values: Dict[Any, Any]):
         validate_date(self.window[self.TALLY_COLLECTION_DATE_INPUT])
 
     def on_tally_cancel_button_pressed(self, values: Dict[Any, Any]):
