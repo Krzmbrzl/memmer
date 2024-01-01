@@ -1348,13 +1348,14 @@ class MemmerGUI:
             if fee_overwrite is not None:
                 self.window[self.USEREDIT_FEEOVERWRITE_CHECK].update(value=True)
                 self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(
-                    value="{:.2f}".format(fee_overwrite.amount)
+                    value="{:.2f}".format(fee_overwrite.amount), disabled=False
                 )
             else:
                 self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(
                     value="{:.2f}".format(
                         compute_monthly_fee(session=self.session, member=user)
-                    )
+                    ),
+                    disabled=True,
                 )
 
             onetime_fees = self.session.scalars(
@@ -1390,7 +1391,7 @@ class MemmerGUI:
             self.window[self.USEREDIT_DELETE_BUTTON].update(disabled=True)
 
             self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(
-                value=_("Save and re-load to compute fee")
+                value=_("Save and re-load to compute fee"), disabled=True
             )
 
         self.populate_user_sessions(user)
