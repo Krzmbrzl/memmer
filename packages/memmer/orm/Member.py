@@ -6,6 +6,7 @@
 from typing import Optional, List
 
 import datetime
+import enum
 
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
@@ -13,6 +14,11 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import CheckConstraint
 
 from .Base import Base
+
+class Gender(enum.Enum):
+    Male = 0
+    Female = 1
+    Diverse = 2
 
 
 class Member(Base):
@@ -29,6 +35,7 @@ class Member(Base):
     first_name: Mapped[str]
     last_name: Mapped[str]
     birthday: Mapped[datetime.date]
+    gender: Mapped[Gender]
 
     # Address
     street: Mapped[str]

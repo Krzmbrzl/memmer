@@ -26,6 +26,7 @@ from sshtunnel import SSHTunnelForwarder, BaseSSHTunnelForwarderError
 from memmer.gui import Layout
 from memmer.orm import (
     Member,
+    Gender,
     Session,
     OneTimeFee,
     FeeOverride,
@@ -247,6 +248,7 @@ class MemmerGUI:
     USEREDITOR_GENERAL_TAB: str = "-USEREDITOR_GENERAL_TAB-"
     USEREDITOR_PAYMENT_TAB: str = "-USEREDITOR_PAYMENT_TAB-"
     USEREDITOR_SESSIONS_TAB: str = "-USEREDITOR_SESSIONS_TAB-"
+    USEREDIT_GENDER_COMBO: str = "-USEREDIT_GENDER_COMBO-"
     USEREDIT_FIRSTNAME_INPUT: str = "-USEREDIT_FIRSTNAME_INPUT-"
     USEREDIT_LASTNAME_INPUT: str = "-USEREDIT_LASTNAME_INPUT-"
     USEREDIT_BIRTHDAY_INPUT: str = "-USEREDIT_BIRTHDAY_INPUT-"
@@ -865,10 +867,12 @@ class MemmerGUI:
         self.open_overview()
 
     def create_usereditor(self):
+        genders = [_("Male"), _("Female"), _("Diverse"), ""]
         personal: Layout = [
             [
                 sg.Column(
                     layout=[
+                        [sg.Text(_("Gender:"))],
                         [sg.Text(_("First name:"))],
                         [sg.Text(_("Last name:"))],
                         [sg.Text(_("Birthday:"))],
@@ -876,6 +880,15 @@ class MemmerGUI:
                 ),
                 sg.Column(
                     layout=[
+                        [
+                            sg.Combo(
+                                values=genders,
+                                key=self.USEREDIT_GENDER_COMBO,
+                                metadata={"all_values": genders},
+                                default_value="",
+                                readonly=True
+                            )
+                        ],
                         [sg.Input(key=self.USEREDIT_FIRSTNAME_INPUT)],
                         [sg.Input(key=self.USEREDIT_LASTNAME_INPUT)],
                         [
@@ -1284,6 +1297,7 @@ class MemmerGUI:
         ]:
             self.window[current].update(values=[])
 
+        self.window[self.USEREDIT_GENDER_COMBO].update(value="")
         self.window[self.USEREDIT_HONORABLEMEMBER_CHECKBOX].update(value=False)
         self.window[self.USEREDIT_FEEOVERWRITE_CHECK].update(value=False)
 
@@ -1305,6 +1319,9 @@ class MemmerGUI:
 
         if user is not None:
             # Populate general data
+            self.window[self.USEREDIT_GENDER_COMBO].update(
+                set_to_index=user.gender.value if user.gender is not None else 4
+            )
             self.window[self.USEREDIT_FIRSTNAME_INPUT].update(value=user.first_name)
             self.window[self.USEREDIT_LASTNAME_INPUT].update(value=user.last_name)
             self.set_value_and_fire_event(
@@ -1603,7 +1620,7 @@ class MemmerGUI:
         self.window[self.USEREDITOR_COLUMN].update(visible=False)
         self.open_management()
 
-    def validate_useredit_contents(self) -> Optional[str]:
+    def validate_useredit_contents(self, values: Dict[Any, Any]) -> Optional[str]:
         # Check presence of mandatory fields
         if self.window[self.USEREDIT_FIRSTNAME_INPUT].get().strip() == "":
             return _("Missing first name")
@@ -1632,12 +1649,22 @@ class MemmerGUI:
                     "If a SEPA mandate is configured, the account owner is required"
                 )
 
+        try:
+            Gender(
+                self.window[self.USEREDIT_GENDER_COMBO]
+                .metadata["all_values"]
+                .index(values[self.USEREDIT_GENDER_COMBO])
+            )
+        except:
+            return _("No gender specified")
+
+
         return None
 
     def on_useredit_save_pressed(self, values: Dict[Any, Any]):
         assert self.session is not None
 
-        error_msg = self.validate_useredit_contents()
+        error_msg = self.validate_useredit_contents(values)
         if not error_msg is None:
             sg.popup_ok(
                 _("Invalid member data: {}").format(error_msg), title=_("Invalid data")
@@ -1663,7 +1690,7 @@ class MemmerGUI:
             "is_honorary_member": self.USEREDIT_HONORABLEMEMBER_CHECKBOX,
         }
 
-        value_map: Dict[str, Optional[Union[str, bool, datetime.date]]] = {}
+        value_map: Dict[str, Optional[Union[str, bool, datetime.date, Gender]]] = {}
 
         validated_fields = list(field_map.values())
         for i in range(MAX_ONETIME_FEES):
@@ -1697,6 +1724,12 @@ class MemmerGUI:
                         value = value.replace(" ", "")
 
             value_map[current] = value
+
+        value_map["gender"] = Gender(
+            self.window[self.USEREDIT_GENDER_COMBO]
+            .metadata["all_values"]
+            .index(values[self.USEREDIT_GENDER_COMBO])
+        )
 
         member: Optional[Member] = self.window[self.USEREDIT_TABGROUP].metadata.get(
             "user", None

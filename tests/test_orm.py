@@ -14,7 +14,7 @@ import sqlalchemy
 import sqlalchemy.orm
 import sqlalchemy.exc
 
-from memmer.orm import Base, Member, Session
+from memmer.orm import Base, Member, Session, Gender
 
 
 class TestORM(unittest.TestCase):
@@ -29,6 +29,7 @@ class TestORM(unittest.TestCase):
             "first_name": "Elvis",
             "last_name": "Presley",
             "birthday": datetime.date(year=1935, month=1, day=8),
+            "gender": Gender.Diverse,
             "street": "Famous road",
             "street_number": "8A",
             "postal_code": "13476",
@@ -62,6 +63,7 @@ class TestORM(unittest.TestCase):
             "first_name": "Elvis",
             "last_name": "Presley",
             "birthday": datetime.date(year=1935, month=1, day=8),
+            "gender": Gender.Male,
             "street": "Famous road",
             "street_number": "8A",
             "postal_code": "13476",

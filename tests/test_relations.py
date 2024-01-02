@@ -15,7 +15,7 @@ import sqlalchemy.orm
 import sqlalchemy.exc
 from sqlalchemy import select
 
-from memmer.orm import Base, Member, Session
+from memmer.orm import Base, Member, Session, Gender
 
 
 class TesRelations(unittest.TestCase):
@@ -30,6 +30,7 @@ class TesRelations(unittest.TestCase):
                 first_name="Alice",
                 last_name="Aliceton",
                 birthday=datetime.date(year=1978, month=2, day=1),
+                gender=Gender.Female,
                 street="Alice's street",
                 street_number="42",
                 postal_code="61452",
@@ -43,6 +44,7 @@ class TesRelations(unittest.TestCase):
                 first_name="Bob",
                 last_name="Bobbington",
                 birthday=datetime.date(year=1978, month=2, day=1),
+                gender=Gender.Male,
                 street="Bob's street",
                 street_number="7",
                 postal_code="73125",

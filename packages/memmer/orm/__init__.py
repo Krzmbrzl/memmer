@@ -1,5 +1,5 @@
 from .Base import Base
-from .Member import Member
+from .Member import Member, Gender
 from .Session import Session
 from .Participation import Participation
 from .Trainer import Trainer
