@@ -5,3 +5,5 @@ sshtunnel
 pgeocode
 xsdata
 unidecode
+
+openpyxl
