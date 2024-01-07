@@ -3,13 +3,13 @@
 # LICENSE file at the root of the source tree or at
 # <https://github.com/Krzmbrzl/memmer/blob/main/LICENSE>.
 
-from typing import List, Optional
+from typing import List
 
 from decimal import Decimal
 from datetime import date, datetime
 
 from sqlalchemy.orm import Session
-from sqlalchemy import delete, select
+from sqlalchemy import select
 
 import memmer.orm as morm
 from memmer import BasicFeeAdultsKey, BasicFeeYouthsKey, BasicFeeTrainersKey
@@ -28,6 +28,8 @@ def compute_monthly_fee(
     """Computes the given member's monthly fee"""
 
     if member.exit_date is not None and member.exit_date <= target_date:
+        return Decimal(0)
+    if member.entry_date > target_date:
         return Decimal(0)
 
     # First check if there exists a fee override for this member as this will make any of the below
