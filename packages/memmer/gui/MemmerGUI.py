@@ -661,7 +661,7 @@ class MemmerGUI:
             self.window[self.CONNECTOR_COLUMN].update(visible=False)
             self.open_overview()
         except Exception as e:
-            sg.popup_ok(_("Invalid connection parameters!\n{}".format(e)))
+            sg.popup_ok(_("Invalid connection parameters!\n{}").format(e))
 
     def create_overview(self):
         overview: Layout = [
@@ -886,7 +886,7 @@ class MemmerGUI:
                                 key=self.USEREDIT_GENDER_COMBO,
                                 metadata={"all_values": genders},
                                 default_value="",
-                                readonly=True
+                                readonly=True,
                             )
                         ],
                         [sg.Input(key=self.USEREDIT_FIRSTNAME_INPUT)],
@@ -1658,7 +1658,6 @@ class MemmerGUI:
         except:
             return _("No gender specified")
 
-
         return None
 
     def on_useredit_save_pressed(self, values: Dict[Any, Any]):
@@ -2236,10 +2235,8 @@ class MemmerGUI:
             )
         except Exception:
             sg.popup_ok(
-                _(
-                    "The given collection date '{}' is not of ISO format".format(
-                        values[self.TALLY_COLLECTION_DATE_INPUT]
-                    )
+                _("The given collection date '{}' is not of ISO format").format(
+                    values[self.TALLY_COLLECTION_DATE_INPUT]
                 )
             )
             return
