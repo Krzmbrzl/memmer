@@ -6,485 +6,493 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "POT-Creation-Date: 2024-02-18 09:41+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: Automatically generated\n"
-"Language-Team: none\n"
+"PO-Revision-Date: 2024-02-18 16:01+0000\n"
+"Last-Translator: Robert Adam <dev@robert-adam.de>\n"
+"Language-Team: German <https://hosted.weblate.org/projects/memmer/gui/de/>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 5.4\n"
 "Generated-By: pygettext.py 1.5\n"
 
 #: MemmerGUI.py:330
 msgid "Do you want to persist your modifications?"
-msgstr ""
+msgstr "Wollen Sie Ihre Änderungen speichern?"
 
 #: MemmerGUI.py:331
 msgid "Persist changes?"
-msgstr ""
+msgstr "Änderungen speichern?"
 
 #: MemmerGUI.py:361
 msgid "Failed to parse config file ('{}'): {}"
-msgstr ""
+msgstr "Konfigurationsdatei ('{}') fehlerhaft: {}"
 
 #: MemmerGUI.py:362
 msgid "Malformatted config"
-msgstr ""
+msgstr "Fehlerhafte Konfiguration"
 
 #: MemmerGUI.py:372
 msgid "Backend:"
-msgstr ""
+msgstr "Backend:"
 
 #: MemmerGUI.py:373 MemmerGUI.py:398
 msgid "User:"
-msgstr ""
+msgstr "Benutzer:"
 
 #: MemmerGUI.py:374 MemmerGUI.py:400
 msgid "Password:"
-msgstr ""
+msgstr "Passwort:"
 
 #: MemmerGUI.py:375
 msgid "Host:"
-msgstr ""
+msgstr "Host:"
 
 #: MemmerGUI.py:376 MemmerGUI.py:399
 msgid "Port:"
-msgstr ""
+msgstr "Port:"
 
 #: MemmerGUI.py:377
 msgid "Database:"
-msgstr ""
+msgstr "Datenbank:"
 
 #: MemmerGUI.py:401
 msgid "Private key:"
-msgstr ""
+msgstr "Privater Schlüssel:"
 
 #: MemmerGUI.py:420
 msgid "Connection type:"
-msgstr ""
+msgstr "Verbindungstyp:"
 
 #: MemmerGUI.py:432
 msgid "Database"
-msgstr ""
+msgstr "Datenbank"
 
 #: MemmerGUI.py:440
 msgid "SSH"
-msgstr ""
+msgstr "SSH"
 
 #: MemmerGUI.py:449
 msgid "Connect"
-msgstr ""
+msgstr "Verbinden"
 
 #: MemmerGUI.py:584
 msgid "Failed to establish ssh tunnel: "
-msgstr ""
+msgstr "Aufbau des SSH-Tunnels ist fehlgeschlagen: "
 
 #: MemmerGUI.py:593
 msgid "Warning: Using in-memory (temporary) SQLite database not supported"
 msgstr ""
+"Warnung: Verwendung einer RAM-basierten (temporären) SQLite Datenbank wird "
+"nicht unterstützt"
 
 #: MemmerGUI.py:664
 msgid ""
 "Invalid connection parameters!\n"
 "{}"
 msgstr ""
+"Ungültige Verbindungsparameter!\n"
+"{}"
 
 #: MemmerGUI.py:670
 msgid "Management"
-msgstr ""
+msgstr "Verwaltung"
 
 #: MemmerGUI.py:673
 msgid "Create tally"
-msgstr ""
+msgstr "Abrechnung erzeugen"
 
 #: MemmerGUI.py:703
 msgid "Add member"
-msgstr ""
+msgstr "Mitglied hinzufügen"
 
 #: MemmerGUI.py:706 MemmerGUI.py:724 MemmerGUI.py:1160
 msgid "Search:"
-msgstr ""
+msgstr "Suche:"
 
 #: MemmerGUI.py:721
 msgid "Add session"
-msgstr ""
+msgstr "Kurs hinzufügen"
 
 #: MemmerGUI.py:742
 msgid "Members"
-msgstr ""
+msgstr "Mitglieder"
 
 #: MemmerGUI.py:750 MemmerGUI.py:1214
 msgid "Sessions"
-msgstr ""
+msgstr "Kurse"
 
 #: MemmerGUI.py:756
 msgid "Back"
-msgstr ""
+msgstr "Zurück"
 
 #: MemmerGUI.py:841
 msgid "Selecting more than one member at once is not implemented"
-msgstr ""
+msgstr "Selektieren von mehr als einem Mitglied ist nicht implementiert"
 
 #: MemmerGUI.py:856
 msgid "Selecting more than one session at once is not implemented"
-msgstr ""
+msgstr "Selektieren von mehr als einem Kurs ist nicht implementiert"
 
 #: MemmerGUI.py:870
 msgid "Diverse"
-msgstr ""
+msgstr "Divers"
 
 #: MemmerGUI.py:870
 msgid "Female"
-msgstr ""
+msgstr "Weiblich"
 
 #: MemmerGUI.py:870
 msgid "Male"
-msgstr ""
+msgstr "Männlich"
 
 #: MemmerGUI.py:875
 msgid "Gender:"
-msgstr ""
+msgstr "Geschlecht:"
 
 #: MemmerGUI.py:876
 msgid "First name:"
-msgstr ""
+msgstr "Vorname:"
 
 #: MemmerGUI.py:877
 msgid "Last name:"
-msgstr ""
+msgstr "Nachname:"
 
 #: MemmerGUI.py:878
 msgid "Birthday:"
-msgstr ""
+msgstr "Geburtstag:"
 
 #: MemmerGUI.py:909
 msgid "Street:"
-msgstr ""
+msgstr "Straße:"
 
 #: MemmerGUI.py:910
 msgid "Street number:"
-msgstr ""
+msgstr "Hausnummer:"
 
 #: MemmerGUI.py:911
 msgid "Postal code:"
-msgstr ""
+msgstr "Postleitzahl:"
 
 #: MemmerGUI.py:912
 msgid "City:"
-msgstr ""
+msgstr "Stadt:"
 
 #: MemmerGUI.py:934
 msgid "Phone number:"
-msgstr ""
+msgstr "Telefonnummer:"
 
 #: MemmerGUI.py:935
 msgid "Email:"
-msgstr ""
+msgstr "Email:"
 
 #: MemmerGUI.py:951
 msgid "Entry date:"
-msgstr ""
+msgstr "Eintrittsdatum:"
 
 #: MemmerGUI.py:952
 msgid "Exit date:"
-msgstr ""
+msgstr "Austrittsdatum:"
 
 #: MemmerGUI.py:972
 msgid "Honorable member"
-msgstr ""
+msgstr "Ehrenmitglied"
 
 #: MemmerGUI.py:986
 msgid "Personal"
-msgstr ""
+msgstr "Person"
 
 #: MemmerGUI.py:988
 msgid "Address"
-msgstr ""
+msgstr "Adresse"
 
 #: MemmerGUI.py:990
 msgid "Contact"
-msgstr ""
+msgstr "Kontakt"
 
 #: MemmerGUI.py:992
 msgid "Membership"
-msgstr ""
+msgstr "Mitgliedschaft"
 
 #: MemmerGUI.py:999
 msgid "SEPA mandate date:"
-msgstr ""
+msgstr "SEPA-Mandatsdatum:"
 
 #: MemmerGUI.py:1000
 msgid "IBAN:"
-msgstr ""
+msgstr "IBAN:"
 
 #: MemmerGUI.py:1001
 msgid "BIC:"
-msgstr ""
+msgstr "BIC:"
 
 #: MemmerGUI.py:1002
 msgid "Institute:"
-msgstr ""
+msgstr "Institut:"
 
 #: MemmerGUI.py:1003
 msgid "Account owner:"
-msgstr ""
+msgstr "Kontoinhaber:"
 
 #: MemmerGUI.py:1031
 msgid "Monthly fee:"
-msgstr ""
+msgstr "Monatsbeitrag:"
 
 #: MemmerGUI.py:1032
 msgid "One-time fees:"
-msgstr ""
+msgstr "Einmalbeiträge:"
 
 #: MemmerGUI.py:1047
 msgid "Overwrite"
-msgstr ""
+msgstr "Überschreiben"
 
 #: MemmerGUI.py:1058
 msgid "Reason"
-msgstr ""
+msgstr "Grund"
 
 #: MemmerGUI.py:1062
 msgid "Amount"
-msgstr ""
+msgstr "Betrag"
 
 #: MemmerGUI.py:1091
 msgid "Bank details"
-msgstr ""
+msgstr "Bankdaten"
 
 #: MemmerGUI.py:1093
 msgid "Fees"
-msgstr ""
+msgstr "Beiträge"
 
 #: MemmerGUI.py:1110 MemmerGUI.py:1121 MemmerGUI.py:1220
 msgid "Participant"
-msgstr ""
+msgstr "Teilnehmer"
 
 #: MemmerGUI.py:1111 MemmerGUI.py:1126 MemmerGUI.py:1221
 msgid "Trainer"
-msgstr ""
+msgstr "Trainer"
 
 #: MemmerGUI.py:1116
 msgid "Session"
-msgstr ""
+msgstr "Kurs"
 
 #: MemmerGUI.py:1135 MemmerGUI.py:1225
 msgid "Relatives"
-msgstr ""
+msgstr "Verwandte"
 
 #: MemmerGUI.py:1147
 msgid "Likely relatives"
-msgstr ""
+msgstr "Wahrscheinliche Verwandte"
 
 #: MemmerGUI.py:1165
 msgid "Potential relatives"
-msgstr ""
+msgstr "Potentielle Verwandte"
 
 #: MemmerGUI.py:1204
 msgid "General"
-msgstr ""
+msgstr "Allgmeines"
 
 #: MemmerGUI.py:1209
 msgid "Payment"
-msgstr ""
+msgstr "Bezahlung"
 
 #: MemmerGUI.py:1240 MemmerGUI.py:1940 MemmerGUI.py:2132
 msgid "Cancel"
-msgstr ""
+msgstr "Abbrechen"
 
 #: MemmerGUI.py:1241 MemmerGUI.py:1941
 msgid "Save"
-msgstr ""
+msgstr "Speichern"
 
 #: MemmerGUI.py:1242 MemmerGUI.py:1942
 msgid "Delete"
-msgstr ""
+msgstr "Löschen"
 
 #: MemmerGUI.py:1404
 msgid "Admission fee"
-msgstr ""
+msgstr "Aufnahmegebühr"
 
 #: MemmerGUI.py:1413 MemmerGUI.py:1605
 msgid "Save and re-load to compute fee"
-msgstr ""
+msgstr "Speichern und neu laden, um Beitrag zu berechnen"
 
 #: MemmerGUI.py:1513
 msgid "({:d} years)"
-msgstr ""
+msgstr "({:d} Jahre)"
 
 #: MemmerGUI.py:1592
 msgid "Unknown"
-msgstr ""
+msgstr "Unbekannt"
 
 #: MemmerGUI.py:1626
 msgid "Missing first name"
-msgstr ""
+msgstr "Fehlender Vorname"
 
 #: MemmerGUI.py:1628
 msgid "Missing last name"
-msgstr ""
+msgstr "Fehlender Nachname"
 
 #: MemmerGUI.py:1630
 msgid "Missing birthday"
-msgstr ""
+msgstr "Fehlendes Geburtsdatum"
 
 #: MemmerGUI.py:1632
 msgid "Missing street"
-msgstr ""
+msgstr "Fehlende Straße"
 
 #: MemmerGUI.py:1634
 msgid "Missing street number"
-msgstr ""
+msgstr "Fehlende Hausnummer"
 
 #: MemmerGUI.py:1636
 msgid "Missing postal code"
-msgstr ""
+msgstr "Fehlende Postleitzahl"
 
 #: MemmerGUI.py:1638
 msgid "Missing city"
-msgstr ""
+msgstr "Fehlende Stadt"
 
 #: MemmerGUI.py:1640
 msgid "Missing entry date"
-msgstr ""
+msgstr "Fehlendes Eintrittsdatum"
 
 #: MemmerGUI.py:1644
 msgid "If a SEPA mandate is configured, an IBAN is required"
-msgstr ""
+msgstr "Wenn ein SEPA-Mandat hinterlegt ist, ist auch eine IBAN erforderlich"
 
 #: MemmerGUI.py:1646
 msgid "If a SEPA mandate is configured, the BIC is required"
-msgstr ""
+msgstr "Wenn ein SEPA-Mandat hinterlegt ist, ist auch die BIC erforderlich"
 
 #: MemmerGUI.py:1648
 msgid "If a SEPA mandate is configured, the account owner is required"
 msgstr ""
+"Wenn ein SEPA-Mandat hinterlegt ist, ist auch ein Kontoinhaber erforderlich"
 
 #: MemmerGUI.py:1659
 msgid "No gender specified"
-msgstr ""
+msgstr "Kein Geschlecht angegeben"
 
 #: MemmerGUI.py:1669
 msgid "Invalid member data: {}"
-msgstr ""
+msgstr "Fehlerhafte Mitgliedsdaten: {}"
 
 #: MemmerGUI.py:1669 MemmerGUI.py:2005
 msgid "Invalid data"
-msgstr ""
+msgstr "Invalide Daten"
 
 #: MemmerGUI.py:1704 MemmerGUI.py:2020
 msgid "There are fields with invalid data"
-msgstr ""
+msgstr "Es wurden Felder mit invaliden Daten gefunden"
 
 #: MemmerGUI.py:1815
 msgid "No active user set - this should not have been possible"
 msgstr ""
+"Kein aktives Mitglied selektiert - das sollte nicht möglich gewesen sein"
 
 #: MemmerGUI.py:1822 MemmerGUI.py:2054
 msgid "Are you sure you want to delete \"{}\"?"
-msgstr ""
+msgstr "Sind Sie sich sicher dass Sie \"{}\" löschen wollen?"
 
 #: MemmerGUI.py:1926
 msgid "Name:"
-msgstr ""
+msgstr "Name:"
 
 #: MemmerGUI.py:1927
 msgid "Membership fee:"
-msgstr ""
+msgstr "Monatsbeitrag:"
 
 #: MemmerGUI.py:1995
 msgid "Missing session name"
-msgstr ""
+msgstr "Fehlender Kursname"
 
 #: MemmerGUI.py:1997
 msgid "Missing session fee"
-msgstr ""
+msgstr "Fehlender Kursbeitrag"
 
 #: MemmerGUI.py:2005
 msgid "Invalid session data: {}"
-msgstr ""
+msgstr "Ungültige Kursdaten: {}"
 
 #: MemmerGUI.py:2047
 msgid "No active session set - this should not have been possible"
-msgstr ""
+msgstr "Kein aktiver Kurs selektiert - das hätte nicht möglich sein dürfen"
 
 #: MemmerGUI.py:2067
 msgid "Year:"
-msgstr ""
+msgstr "Jahr:"
 
 #: MemmerGUI.py:2068
 msgid "For month:"
-msgstr ""
+msgstr "Für Monat:"
 
 #: MemmerGUI.py:2069
 msgid "Collection date:"
-msgstr ""
+msgstr "Einzugsdatum:"
 
 #: MemmerGUI.py:2070
 msgid "Output dir:"
-msgstr ""
+msgstr "Ausgabeverzeichnis:"
 
 #: MemmerGUI.py:2074
 msgid "January"
-msgstr ""
+msgstr "Januar"
 
 #: MemmerGUI.py:2075
 msgid "February"
-msgstr ""
+msgstr "Februar"
 
 #: MemmerGUI.py:2076
 msgid "March"
-msgstr ""
+msgstr "März"
 
 #: MemmerGUI.py:2077
 msgid "April"
-msgstr ""
+msgstr "April"
 
 #: MemmerGUI.py:2078
 msgid "May"
-msgstr ""
+msgstr "Mai"
 
 #: MemmerGUI.py:2079
 msgid "June"
-msgstr ""
+msgstr "Juni"
 
 #: MemmerGUI.py:2080
 msgid "July"
-msgstr ""
+msgstr "Juli"
 
 #: MemmerGUI.py:2081
 msgid "August"
-msgstr ""
+msgstr "August"
 
 #: MemmerGUI.py:2082
 msgid "September"
-msgstr ""
+msgstr "September"
 
 #: MemmerGUI.py:2083
 msgid "October"
-msgstr ""
+msgstr "Oktober"
 
 #: MemmerGUI.py:2084
 msgid "November"
-msgstr ""
+msgstr "November"
 
 #: MemmerGUI.py:2085
 msgid "December"
-msgstr ""
+msgstr "Dezember"
 
 #: MemmerGUI.py:2133
 msgid "Create"
-msgstr ""
+msgstr "Erstellen"
 
 #: MemmerGUI.py:2238
 msgid "The given collection date '{}' is not of ISO format"
-msgstr ""
+msgstr "Das angegebene Einzugsdatum '{}' entspricht nicht dem ISO-Format"
 
 #: MemmerGUI.py:2259
 msgid "Output directory '{}' doesn't exist or isn't a directory"
-msgstr ""
+msgstr "Ausgabeverzeichnis '{}' existiert nicht oder ist kein Verzeichnis"
 
 #: MemmerGUI.py:2328
 msgid "Memmer"
-msgstr ""
+msgstr "Memmer"
