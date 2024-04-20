@@ -12,7 +12,9 @@ from sqlalchemy.orm import Session
 
 import matplotlib.pyplot as plt
 from matplotlib.ticker import PercentFormatter
-from matplotlib.dates import DateFormatter, DayLocator
+from matplotlib.dates import DateFormatter
+from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, HPacker, VPacker
+
 
 # TODO: Translate labels for plots
 
@@ -20,7 +22,7 @@ from matplotlib.dates import DateFormatter, DayLocator
 def get_active_members(session: Session, date: datetime.date):
     return session.scalars(
         select(Member)
-        .where(or_(Member.exit_date == None, Member.exit_date < date))
+        .where(or_(Member.exit_date == None, Member.exit_date > date))
         .where(Member.entry_date <= date)
     ).all()
 
@@ -29,8 +31,26 @@ def count_active_members(session: Session, date: datetime.date) -> int:
     return session.scalars(
         select(func.count())
         .select_from(Member)
-        .where(or_(Member.exit_date == None, Member.exit_date < date))
+        .where(or_(Member.exit_date == None, Member.exit_date > date))
         .where(Member.entry_date <= date)
+    ).one()
+
+
+def count_leaves(session: Session, date: datetime.date, delta: datetime.timedelta):
+    return session.scalars(
+        select(func.count())
+        .select_from(Member)
+        .where(Member.exit_date <= date)
+        .where(Member.exit_date > date - delta)
+    ).one()
+
+
+def count_joins(session: Session, date: datetime.date, delta: datetime.timedelta):
+    return session.scalars(
+        select(func.count())
+        .select_from(Member)
+        .where(Member.entry_date <= date)
+        .where(Member.entry_date > date - delta)
     ).one()
 
 
@@ -41,23 +61,53 @@ def create_member_history(
     output_path: str,
 ):
     member_counts = []
+    joins = []
+    leaves = []
     dates = []
     current = since_date
-    total_days = 0
+    delta = datetime.timedelta(weeks=1)
     while current <= target_date:
         member_counts.append(count_active_members(session=session, date=current))
+        joins.append(count_joins(session=session, date=current, delta=delta))
+        leaves.append(-count_leaves(session=session, date=current, delta=delta))
         dates.append(current)
-        current += datetime.timedelta(weeks=1)
-        total_days += 7
+        current += delta
 
-    plt.plot(dates, member_counts)
+    total_color = "#1f77b4"
+    join_color = "#2ca02c"
+    leave_color = "#ff7f0e"
+
+    plt.plot(dates, member_counts, color=total_color)
     plt.ylim(bottom=0, top=None)
     plt.gca().xaxis.set_major_formatter(DateFormatter("%Y-%m-%d"))
     plt.xticks(rotation=45, ha="right")
-    plt.ylabel("Anzahl Mitglieder")
+    plt.ylabel("Anzahl Mitglieder", color=total_color)
     plt.title("Entwicklung Mitgliederzahlen")
-    plt.annotate(member_counts[0], (dates[0], member_counts[0] - 5), ha="center", va="top")
-    plt.annotate(member_counts[-1], (dates[-1], member_counts[-1] - 5), ha="center", va="top")
+    plt.annotate(
+        member_counts[0], (dates[0], member_counts[0] - 5), ha="center", va="top"
+    )
+    plt.annotate(
+        member_counts[-1], (dates[-1], member_counts[-1] - 5), ha="center", va="top"
+    )
+
+    plt.twinx()
+    bar_width = 0.8 * delta
+    plt.bar(
+        dates,
+        [x if x != 0 else float("nan") for x in joins],
+        width=bar_width, # type: ignore
+        color=join_color,
+    )
+    plt.bar(
+        dates,
+        [x if x != 0 else float("nan") for x in leaves],
+        width=bar_width, # type: ignore
+        color=leave_color,
+    )
+
+    plt.ylabel("An-/Abmeldungen")
+    plt.ylim(bottom=1.2 * min(leaves), top=1.2 * max(joins))
+    plt.axhline(y=0, xmin=0.03, color="black", linewidth=plt.rcParams["axes.linewidth"])
 
     plt.tight_layout()
     plt.savefig(os.path.join(output_path, "member_history.pdf"))
