@@ -2,6 +2,7 @@
 
 from decimal import Decimal
 
+import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
@@ -15,7 +16,15 @@ from memmer import (
 
 
 def main():
-    engine = create_engine("sqlite:///sampleDB.sqlite", echo=True)
+    connection_url = sqlalchemy.engine.URL.create(
+        drivername="sqlite",
+        #username="James Bond",
+        #password="Shaken, not stirred",
+        #host="localhost",
+        database="sampleDB.sqlite"
+    )
+    print(connection_url)
+    engine = create_engine(connection_url, echo=True)
 
     Base.metadata.create_all(engine)
 
