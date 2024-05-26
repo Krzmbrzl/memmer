@@ -596,7 +596,7 @@ class MemmerGUI:
                 )
                 return
         elif values[self.CONNECTOR_DBBACKEND_COMBO] == "PostgreSQL":
-            backend = "postgres"
+            backend = "postgresql"
         else:
             assert values[self.CONNECTOR_DBBACKEND_COMBO] == "MySQL"
             backend = "mysql"
