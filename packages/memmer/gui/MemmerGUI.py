@@ -605,6 +605,7 @@ class MemmerGUI:
         if backend == "sqlite":
             host = None
             port = None
+            password = None
         else:
             port = (
                 self.ssh_tunnel.local_bind_port
@@ -616,6 +617,9 @@ class MemmerGUI:
                 if self.ssh_tunnel is not None
                 else values[self.CONNECTOR_HOST_INPUT]
             )
+            password = values[self.CONNECTOR_PASSWORD_INPUT]
+            if len(password) == 0:
+                password = None
 
         try:
             connect_url = URL.create(
@@ -625,6 +629,7 @@ class MemmerGUI:
                 else None,
                 port=port,
                 host=host,
+                password=password,
                 database=values[self.CONNECTOR_DBNAME_INPUT],
             )
 
