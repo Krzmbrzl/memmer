@@ -45,7 +45,12 @@ connection_url = sqlalchemy.engine.URL.create(
     database="memmer_test"
 )
 ```
-6. Execute the script via `python3 bin/create_database.py` in order to have all necessary tables created for you
+6. Install all required dependencies via
+```bash
+python3 -m pip install -r ./requirements.txt
+```
+7. Additionally, install `psycopg2` via `python3 -m pip install psycopg2` - this is the PostgreSQL-specific database driver
+8. Execute the script via `python3 bin/create_database.py` in order to have all necessary tables created for you
 
 Now you are ready to connect to your database via the GUI. If the database lives on a remote host, it is recommended to use an SSH tunnel as that
 doesn't require to open up the database to the internet itself. Instead, the client will authenticate via SSH (which is most conveniently achieved by
