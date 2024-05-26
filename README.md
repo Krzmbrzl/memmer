@@ -30,12 +30,12 @@ sudo -u postgres psql
 ```psql
 CREATE USER "JamesBond" WITH PASSWORD ENCRYPTED "Shaken, not stirred";
 ```
-2. Create the database that you intend to use (the name is arbitrary)
+3. Create the database that you intend to use (the name is arbitrary)
 ```psql
 CREATE DATABASE "memmer_test" ENCODING "UTF-8";
 ```
-3. Exit `psql` by entering `\q`
-4. Edit the [create_database.py](bin/create_database.py) script and edit set the parameters for the connection URL to
+4. Exit `psql` by entering `\q`
+5. Edit the [create_database.py](bin/create_database.py) script and edit set the parameters for the connection URL to
 ```python
 connection_url = sqlalchemy.engine.URL.create(
     drivername="postgresql",
@@ -45,7 +45,7 @@ connection_url = sqlalchemy.engine.URL.create(
     database="memmer_test"
 )
 ```
-5. Execute the script via `python3 bin/create_database.py` in order to have all necessary tables created for you
+6. Execute the script via `python3 bin/create_database.py` in order to have all necessary tables created for you
 
 Now you are ready to connect to your database via the GUI. If the database lives on a remote host, it is recommended to use an SSH tunnel as that
 doesn't require to open up the database to the internet itself. Instead, the client will authenticate via SSH (which is most conveniently achieved by
