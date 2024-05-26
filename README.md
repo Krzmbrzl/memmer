@@ -32,7 +32,7 @@ CREATE USER "JamesBond" WITH PASSWORD ENCRYPTED "Shaken, not stirred";
 ```
 3. Create the database that you intend to use (the name is arbitrary)
 ```psql
-CREATE DATABASE "memmer_test" ENCODING "UTF-8";
+CREATE DATABASE "memmer_test" ENCODING "UTF-8" OWNER "JamesBond";
 ```
 4. Exit `psql` by entering `\q`
 5. Edit the [create_database.py](bin/create_database.py) script and edit set the parameters for the connection URL to
