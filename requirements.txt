@@ -5,6 +5,7 @@ sshtunnel
 pgeocode
 xsdata
 unidecode
+alembic
 
 openpyxl
 matplotlib

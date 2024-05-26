@@ -1,0 +1,8 @@
+# Alembic setup
+
+[Alembic](https://alembic.sqlalchemy.org/en/latest/) is an easy way to migrate a database between different schematas without having to write (all)
+migration scripts by hand.
+
+When using this, make sure to adapt the [alembic.ini](../alembic.ini) file and add a connection URL that actually matches your database
+specifications.
+
