@@ -53,23 +53,29 @@ def get_users(session):
         select(Member).where(
             (Member.first_name == "Sally") & (Member.last_name == "Smoldriski")
         )
-    ).first()
+    ).one()
     sam = session.scalars(
         select(Member).where(
             (Member.first_name == "Sam") & (Member.last_name == "Smoldriski")
         )
-    ).first()
+    ).one()
+    yoshi = session.scalars(
+        select(Member).where(
+            (Member.first_name == "Yoshi") & (Member.last_name == "Young")
+        )
+    ).one()
     dirk = session.scalars(
         select(Member).where(
             (Member.first_name == "Dirk") & (Member.last_name == "Nowitzki")
         )
-    ).first()
+    ).one()
+    marilyn = session.scalars(
+        select(Member).where(
+            (Member.first_name == "Marilyn") & (Member.last_name == "Monroe")
+        )
+    ).one()
 
-    assert sally != None
-    assert sam != None
-    assert dirk != None
-
-    return (sally, sam, dirk)
+    return (sally, sam, yoshi, dirk, marilyn)
 
 
 def get_sessions(session):
@@ -152,7 +158,7 @@ class TestOperations(unittest.TestCase):
 
     def test_relationships(self):
         with self.Session() as session:
-            sally, sam, dirk = get_users(session)
+            sally, sam, _, dirk, _ = get_users(session)
 
             # Check current relations
             self.assertTrue(are_related(session, sam, sally))
@@ -183,7 +189,7 @@ class TestOperations(unittest.TestCase):
 
     def test_monthly_fee_calculation(self):
         with self.Session() as session:
-            sally, sam, dirk = get_users(session)
+            sally, sam, yoshi, dirk, marilyn = get_users(session)
             shortSession, mediumSession, longSession = get_sessions(session)
 
             youth_base_fee = get_fixed_cost(session, BasicFeeYouthsKey)
@@ -234,9 +240,34 @@ class TestOperations(unittest.TestCase):
                 adult_base_fee + 28 + Decimal(20 * 0.75),
             )
 
+            # Family bonus
+            sally.participating_sessions = [shortSession]
+            sam.participating_sessions = [shortSession]
+            yoshi.participating_sessions = [shortSession]
+            dirk.participating_sessions = [shortSession]
+            marilyn.participating_sessions = [shortSession]
+
+            make_relation(session, sally, yoshi)
+            make_relation(session, sam, sally)
+            make_relation(session, sam, dirk)
+            make_relation(session, sally, marilyn)
+
+            family_total = compute_monthly_fee(session, sally)
+            family_total += compute_monthly_fee(session, sam)
+            family_total += compute_monthly_fee(session, yoshi)
+            family_total += compute_monthly_fee(session, dirk)
+            family_total += compute_monthly_fee(session, marilyn)
+
+            # In a family, most expensive pair pays full, the following members (children)
+            # pay 50% and beyond that further children go free
+            self.assertEqual(
+                family_total,
+                2 * (adult_base_fee + 16) + 2 * Decimal("0.5") * (youth_base_fee + 16),
+            )
+
     def test_total_fee_calculation(self):
         with self.Session() as session:
-            sally, sam, dirk = get_users(session)
+            sally, sam, yoshi, dirk, marilyn = get_users(session)
             shortSession, mediumSession, longSession = get_sessions(session)
 
             youth_base_fee = get_fixed_cost(session, BasicFeeYouthsKey)
@@ -261,7 +292,7 @@ class TestOperations(unittest.TestCase):
 
     def test_participation_dates(self):
         with self.Session() as session:
-            sally, sam, dirk = get_users(session)
+            sally, sam, _, dirk, _ = get_users(session)
             shortSession, mediumSession, longSession = get_sessions(session)
 
             youth_base_fee = get_fixed_cost(session, BasicFeeYouthsKey)
@@ -309,7 +340,7 @@ class TestOperations(unittest.TestCase):
 
     def test_fee_overwrite(self):
         with self.Session() as session:
-            sally, sam, dirk = get_users(session)
+            sally, sam, _, dirk, _ = get_users(session)
             shortSession, mediumSession, longSession = get_sessions(session)
 
             youth_base_fee = get_fixed_cost(session, BasicFeeYouthsKey)
@@ -333,7 +364,7 @@ class TestOperations(unittest.TestCase):
 
     def test_ex_member(self):
         with self.Session() as session:
-            sally, sam, _ = get_users(session)
+            sally, sam, _, _, _ = get_users(session)
             shortSession, _, longSession = get_sessions(session)
 
             print("Now")
@@ -386,7 +417,7 @@ class TestOperations(unittest.TestCase):
 
     def test_honorary_member(self):
         with self.Session() as session:
-            _, _, dirk = get_users(session)
+            _, _, _, dirk, _ = get_users(session)
             shortSession, _, _ = get_sessions(session)
 
             # Honorary members don't have to pay the base fee

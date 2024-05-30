@@ -14,9 +14,96 @@ from sqlalchemy import select
 import memmer.orm as morm
 from memmer import BasicFeeAdultsKey, BasicFeeYouthsKey, BasicFeeTrainersKey
 from memmer.queries import get_relatives
-from memmer.utils import nominal_year_diff
+from memmer.utils import nominal_year_diff, is_active
 
 from .fixed_costs import get_fixed_cost
+
+
+def delete_all(collection, indices):
+    for i in sorted(indices, reverse=True):
+        del collection[i]
+
+    return collection
+
+
+def compute_discount(
+    session: Session, member: morm.Member, target_date: date
+) -> Decimal:
+    """Computes a discount factor that has to be applied to the given member's fee"""
+    relatives = get_relatives(session=session, member=member)
+
+    relatives = [x for x in relatives if is_active(x, target_date)]
+
+    if len(relatives) == 0:
+        return Decimal(1)
+
+    # Also include the current member in the set of relatives
+    relatives.append(member)
+
+    fees = [
+        compute_monthly_fee(
+            session=session, member=x, apply_discounts=False, target_date=target_date
+        )
+        for x in relatives
+    ]
+
+    child_indices = []
+    adult_indices = []
+    for i in range(len(relatives)):
+        if nominal_year_diff(relatives[i].birthday, target_date) < 18:
+            child_indices.append(i)
+        else:
+            adult_indices.append(i)
+
+    assert len(child_indices) + len(adult_indices) == len(relatives)
+    member_index = len(relatives) - 1
+    assert relatives[member_index] == member
+
+    if len(adult_indices) >= 2 and len(child_indices) >= 2:
+        # Family discount
+        sorted_adults = sorted(adult_indices, key=lambda x: fees[x], reverse=True)
+        # Only two adults can take part in the family discount
+        sorted_adults = sorted_adults[0:2]
+
+        overall = child_indices + sorted_adults
+        overall = sorted(
+            overall, key=lambda x: (fees[x], relatives[x].id), reverse=True
+        )
+
+        if member_index in overall:
+            if overall.index(member_index) >= 4:
+                if member_index in child_indices:
+                    # These go for free
+                    return Decimal(0)
+            elif overall.index(member_index) >= 2:
+                return Decimal("0.5")
+
+        # No discount for this family member
+        return Decimal(1)
+
+    if member_index in child_indices and len(child_indices) >= 2:
+        # Sibling discount
+        child_fees = sorted([fees[i] for i in child_indices], reverse=True)
+        assert child_fees[0] == max(child_fees)
+
+        if fees[member_index] < child_fees[0]:
+            # 50% discount for siblings that don't have the most expensive monthly fee
+            return Decimal("0.5")
+
+        if child_fees[0] == child_fees[1]:
+            # There are multiple children paying the highest monthly fee
+            # Only one of them has to pay fully
+            filtered = [x for x in child_indices if fees[x] == child_fees[0]]
+            highest_paying = sorted(filtered, key=lambda x: relatives[x].id)[0]
+
+            if member_index != highest_paying:
+                return Decimal("0.5")
+
+        # No discount for this sibling
+        return Decimal(1)
+
+    # No discount applies
+    return Decimal(1)
 
 
 def compute_monthly_fee(
@@ -77,48 +164,11 @@ def compute_monthly_fee(
     if len(session_fees) >= 2:
         fee += Decimal(0.75) * session_fees[1]
 
-    # Potentially account for siblings that might reduce the fee:
-    # The most expensive child pays full, everyone else pays only 50%
-    # (only siblings < 18 years old are considered)
-    if apply_discounts and member_age < 18:
-        relatives = get_relatives(session=session, member=member)
-        relatives = [
-            x for x in relatives if nominal_year_diff(x.birthday, target_date) < 18
-        ]
-
-        if len(relatives) > 0:
-            relative_fees = [
-                compute_monthly_fee(
-                    session=session,
-                    member=current,
-                    apply_discounts=False,
-                    target_date=target_date,
-                )
-                for current in relatives
-            ]
-
-            if max(relative_fees) > fee:
-                fee /= 2
-            elif max(relative_fees) == fee:
-                # There is a tie in terms of the fee -> now we have to uniquely determine
-                # the sibling who has to pay fully
-                candidates = [
-                    relatives[i]
-                    for i in range(len(relatives))
-                    if relative_fees[i] == fee
-                ]
-                candidates.append(member)
-
-                candidate_names = [
-                    current.first_name + current.last_name for current in candidates
-                ]
-                # We assume that there are no duplicates in here
-                assert len(candidate_names) == len(set(candidate_names))
-
-                full_paying_name = sorted(candidate_names)[0]
-
-                if member.first_name + member.last_name != full_paying_name:
-                    fee /= 2
+    if apply_discounts:
+        discount = compute_discount(
+            session=session, member=member, target_date=target_date
+        )
+        fee *= discount
 
     return fee
 
