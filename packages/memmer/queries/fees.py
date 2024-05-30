@@ -22,7 +22,7 @@ from .fixed_costs import get_fixed_cost
 def compute_monthly_fee(
     session: Session,
     member: morm.Member,
-    account_for_siblings: bool = True,
+    apply_discounts: bool = True,
     target_date: date = datetime.now().date(),
 ) -> Decimal:
     """Computes the given member's monthly fee"""
@@ -80,7 +80,7 @@ def compute_monthly_fee(
     # Potentially account for siblings that might reduce the fee:
     # The most expensive child pays full, everyone else pays only 50%
     # (only siblings < 18 years old are considered)
-    if account_for_siblings and member_age < 18:
+    if apply_discounts and member_age < 18:
         relatives = get_relatives(session=session, member=member)
         relatives = [
             x for x in relatives if nominal_year_diff(x.birthday, target_date) < 18
@@ -91,7 +91,7 @@ def compute_monthly_fee(
                 compute_monthly_fee(
                     session=session,
                     member=current,
-                    account_for_siblings=False,
+                    apply_discounts=False,
                     target_date=target_date,
                 )
                 for current in relatives
