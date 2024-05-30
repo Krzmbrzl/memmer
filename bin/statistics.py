@@ -5,15 +5,14 @@ import datetime
 import os
 
 from memmer.orm import Member, Gender
-from memmer.utils import nominal_year_diff
+from memmer.utils import nominal_year_diff, restrict_to_active_members
 
-from sqlalchemy import create_engine, select, or_, func
+from sqlalchemy import create_engine, select, func
 from sqlalchemy.orm import Session
 
 import matplotlib.pyplot as plt
 from matplotlib.ticker import PercentFormatter
 from matplotlib.dates import DateFormatter
-from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, HPacker, VPacker
 
 
 # TODO: Translate labels for plots
@@ -21,18 +20,13 @@ from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, HPacker, VPacker
 
 def get_active_members(session: Session, date: datetime.date):
     return session.scalars(
-        select(Member)
-        .where(or_(Member.exit_date == None, Member.exit_date > date))
-        .where(Member.entry_date <= date)
+        restrict_to_active_members(query=select(Member), target_date=date)
     ).all()
 
 
 def count_active_members(session: Session, date: datetime.date) -> int:
     return session.scalars(
-        select(func.count())
-        .select_from(Member)
-        .where(or_(Member.exit_date == None, Member.exit_date > date))
-        .where(Member.entry_date <= date)
+        restrict_to_active_members(query=select(func.count()).select_from(Member), target_date=date)
     ).one()
 
 
