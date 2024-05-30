@@ -42,7 +42,7 @@ from memmer.orm import Member, Setting
 from .fees import compute_total_fee
 from .maintenance import archive_onetimecosts
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select
 
 from xsdata.models.datatype import XmlDateTime, XmlDate
@@ -73,9 +73,17 @@ def sanitize(string: str) -> str:
 def create_sepa_transactions(
     session: Session, end_to_end_id: str, purpose: str, collection_date: date
 ) -> Tuple[Decimal, List[DirectDebitTransactionInformation9]]:
+    # TODO: Restrict to those members that actually have to pay anyting
+    # i.e. active ones and ones with open onetime fees
     members = session.scalars(
-        select(Member).where(Member.sepa_mandate_date != None).order_by(Member.id.asc())
-    ).all()
+        select(Member)
+        .where(Member.sepa_mandate_date != None)
+        .order_by(Member.id.asc())
+        # Eager load these associations as they are needed anyway
+        .options(joinedload(Member.participating_sessions))
+        .options(joinedload(Member.trained_sessions))
+        .options(joinedload(Member.one_time_fees))
+    ).unique()
 
     transactions = []
     total = Decimal(0)
