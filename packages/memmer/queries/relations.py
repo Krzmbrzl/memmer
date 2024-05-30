@@ -57,10 +57,21 @@ def get_relatives(session: Session, member: Member) -> List[Member]:
 
 
 def make_relation(session: Session, first: Member, second: Member) -> None:
-    """Ensures that the given two members are stored as being related to each other"""
+    """Ensures that the given two members are stored as being related to each other.
+    Note: relationship is a transitive property."""
     if not are_related(session, first, second):
-        relation = Relation(first_id=first.id, second_id=second.id)
-        session.add(relation)
+        first_relatives = get_relatives(session=session, member=first)
+        second_relatives = get_relatives(session=session, member=second)
+
+        # Handle transitiveness of relationships
+        for current in first_relatives:
+            session.add(Relation(first_id=current.id, second_id=second.id))
+
+        for current in second_relatives:
+            session.add(Relation(first_id=current.id, second_id=first.id))
+
+        # Actually make first and second relatives
+        session.add(Relation(first_id=first.id, second_id=second.id))
 
 
 def drop_relation(session: Session, first: Member, second: Member) -> None:

@@ -161,8 +161,8 @@ class TestOperations(unittest.TestCase):
             self.assertFalse(are_related(session, dirk, sally))
 
             # Add dirk into the relation
+            # (note that by means of transitivity, that means dirk is also related to sally)
             make_relation(session, sally, dirk)
-            make_relation(session, dirk, sam)
 
             self.assertTrue(are_related(session, sam, sally))
             self.assertTrue(are_related(session, sally, dirk))
