@@ -334,6 +334,8 @@ class MemmerGUI:
                 # TODO: Handle translations
                 if result == "Yes":
                     self.session.commit()
+                else:
+                    self.session.rollback()
 
     def write_to_config(self, key: str, value: Optional[str]):
         if self.config is None:
