@@ -10,7 +10,6 @@ from gettext import gettext as _
 import datetime
 import re
 from pathlib import Path
-import json
 import os
 from datetime import date
 
@@ -34,7 +33,15 @@ from memmer.orm import (
     Setting,
     Tally,
 )
-from memmer.utils import nominal_year_diff
+from memmer.utils import (
+    nominal_year_diff,
+    MemmerConfig,
+    save_config,
+    load_config,
+    ConfigKey,
+    ConnectType,
+    DBBackend,
+)
 from memmer.queries import (
     compute_monthly_fee,
     get_relatives,
@@ -49,9 +56,6 @@ from sqlalchemy.orm import Session as SQLSession
 from sqlalchemy import create_engine, URL, select, delete, event
 
 zip_code_locator = pgeocode.Nominatim(country="de")
-
-
-config_path = Path.joinpath(Path.home(), ".memmer_config.json")
 
 
 @event.listens_for(SQLSession, "after_flush")
@@ -307,7 +311,7 @@ class MemmerGUI:
         self.event_processors: Dict[str, List[Callable[[Dict[Any, Any]], Any]]] = {}
         self.ssh_tunnel: Optional[SSHTunnelForwarder] = None
         self.session: Optional[SQLSession] = None
-        self.config: Optional[Dict[str, str]] = None
+        self.config: Optional[MemmerConfig] = None
 
         self.create_connector()
         self.create_overview()
@@ -337,37 +341,19 @@ class MemmerGUI:
                 else:
                     self.session.rollback()
 
-    def write_to_config(self, key: str, value: Optional[str]):
+    def write_to_config(self, key: ConfigKey, value):
         if self.config is None:
-            self.config = {}
+            self.config = load_config()
 
-        if value is None and key in self.config:
-            del self.config[key]
-        elif value is not None:
-            self.config[key] = value
+        self.config[key] = value
 
-    def get_config(self) -> Optional[Dict[str, str]]:
-        if not self.config is None:
+    def get_config(self) -> MemmerConfig:
+        if self.config is not None:
             return self.config
 
-        if not Path.is_file(config_path):
-            return {}
+        self.config = load_config()
 
-        with open(config_path, "r") as config_file:
-            try:
-                self.config = json.load(config_file)
-
-                return self.config
-            except ValueError as e:
-                sg.popup_ok(
-                    _("Failed to parse config file ('{}'): {}").format(config_path, e),
-                    title=_("Malformatted config"),
-                )
-                # Get rid of that malformed file
-                try:
-                    os.remove(config_path)
-                except:
-                    pass
+        return self.config
 
     def create_connector(self):
         db_labels: Layout = [
@@ -474,45 +460,30 @@ class MemmerGUI:
     def open_connector(self):
         config = self.get_config()
 
-        if config is not None:
-            connect_type = config.get("connector_type", None)
-            db_backend = config.get("connector_db_backend", None)
-            db_user = config.get("connector_db_user", None)
-            db_host = config.get("connector_db_host")
-            db_port = config.get("connector_db_port")
-            db_name = config.get("connector_db_name")
-            ssh_user = config.get("connector_ssh_user")
-            ssh_port = config.get("connector_ssh_port")
-            ssh_key = config.get("connector_ssh_key")
-
-            if connect_type is not None and connect_type in ["Regular", "SSH-Tunnel"]:
-                self.set_value_and_fire_event(
-                    self.CONNECTOR_CONNECTIONTYPE_COMBO, connect_type
-                )
-            if db_backend is not None and db_backend in [
-                "SQLite",
-                "MySQL",
-                "PostgreSQL",
-            ]:
-                self.set_value_and_fire_event(
-                    self.CONNECTOR_DBBACKEND_COMBO, db_backend
-                )
-            if db_user is not None:
-                self.set_value_and_fire_event(self.CONNECTOR_USER_INPUT, db_user)
-            if db_host is not None:
-                self.set_value_and_fire_event(self.CONNECTOR_HOST_INPUT, db_host)
-            if db_port is not None:
-                self.set_value_and_fire_event(self.CONNECTOR_PORT_INPUT, db_port)
-            if db_name is not None:
-                self.set_value_and_fire_event(self.CONNECTOR_DBNAME_INPUT, db_name)
-            if ssh_user is not None:
-                self.set_value_and_fire_event(self.CONNECTOR_SSHUSER_INPUT, ssh_user)
-            if ssh_port is not None:
-                self.set_value_and_fire_event(self.CONNECTOR_SSHPORT_INPUT, ssh_port)
-            if ssh_key is not None:
-                self.set_value_and_fire_event(
-                    self.CONNECTOR_SSHPRIVATEKEY_INPUT, ssh_key
-                )
+        if config.connect_type is not None:
+            self.set_value_and_fire_event(
+                self.CONNECTOR_CONNECTIONTYPE_COMBO, config.connect_type.value
+            )
+        if config.db_backend is not None:
+            self.set_value_and_fire_event(
+                self.CONNECTOR_DBBACKEND_COMBO, config.db_backend.value
+            )
+        if config.db_user is not None:
+            self.set_value_and_fire_event(self.CONNECTOR_USER_INPUT, config.db_user)
+        if config.db_host is not None:
+            self.set_value_and_fire_event(self.CONNECTOR_HOST_INPUT, config.db_host)
+        if config.db_port is not None:
+            self.set_value_and_fire_event(self.CONNECTOR_PORT_INPUT, config.db_port)
+        if config.db_name is not None:
+            self.set_value_and_fire_event(self.CONNECTOR_DBNAME_INPUT, config.db_name)
+        if config.ssh_user is not None:
+            self.set_value_and_fire_event(self.CONNECTOR_SSHUSER_INPUT, config.ssh_user)
+        if config.ssh_port is not None:
+            self.set_value_and_fire_event(self.CONNECTOR_SSHPORT_INPUT, config.ssh_port)
+        if config.ssh_key is not None:
+            self.set_value_and_fire_event(
+                self.CONNECTOR_SSHPRIVATEKEY_INPUT, config.ssh_key
+            )
 
         self.window[self.CONNECTOR_COLUMN].update(visible=True)
 
@@ -643,25 +614,24 @@ class MemmerGUI:
 
             # Save connection values
             self.write_to_config(
-                "connector_type", values[self.CONNECTOR_CONNECTIONTYPE_COMBO]
+                ConfigKey.CONNECT_TYPE,
+                ConnectType(values[self.CONNECTOR_CONNECTIONTYPE_COMBO]),
             )
             self.write_to_config(
-                "connector_db_backend", values[self.CONNECTOR_DBBACKEND_COMBO]
+                ConfigKey.DB_BACKEND, DBBackend(values[self.CONNECTOR_DBBACKEND_COMBO])
             )
-            self.write_to_config("connector_db_user", values[self.CONNECTOR_USER_INPUT])
-            self.write_to_config("connector_db_host", values[self.CONNECTOR_HOST_INPUT])
-            self.write_to_config("connector_db_port", values[self.CONNECTOR_PORT_INPUT])
+            self.write_to_config(ConfigKey.DB_USER, values[self.CONNECTOR_USER_INPUT])
+            self.write_to_config(ConfigKey.DB_HOST, values[self.CONNECTOR_HOST_INPUT])
+            self.write_to_config(ConfigKey.DB_PORT, values[self.CONNECTOR_PORT_INPUT])
+            self.write_to_config(ConfigKey.DB_NAME, values[self.CONNECTOR_DBNAME_INPUT])
             self.write_to_config(
-                "connector_db_name", values[self.CONNECTOR_DBNAME_INPUT]
-            )
-            self.write_to_config(
-                "connector_ssh_user", values[self.CONNECTOR_SSHUSER_INPUT]
+                ConfigKey.SSH_USER, values[self.CONNECTOR_SSHUSER_INPUT]
             )
             self.write_to_config(
-                "connector_ssh_port", values[self.CONNECTOR_SSHPORT_INPUT]
+                ConfigKey.SSH_PORT, values[self.CONNECTOR_SSHPORT_INPUT]
             )
             self.write_to_config(
-                "connector_ssh_key", values[self.CONNECTOR_SSHPRIVATEKEY_INPUT]
+                ConfigKey.SSH_KEY, values[self.CONNECTOR_SSHPRIVATEKEY_INPUT]
             )
 
             # Switch to overview
@@ -2189,10 +2159,9 @@ class MemmerGUI:
 
         config = self.get_config()
 
-        if not config is None:
-            self.window[self.TALLY_OUT_DIR_INPUT].update(
-                value=config.get("tally_out_dir", "")
-            )
+        self.window[self.TALLY_OUT_DIR_INPUT].update(
+            value=config.tally_dir if config.tally_dir is not None else ""
+        )
 
     def determine_tally_collection_date(self, values: Dict[Any, Any]) -> datetime.date:
         min_collection_date = (
@@ -2253,7 +2222,7 @@ class MemmerGUI:
         ):
             return
 
-        self.write_to_config("tally_out_dir", values[self.TALLY_OUT_DIR_INPUT])
+        self.write_to_config(ConfigKey.TALLY_DIR, values[self.TALLY_OUT_DIR_INPUT])
 
         self.window[self.TALLY_COLUMN].update(visible=False)
         self.open_overview()
@@ -2367,9 +2336,7 @@ class MemmerGUI:
             self.ssh_tunnel.stop()
 
         if not self.config is None:
-            # Write config to disk
             try:
-                global config_path
-                json.dump(self.config, open(config_path, "w"))
+                save_config(self.config)
             except:
                 print("Failed to persist config")
