@@ -538,13 +538,17 @@ class MemmerGUI:
 
                 self.ssh_tunnel = SSHTunnelForwarder(
                     ssh_address_or_host=values[self.CONNECTOR_HOST_INPUT],
-                    ssh_port=int(values[self.CONNECTOR_SSHPORT_INPUT])
-                    if values[self.CONNECTOR_SSHPORT_INPUT].strip() != ""
-                    else 22,
+                    ssh_port=(
+                        int(values[self.CONNECTOR_SSHPORT_INPUT])
+                        if values[self.CONNECTOR_SSHPORT_INPUT].strip() != ""
+                        else 22
+                    ),
                     ssh_username=values[self.CONNECTOR_SSHUSER_INPUT],
-                    ssh_password=values[self.CONNECTOR_SSHPASSWORD_INPUT]
-                    if values[self.CONNECTOR_SSHPASSWORD_INPUT] != ""
-                    else None,
+                    ssh_password=(
+                        values[self.CONNECTOR_SSHPASSWORD_INPUT]
+                        if values[self.CONNECTOR_SSHPASSWORD_INPUT] != ""
+                        else None
+                    ),
                     ssh_pkey=values[self.CONNECTOR_SSHPRIVATEKEY_INPUT],
                     remote_bind_address=(
                         "127.0.0.1",
@@ -597,9 +601,9 @@ class MemmerGUI:
         try:
             connect_url = URL.create(
                 drivername=backend,
-                username=values[self.CONNECTOR_USER_INPUT]
-                if backend != "sqlite"
-                else None,
+                username=(
+                    values[self.CONNECTOR_USER_INPUT] if backend != "sqlite" else None
+                ),
                 port=port,
                 host=host,
                 password=password,
@@ -1441,9 +1445,9 @@ class MemmerGUI:
                         ]
                     ],
                 )
-            self.window[self.USEREDITOR_SESSIONS_TAB].metadata[
-                "number_of_sessions"
-            ] = len(sessions)
+            self.window[self.USEREDITOR_SESSIONS_TAB].metadata["number_of_sessions"] = (
+                len(sessions)
+            )
             n_existing_rows = len(sessions)
 
         # Actually populate the rows with contents
@@ -1461,9 +1465,11 @@ class MemmerGUI:
                 visible=True,
             )
             self.window["-user_session_trainer_{}-".format(i)].update(
-                value=current_session in member.trained_sessions
-                if member is not None
-                else False,
+                value=(
+                    current_session in member.trained_sessions
+                    if member is not None
+                    else False
+                ),
                 visible=True,
             )
 

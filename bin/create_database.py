@@ -18,10 +18,10 @@ from memmer import (
 def main():
     connection_url = sqlalchemy.engine.URL.create(
         drivername="sqlite",
-        #username="James Bond",
-        #password="Shaken, not stirred",
-        #host="localhost",
-        database="sampleDB.sqlite"
+        # username="James Bond",
+        # password="Shaken, not stirred",
+        # host="localhost",
+        database="sampleDB.sqlite",
     )
     print(connection_url)
     engine = create_engine(connection_url, echo=True)

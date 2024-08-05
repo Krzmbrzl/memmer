@@ -26,7 +26,9 @@ def get_active_members(session: Session, date: datetime.date):
 
 def count_active_members(session: Session, date: datetime.date) -> int:
     return session.scalars(
-        restrict_to_active_members(query=select(func.count()).select_from(Member), target_date=date)
+        restrict_to_active_members(
+            query=select(func.count()).select_from(Member), target_date=date
+        )
     ).one()
 
 
@@ -89,13 +91,13 @@ def create_member_history(
     plt.bar(
         dates,
         [x if x != 0 else float("nan") for x in joins],
-        width=bar_width, # type: ignore
+        width=bar_width,  # type: ignore
         color=join_color,
     )
     plt.bar(
         dates,
         [x if x != 0 else float("nan") for x in leaves],
-        width=bar_width, # type: ignore
+        width=bar_width,  # type: ignore
         color=leave_color,
     )
 

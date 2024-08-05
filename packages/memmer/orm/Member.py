@@ -15,6 +15,7 @@ from sqlalchemy import CheckConstraint
 
 from .Base import Base
 
+
 class Gender(enum.Enum):
     Male = 0
     Female = 1
