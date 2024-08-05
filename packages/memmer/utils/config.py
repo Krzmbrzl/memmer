@@ -8,7 +8,7 @@ import json
 
 
 class ConfigKey(Enum):
-    CONNECT_TYPE = "connector_type"
+    CONNECT_TYPE = "connector_connect_type"
     DB_BACKEND = "connector_db_backend"
     DB_USER = "connector_db_user"
     DB_HOST = "connector_db_host"
@@ -18,7 +18,7 @@ class ConfigKey(Enum):
     SSH_PORT = "connector_ssh_port"
     SSH_KEY = "connector_ssh_key"
 
-    TALLY_DIR = ("tally_out_dir",)
+    TALLY_DIR = "tally_out_dir"
 
 
 class ConnectType(Enum):
@@ -47,12 +47,34 @@ class MemmerConfig:
     tally_dir: Optional[str] = None
 
     def __getitem__(self, key: ConfigKey):
-        return getattr(self, str(key.value))
+        assert str(key.name.lower()) in dir(self)
+        return getattr(self, str(key.name.lower()))
 
     def __setitem__(self, key: ConfigKey, value):
-        # TODO: ensure that value is of the expected type
-        # and/or do necessary conversion from string
-        setattr(self, str(key.value), value)
+        member_name = key.name.lower()
+        assert member_name in dir(self)
+
+        attr_types = get_type_hints(self)
+
+        # Ensure the given value is stored as the correct type
+        assert member_name in attr_types
+        args = get_args(attr_types[member_name])
+        assert len(args) == 2
+        args = [x for x in args if x is not type(None)]
+        assert len(args) == 1
+        expected_type = args[0]
+
+        if value is None or value == "":
+            value = None
+        else:
+            value = expected_type(value)
+
+        setattr(self, member_name, value)
+
+    def get(self, key: ConfigKey, default=None):
+        value = self[key]
+
+        return value if value is not None else default
 
 
 default_config_path: Path = Path.joinpath(Path.home(), ".memmer_config.json")
@@ -103,10 +125,12 @@ def save_config(config: MemmerConfig, config_path: Path = default_config_path):
 
         value = config[key]
 
-        if isinstance(value, Enum):
+        if value is None:
+            json_config[json_key] = None
+        elif isinstance(value, Enum):
             json_config[json_key] = value.value
         else:
             json_config[json_key] = str(value)
 
     with open(config_path, "w") as config_file:
-        json.dump(json_config, config_file)
+        json.dump(json_config, config_file, indent=2)
