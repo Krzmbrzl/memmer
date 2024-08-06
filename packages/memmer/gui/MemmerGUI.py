@@ -41,6 +41,9 @@ from memmer.utils import (
     ConfigKey,
     ConnectType,
     DBBackend,
+    ConnectionParameter,
+    SSHTunnelParameter,
+    connect,
 )
 from memmer.queries import (
     compute_monthly_fee,
@@ -524,125 +527,73 @@ class MemmerGUI:
         )
 
     def on_connect_button_pressed(self, values: Dict[Any, Any]):
-        if values[self.CONNECTOR_CONNECTIONTYPE_COMBO] == "SSH-Tunnel":
-            # Establish SSH tunnel
-            try:
-                if not self.ssh_tunnel is None:
-                    self.ssh_tunnel.stop()
+        if not self.ssh_tunnel is None:
+            self.ssh_tunnel.stop()
 
-                remote_port = (
-                    int(values[self.CONNECTOR_PORT_INPUT])
-                    if values[self.CONNECTOR_PORT_INPUT] != ""
-                    else 80
-                )
+        params = ConnectionParameter(
+            db_backend=DBBackend[values[self.CONNECTOR_DBBACKEND_COMBO]],
+            database=values[self.CONNECTOR_DBNAME_INPUT],
+        )
 
-                self.ssh_tunnel = SSHTunnelForwarder(
-                    ssh_address_or_host=values[self.CONNECTOR_HOST_INPUT],
-                    ssh_port=(
-                        int(values[self.CONNECTOR_SSHPORT_INPUT])
-                        if values[self.CONNECTOR_SSHPORT_INPUT].strip() != ""
-                        else 22
-                    ),
-                    ssh_username=values[self.CONNECTOR_SSHUSER_INPUT],
-                    ssh_password=(
-                        values[self.CONNECTOR_SSHPASSWORD_INPUT]
-                        if values[self.CONNECTOR_SSHPASSWORD_INPUT] != ""
-                        else None
-                    ),
-                    ssh_pkey=values[self.CONNECTOR_SSHPRIVATEKEY_INPUT],
-                    remote_bind_address=(
-                        "127.0.0.1",
-                        remote_port,
-                    ),
-                )
+        params.db_backend = DBBackend[values[self.CONNECTOR_DBBACKEND_COMBO]]
+        params.database = values[self.CONNECTOR_DBNAME_INPUT]
 
-                self.ssh_tunnel.start()
-            except BaseSSHTunnelForwarderError as e:
-                sg.popup_ok(_("Failed to establish ssh tunnel: ") + str(e))
-                return
+        if values[self.CONNECTOR_DBNAME_INPUT] != "":
+            params.address = values[self.CONNECTOR_DBNAME_INPUT]
+        if values[self.CONNECTOR_PORT_INPUT] != "":
+            params.port = int(values[self.CONNECTOR_PORT_INPUT])
+        if values[self.CONNECTOR_PASSWORD_INPUT] != "":
+            params.password = values[self.CONNECTOR_PASSWORD_INPUT]
+        if values[self.CONNECTOR_USER_INPUT] != "":
+            params.user = values[self.CONNECTOR_USER_INPUT]
 
-        # Process DB backend that shall be used
-        if values[self.CONNECTOR_DBBACKEND_COMBO] == "SQLite":
-            backend = "sqlite"
+        if (
+            ConnectType(values[self.CONNECTOR_CONNECTIONTYPE_COMBO])
+            == ConnectType.SSH_TUNNEL
+        ):
+            params.ssh_tunnel = SSHTunnelParameter(
+                address=values[self.CONNECTOR_HOST_INPUT],
+                user=values[self.CONNECTOR_SSHUSER_INPUT],
+            )
 
-            if values[self.CONNECTOR_DBNAME_INPUT] == "":
-                sg.popup_ok(
-                    _(
-                        "Warning: Using in-memory (temporary) SQLite database not supported"
-                    )
-                )
-                return
-        elif values[self.CONNECTOR_DBBACKEND_COMBO] == "PostgreSQL":
-            backend = "postgresql"
-        else:
-            assert values[self.CONNECTOR_DBBACKEND_COMBO] == "MySQL"
-            backend = "mysql"
+            if values[self.CONNECTOR_PORT_INPUT] != "":
+                params.ssh_tunnel.remote_port = int(values[self.CONNECTOR_PORT_INPUT])
+            if values[self.CONNECTOR_SSHPORT_INPUT] != "":
+                params.ssh_tunnel.port = int(values[self.CONNECTOR_SSHPORT_INPUT])
+            if values[self.CONNECTOR_SSHPASSWORD_INPUT] != "":
+                params.ssh_tunnel.password = values[self.CONNECTOR_SSHPASSWORD_INPUT]
+            if values[self.CONNECTOR_SSHPRIVATEKEY_INPUT] != "":
+                params.ssh_tunnel.key = values[self.CONNECTOR_SSHPRIVATEKEY_INPUT]
 
         # Figure out what host and port to connect the DB to
-        if backend == "sqlite":
-            host = None
-            port = None
-            password = None
-        else:
-            port = (
-                self.ssh_tunnel.local_bind_port
-                if self.ssh_tunnel is not None
-                else values[self.CONNECTOR_PORT_INPUT]
-            )
-            host = (
-                self.ssh_tunnel.local_bind_host
-                if self.ssh_tunnel is not None
-                else values[self.CONNECTOR_HOST_INPUT]
-            )
-            password = values[self.CONNECTOR_PASSWORD_INPUT]
-            if len(password) == 0:
-                password = None
-
         try:
-            connect_url = URL.create(
-                drivername=backend,
-                username=(
-                    values[self.CONNECTOR_USER_INPUT] if backend != "sqlite" else None
-                ),
-                port=port,
-                host=host,
-                password=password,
-                database=values[self.CONNECTOR_DBNAME_INPUT],
+            self.session, self.ssh_tunnel = connect(
+                params=params, enable_sql_echo=False
             )
-
-            print("Connecting DB via ", connect_url)
-
-            engine = create_engine(connect_url)
-
-            self.session = SQLSession(bind=engine)
-
-            # Save connection values
-            self.write_to_config(
-                ConfigKey.CONNECT_TYPE,
-                ConnectType(values[self.CONNECTOR_CONNECTIONTYPE_COMBO]),
-            )
-            self.write_to_config(
-                ConfigKey.DB_BACKEND, DBBackend(values[self.CONNECTOR_DBBACKEND_COMBO])
-            )
-            self.write_to_config(ConfigKey.DB_USER, values[self.CONNECTOR_USER_INPUT])
-            self.write_to_config(ConfigKey.DB_HOST, values[self.CONNECTOR_HOST_INPUT])
-            self.write_to_config(ConfigKey.DB_PORT, values[self.CONNECTOR_PORT_INPUT])
-            self.write_to_config(ConfigKey.DB_NAME, values[self.CONNECTOR_DBNAME_INPUT])
-            self.write_to_config(
-                ConfigKey.SSH_USER, values[self.CONNECTOR_SSHUSER_INPUT]
-            )
-            self.write_to_config(
-                ConfigKey.SSH_PORT, values[self.CONNECTOR_SSHPORT_INPUT]
-            )
-            self.write_to_config(
-                ConfigKey.SSH_KEY, values[self.CONNECTOR_SSHPRIVATEKEY_INPUT]
-            )
-
-            # Switch to overview
-            self.window[self.CONNECTOR_COLUMN].update(visible=False)
-            self.open_overview()
         except Exception as e:
             sg.popup_ok(_("Invalid connection parameters!\n{}").format(e))
+
+        # Save connection values
+        self.write_to_config(
+            ConfigKey.CONNECT_TYPE,
+            ConnectType(values[self.CONNECTOR_CONNECTIONTYPE_COMBO]),
+        )
+        self.write_to_config(
+            ConfigKey.DB_BACKEND, DBBackend(values[self.CONNECTOR_DBBACKEND_COMBO])
+        )
+        self.write_to_config(ConfigKey.DB_USER, values[self.CONNECTOR_USER_INPUT])
+        self.write_to_config(ConfigKey.DB_HOST, values[self.CONNECTOR_HOST_INPUT])
+        self.write_to_config(ConfigKey.DB_PORT, values[self.CONNECTOR_PORT_INPUT])
+        self.write_to_config(ConfigKey.DB_NAME, values[self.CONNECTOR_DBNAME_INPUT])
+        self.write_to_config(ConfigKey.SSH_USER, values[self.CONNECTOR_SSHUSER_INPUT])
+        self.write_to_config(ConfigKey.SSH_PORT, values[self.CONNECTOR_SSHPORT_INPUT])
+        self.write_to_config(
+            ConfigKey.SSH_KEY, values[self.CONNECTOR_SSHPRIVATEKEY_INPUT]
+        )
+
+        # Switch to overview
+        self.window[self.CONNECTOR_COLUMN].update(visible=False)
+        self.open_overview()
 
     def create_overview(self):
         overview: Layout = [
