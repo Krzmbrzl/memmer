@@ -14,3 +14,9 @@ from .config import (
     load_config,
     save_config,
 )
+from .connection import (
+    SSHTunnelParameter,
+    ConnectionParameter,
+    connect,
+    establish_ssh_tunnel,
+)
