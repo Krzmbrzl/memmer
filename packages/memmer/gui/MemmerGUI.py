@@ -572,6 +572,7 @@ class MemmerGUI:
             )
         except Exception as e:
             sg.popup_ok(_("Invalid connection parameters!\n{}").format(e))
+            return
 
         # Save connection values
         self.write_to_config(
