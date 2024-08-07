@@ -8,6 +8,7 @@ from typing import Optional, Tuple
 from dataclasses import dataclass
 
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy import URL, create_engine, event
 
 from sshtunnel import SSHTunnelForwarder
@@ -105,6 +106,18 @@ def enable_foreign_key_constraint_support(dbapi_con, con_record):
     dbapi_con.execute("pragma foreign_keys=on")
 
 
+class SSHTunnelError(RuntimeError):
+    """Exception thrown if something goes wrong during establishing an SSH tunnel"""
+
+    pass
+
+
+class DBConnectionError(RuntimeError):
+    """Exception thrown if something goes wrong when connecting to the database"""
+
+    pass
+
+
 def connect(
     params: ConnectionParameter, enable_sql_echo: bool = False
 ) -> Tuple[Session, Optional[SSHTunnelForwarder]]:
@@ -113,7 +126,11 @@ def connect(
     port = params.port
 
     if params.ssh_tunnel is not None:
-        tunnel = establish_ssh_tunnel(params.ssh_tunnel)
+        try:
+            tunnel = establish_ssh_tunnel(params.ssh_tunnel)
+        except Exception as e:
+            raise SSHTunnelError(f"{e}")
+
         address = tunnel.local_bind_host
         port = tunnel.local_bind_port
 
@@ -134,4 +151,13 @@ def connect(
         # SQLite doesn't enable FK support by default (for backwards compatibility reasons)
         event.listen(engine, "connect", enable_foreign_key_constraint_support)
 
-    return (Session(bind=engine), tunnel)
+    try:
+        # Check whether the connection can be established properly
+        connection = engine.connect()
+        connection.close()
+    except DBAPIError as e:
+        raise DBConnectionError(f"{e.orig}" if e.orig is not None else f"{e}")
+
+    session = Session(bind=engine)
+
+    return (session, tunnel)
