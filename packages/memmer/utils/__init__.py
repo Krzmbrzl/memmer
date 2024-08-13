@@ -19,4 +19,5 @@ from .connection import (
     ConnectionParameter,
     connect,
     establish_ssh_tunnel,
+    interactive_connect,
 )

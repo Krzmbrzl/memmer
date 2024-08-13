@@ -3,9 +3,11 @@
 # LICENSE file at the root of the source tree or at
 # <https://github.com/Krzmbrzl/memmer/blob/main/LICENSE>.
 
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Type
 
 from dataclasses import dataclass
+from itertools import chain, repeat
+from getpass import getpass
 
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import DBAPIError
@@ -13,7 +15,7 @@ from sqlalchemy import URL, create_engine, event
 
 from sshtunnel import SSHTunnelForwarder
 
-from .config import MemmerConfig, DBBackend, ConnectType
+from .config import MemmerConfig, DBBackend, ConnectType, load_config
 
 
 @dataclass
@@ -161,3 +163,58 @@ def connect(
     session = Session(bind=engine)
 
     return (session, tunnel)
+
+
+class InteractionProvider:
+    def query(self, message: str, dtype: Type):
+        raise RuntimeError("Not implemented")
+
+    def query_password(self, message: str) -> str:
+        raise RuntimeError("Not implemented")
+
+
+class CLIInteractionProvider(InteractionProvider):
+    def query(self, message: str, dtype: Type):
+        # Taken from https://stackoverflow.com/a/56081775
+        if not message.endswith(" "):
+            message += " "
+
+        prompts = chain(
+            [message],
+            repeat(f"Invalid input - expected type {dtype.__name__}. Try again.\n"),
+        )
+        replies = map(input, prompts)
+        valid_response = next(filter(lambda x: dtype(x), replies))
+
+        return dtype(valid_response)
+
+    def query_password(self, message: str) -> str:
+        if not message.endswith(" "):
+            message += " "
+
+        return getpass(prompt=message)
+
+
+def interactive_connect(
+    params: Optional[ConnectionParameter] = None,
+    interacter: InteractionProvider = CLIInteractionProvider(),
+) -> Tuple[Session, Optional[SSHTunnelForwarder]]:
+    if params is None:
+        config = load_config()
+        params = ConnectionParameter.from_config(config)
+
+    if params.db_backend != DBBackend.SQLite:
+        if params.user is None:
+            params.user = interacter.query("DB username:", str)
+        if params.port is None:
+            params.port = interacter.query("DB port:", int)
+        if params.address is None:
+            params.address = interacter.query("DB address/host:", str)
+        if params.password is None:
+            params.password = interacter.query_password("DB password:")
+
+    if params.ssh_tunnel is not None:
+        if params.ssh_tunnel.key is None:
+            params.ssh_tunnel.password = interacter.query_password("SSH password:")
+
+    return connect(params=params)
