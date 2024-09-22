@@ -10,6 +10,7 @@ from memmer.utils import (
     load_config,
     ConnectionParameter,
     restrict_to_active_members,
+    nominal_year_diff,
 )
 from memmer.orm import Session, Member
 
@@ -97,7 +98,9 @@ def main():
             )
 
             for i, member in enumerate(active_members):
-                print(f"{i+1:3d} - {member.last_name}, {member.first_name}")
+                age = nominal_year_diff(member.birthday, datetime.now().date())
+
+                print(f"{i+1:3d} - {member.last_name}, {member.first_name} ({age} y/o)")
 
             print()
 
