@@ -15,8 +15,26 @@
   </property>
   <widget class="QWidget" name="main_widget">
    <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
     <item>
      <widget class="QScrollArea" name="main_scroller">
+      <property name="frameShape">
+       <enum>QFrame::Shape::StyledPanel</enum>
+      </property>
       <property name="widgetResizable">
        <bool>true</bool>
       </property>
@@ -25,11 +43,26 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>788</width>
-         <height>649</height>
+         <width>800</width>
+         <height>661</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
         <item>
          <widget class="QStackedWidget" name="page_stack">
           <property name="currentIndex">
@@ -128,7 +161,11 @@
                 </widget>
                </item>
                <item row="1" column="1">
-                <widget class="QLineEdit" name="lineEdit_4"/>
+                <widget class="QLineEdit" name="lineEdit_4">
+                 <property name="placeholderText">
+                  <string>db_username</string>
+                 </property>
+                </widget>
                </item>
                <item row="2" column="0">
                 <widget class="QLabel" name="label_7">
@@ -138,7 +175,11 @@
                 </widget>
                </item>
                <item row="2" column="1">
-                <widget class="QLineEdit" name="lineEdit_3"/>
+                <widget class="QLineEdit" name="lineEdit_3">
+                 <property name="echoMode">
+                  <enum>QLineEdit::EchoMode::Password</enum>
+                 </property>
+                </widget>
                </item>
                <item row="3" column="0">
                 <widget class="QLabel" name="label_8">
@@ -148,7 +189,11 @@
                 </widget>
                </item>
                <item row="3" column="1">
-                <widget class="QLineEdit" name="lineEdit_5"/>
+                <widget class="QLineEdit" name="lineEdit_5">
+                 <property name="placeholderText">
+                  <string>mydb.example.com</string>
+                 </property>
+                </widget>
                </item>
                <item row="4" column="0">
                 <widget class="QLabel" name="label_9">
@@ -168,7 +213,11 @@
                 </widget>
                </item>
                <item row="5" column="1">
-                <widget class="QLineEdit" name="lineEdit_6"/>
+                <widget class="QLineEdit" name="lineEdit_6">
+                 <property name="placeholderText">
+                  <string>awesome_dataset</string>
+                 </property>
+                </widget>
                </item>
               </layout>
              </widget>
@@ -187,7 +236,11 @@
                 </widget>
                </item>
                <item row="0" column="1">
-                <widget class="QLineEdit" name="lineEdit_7"/>
+                <widget class="QLineEdit" name="lineEdit_7">
+                 <property name="placeholderText">
+                  <string>ssh_username</string>
+                 </property>
+                </widget>
                </item>
                <item row="1" column="0">
                 <widget class="QLabel" name="label_12">
@@ -197,7 +250,11 @@
                 </widget>
                </item>
                <item row="1" column="1">
-                <widget class="QSpinBox" name="spinBox_2"/>
+                <widget class="QSpinBox" name="spinBox_2">
+                 <property name="value">
+                  <number>22</number>
+                 </property>
+                </widget>
                </item>
                <item row="2" column="0">
                 <widget class="QLabel" name="label_13">
@@ -207,7 +264,11 @@
                 </widget>
                </item>
                <item row="2" column="1">
-                <widget class="QLineEdit" name="lineEdit_8"/>
+                <widget class="QLineEdit" name="lineEdit_8">
+                 <property name="echoMode">
+                  <enum>QLineEdit::EchoMode::Password</enum>
+                 </property>
+                </widget>
                </item>
                <item row="3" column="0">
                 <widget class="QLabel" name="label_14">
@@ -253,10 +314,30 @@
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_3">
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_4"/>
+               <spacer name="horizontalSpacer_6">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
               </item>
               <item>
                <widget class="QPushButton" name="pushButton_5">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="text">
+                 <string>Cancel</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="connect_button">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -715,6 +796,12 @@
     </rect>
    </property>
    <widget class="QMenu" name="menuNew">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="tearOffEnabled">
+     <bool>false</bool>
+    </property>
     <property name="title">
      <string>&amp;New</string>
     </property>
@@ -726,12 +813,12 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionMember">
    <property name="text">
-    <string>Member</string>
+    <string>&amp;Member</string>
    </property>
   </action>
   <action name="actionSession">
    <property name="text">
-    <string>Session</string>
+    <string>&amp;Session</string>
    </property>
   </action>
  </widget>
