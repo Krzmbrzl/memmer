@@ -1,32 +1,33 @@
 #!/usr/bin/env python3
 
-from ui_MainWindow import Ui_MainWindow
-
-from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QTimer
 from PySide6.QtUiTools import QUiLoader
 
+from MainWindow import MainWindow
+
 import sys
+import signal
 
 
-class MainWindow(QMainWindow, Ui_MainWindow):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setupUi(self)
-
-        self.statusbar.showMessage(self.tr("Ready"))
-
-        self.setWindowTitle("Memmer")
-
-        self.connect_button.clicked.connect(
-            lambda: self.page_stack.setCurrentWidget(self.main_menu)
-        )
+def quit_app(*_):
+    QApplication.quit()
 
 
 def main():
-    loader = QUiLoader()
+    signal.signal(signal.SIGINT, quit_app)
 
     app = QApplication(sys.argv)
 
+    # Required to ensure that the Python interpreter is called every now
+    # and then in order to allow for signal handling (e.g. Ctrl+C)
+    # to be done.
+    # Taken from https://stackoverflow.com/a/4939113
+    timer = QTimer()
+    timer.start(500)
+    timer.timeout.connect(lambda: None)
+
+    # loader = QUiLoader()
     # win = loader.load("MainWindow.ui")
     win = MainWindow()
 
