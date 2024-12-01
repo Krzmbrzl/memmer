@@ -5,6 +5,6 @@
 
 from typing import List
 
-from PySimpleGUI import Element
+from FreeSimpleGUI import Element
 
 Layout = List[List[Element]]

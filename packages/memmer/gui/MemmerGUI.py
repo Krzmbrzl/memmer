@@ -13,7 +13,7 @@ from pathlib import Path
 import os
 from datetime import date
 
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 
 import pgeocode
 
