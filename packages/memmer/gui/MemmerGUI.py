@@ -457,7 +457,7 @@ class MemmerGUI:
         )
 
     def set_value_and_fire_event(self, key: str, value: Any):
-        self.window[key].update(value=value)
+        self.window[key].update(value=value)  # type: ignore
         self.window.write_event_value(key, value)
 
     def open_connector(self):
@@ -488,7 +488,7 @@ class MemmerGUI:
                 self.CONNECTOR_SSHPRIVATEKEY_INPUT, config.ssh_key
             )
 
-        self.window[self.CONNECTOR_COLUMN].update(visible=True)
+        self.window[self.CONNECTOR_COLUMN].update(visible=True)  # type: ignore
 
     def on_connection_type_changed(self, values: Dict[Any, Any]):
         selected_type = values[self.CONNECTOR_CONNECTIONTYPE_COMBO]
@@ -496,18 +496,18 @@ class MemmerGUI:
         remote_options_disabled = values[self.CONNECTOR_DBBACKEND_COMBO] == "SQLite"
 
         if selected_type == "Regular":
-            self.window[self.CONNECTOR_SSH_FRAME].update(visible=False)
-            self.window[self.CONNECTOR_PORT_INPUT].update(
+            self.window[self.CONNECTOR_SSH_FRAME].update(visible=False)  # type: ignore
+            self.window[self.CONNECTOR_PORT_INPUT].update(  # type: ignore
                 disabled=remote_options_disabled
             )
-            self.window[self.CONNECTOR_HOST_INPUT].update(
+            self.window[self.CONNECTOR_HOST_INPUT].update(  # type: ignore
                 disabled=remote_options_disabled
             )
         else:
             assert selected_type == "SSH-Tunnel"
-            self.window[self.CONNECTOR_SSH_FRAME].update(visible=True)
-            self.window[self.CONNECTOR_PORT_INPUT].update(disabled=False)
-            self.window[self.CONNECTOR_HOST_INPUT].update(disabled=False)
+            self.window[self.CONNECTOR_SSH_FRAME].update(visible=True)  # type: ignore
+            self.window[self.CONNECTOR_PORT_INPUT].update(disabled=False)  # type: ignore
+            self.window[self.CONNECTOR_HOST_INPUT].update(disabled=False)  # type: ignore
 
     def on_db_backend_changed(self, values: Dict[Any, Any]):
         selected_backend = values[self.CONNECTOR_DBBACKEND_COMBO]
@@ -515,14 +515,14 @@ class MemmerGUI:
         remote_options_disabled = selected_backend == "SQLite"
         reuse_for_ssh = values[self.CONNECTOR_CONNECTIONTYPE_COMBO] == "SSH-Tunnel"
 
-        self.window[self.CONNECTOR_HOST_INPUT].update(
+        self.window[self.CONNECTOR_HOST_INPUT].update(  # type: ignore
             disabled=remote_options_disabled and not reuse_for_ssh
         )
-        self.window[self.CONNECTOR_PORT_INPUT].update(
+        self.window[self.CONNECTOR_PORT_INPUT].update(  # type: ignore
             disabled=remote_options_disabled and not reuse_for_ssh
         )
-        self.window[self.CONNECTOR_USER_INPUT].update(disabled=remote_options_disabled)
-        self.window[self.CONNECTOR_PASSWORD_INPUT].update(
+        self.window[self.CONNECTOR_USER_INPUT].update(disabled=remote_options_disabled)  # type: ignore
+        self.window[self.CONNECTOR_PASSWORD_INPUT].update(  # type: ignore
             disabled=remote_options_disabled
         )
 
@@ -593,7 +593,7 @@ class MemmerGUI:
         )
 
         # Switch to overview
-        self.window[self.CONNECTOR_COLUMN].update(visible=False)
+        self.window[self.CONNECTOR_COLUMN].update(visible=False)  # type: ignore
         self.open_overview()
 
     def create_overview(self):
@@ -621,14 +621,14 @@ class MemmerGUI:
 
     def open_overview(self):
         # TODO: Check permissions on DB and hide inappropriate actions
-        self.window[self.OVERVIEW_COLUMN].update(visible=True)
+        self.window[self.OVERVIEW_COLUMN].update(visible=True)  # type: ignore
 
     def on_management_button_pressed(self, values: Dict[Any, Any]):
-        self.window[self.OVERVIEW_COLUMN].update(visible=False)
+        self.window[self.OVERVIEW_COLUMN].update(visible=False)  # type: ignore
         self.open_management()
 
     def on_tally_button_pressed(self, values: Dict[Any, Any]):
-        self.window[self.OVERVIEW_COLUMN].update(visible=False)
+        self.window[self.OVERVIEW_COLUMN].update(visible=False)  # type: ignore
         self.open_tally_creator()
 
     def create_management(self):
@@ -725,7 +725,7 @@ class MemmerGUI:
         )
 
     def open_management(self):
-        self.window[self.MANAGEMENT_COLUMN].update(visible=True)
+        self.window[self.MANAGEMENT_COLUMN].update(visible=True)  # type: ignore
 
         assert self.session is not None
 
@@ -737,17 +737,17 @@ class MemmerGUI:
             .order_by(Member.first_name.asc())
         ).all()
 
-        self.window[self.MANAGEMENT_MEMBER_LISTBOX].update(values=members)
+        self.window[self.MANAGEMENT_MEMBER_LISTBOX].update(values=members)  # type: ignore
 
         sessions = self.session.scalars(
             select(Session).order_by(Session.name.asc())
         ).all()
 
-        self.window[self.MANAGEMENT_SESSION_LISTBOX].update(values=sessions)
+        self.window[self.MANAGEMENT_SESSION_LISTBOX].update(values=sessions)  # type: ignore
 
         # Restore search state
-        member_search = self.window[self.MANAGEMENT_MEMBERSEARCH_INPUT].get()
-        session_search = self.window[self.MANAGEMENT_SESSIONSEARCH_INPUT].get()
+        member_search = self.window[self.MANAGEMENT_MEMBERSEARCH_INPUT].get()  # type: ignore
+        session_search = self.window[self.MANAGEMENT_SESSIONSEARCH_INPUT].get()  # type: ignore
         if len(member_search) > 0:
             self.window.write_event_value(
                 self.MANAGEMENT_MEMBERSEARCH_INPUT, member_search
@@ -758,11 +758,11 @@ class MemmerGUI:
             )
 
     def on_addmember_button_pressed(self, values: Dict[Any, Any]):
-        self.window[self.MANAGEMENT_COLUMN].update(visible=False)
+        self.window[self.MANAGEMENT_COLUMN].update(visible=False)  # type: ignore
         self.open_usereditor()
 
     def on_addsession_button_pressed(self, values: Dict[Any, Any]):
-        self.window[self.MANAGEMENT_COLUMN].update(visible=False)
+        self.window[self.MANAGEMENT_COLUMN].update(visible=False)  # type: ignore
         self.open_sessioneditor()
 
     def on_memberlist_activated(self, values: Dict[Any, Any]):
@@ -777,7 +777,7 @@ class MemmerGUI:
         assert selected_entries == 1
 
         # Open user editor for that user
-        self.window[self.MANAGEMENT_COLUMN].update(visible=False)
+        self.window[self.MANAGEMENT_COLUMN].update(visible=False)  # type: ignore
         self.open_usereditor(values[self.MANAGEMENT_MEMBER_LISTBOX][0])
 
     def on_sessionlist_activated(self, values: Dict[Any, Any]):
@@ -792,11 +792,11 @@ class MemmerGUI:
         assert selected_entries == 1
 
         # Open session editor for that session
-        self.window[self.MANAGEMENT_COLUMN].update(visible=False)
+        self.window[self.MANAGEMENT_COLUMN].update(visible=False)  # type: ignore
         self.open_sessioneditor(values[self.MANAGEMENT_SESSION_LISTBOX][0])
 
     def on_management_back_button_pressed(self, values: Dict[Any, Any]):
-        self.window[self.MANAGEMENT_COLUMN].update(visible=False)
+        self.window[self.MANAGEMENT_COLUMN].update(visible=False)  # type: ignore
         self.open_overview()
 
     def create_usereditor(self):
@@ -1219,32 +1219,32 @@ class MemmerGUI:
             *["-onetimefee_reason_{}-".format(i) for i in range(MAX_ONETIME_FEES)],
             *["-onetimefee_amount_{}-".format(i) for i in range(MAX_ONETIME_FEES)],
         ]:
-            self.window[current].update(value="")
+            self.window[current].update(value="")  # type: ignore
             set_validation_state(self.window[current], True)
-            self.window[current].metadata = None
+            self.window[current].metadata = None  # type: ignore
 
         for current in [
             self.USEREDIT_RELATIVES_LISTBOX,
             self.USEREDIT_LIKELYRELATIVES_LISTBOX,
             self.USEREDIT_POTENTIALRELATIVES_LISTBOX,
         ]:
-            self.window[current].update(values=[])
+            self.window[current].update(values=[])  # type: ignore
 
-        self.window[self.USEREDIT_GENDER_COMBO].update(value="")
-        self.window[self.USEREDIT_HONORABLEMEMBER_CHECKBOX].update(value=False)
-        self.window[self.USEREDIT_FEEOVERWRITE_CHECK].update(value=False)
+        self.window[self.USEREDIT_GENDER_COMBO].update(value="")  # type: ignore
+        self.window[self.USEREDIT_HONORABLEMEMBER_CHECKBOX].update(value=False)  # type: ignore
+        self.window[self.USEREDIT_FEEOVERWRITE_CHECK].update(value=False)  # type: ignore
 
         for i in range(
-            self.window[self.USEREDITOR_SESSIONS_TAB].metadata["number_of_sessions"]
+            self.window[self.USEREDITOR_SESSIONS_TAB].metadata["number_of_sessions"]  # type: ignore
         ):
-            self.window["-user_session_name_{}-".format(i)].update(
+            self.window["-user_session_name_{}-".format(i)].update(  # type: ignore
                 visible=False, value=""
             )
-            self.window["-user_session_name_{}-".format(i)].metadata = None
-            self.window["-user_session_participant_{}-".format(i)].update(
+            self.window["-user_session_name_{}-".format(i)].metadata = None  # type: ignore
+            self.window["-user_session_participant_{}-".format(i)].update(  # type: ignore
                 visible=False, value=False
             )
-            self.window["-user_session_trainer_{}-".format(i)].update(
+            self.window["-user_session_trainer_{}-".format(i)].update(  # type: ignore
                 visible=False, value=False
             )
 
@@ -1252,45 +1252,45 @@ class MemmerGUI:
 
         if user is not None:
             # Populate general data
-            self.window[self.USEREDIT_GENDER_COMBO].update(
+            self.window[self.USEREDIT_GENDER_COMBO].update(  # type: ignore
                 set_to_index=user.gender.value if user.gender is not None else 4
             )
-            self.window[self.USEREDIT_FIRSTNAME_INPUT].update(value=user.first_name)
-            self.window[self.USEREDIT_LASTNAME_INPUT].update(value=user.last_name)
+            self.window[self.USEREDIT_FIRSTNAME_INPUT].update(value=user.first_name)  # type: ignore
+            self.window[self.USEREDIT_LASTNAME_INPUT].update(value=user.last_name)  # type: ignore
             self.set_value_and_fire_event(
                 self.USEREDIT_BIRTHDAY_INPUT, user.birthday.isoformat()
             )
-            self.window[self.USEREDIT_STREET_INPUT].update(value=user.street)
-            self.window[self.USEREDIT_STREETNUM_INPUT].update(value=user.street_number)
-            self.window[self.USEREDIT_POSTALCODE_INPUT].update(value=user.postal_code)
-            self.window[self.USEREDIT_CITY_INPUT].update(value=user.city)
-            self.window[self.USEREDIT_PHONE_INPUT].update(
+            self.window[self.USEREDIT_STREET_INPUT].update(value=user.street)  # type: ignore
+            self.window[self.USEREDIT_STREETNUM_INPUT].update(value=user.street_number)  # type: ignore
+            self.window[self.USEREDIT_POSTALCODE_INPUT].update(value=user.postal_code)  # type: ignore
+            self.window[self.USEREDIT_CITY_INPUT].update(value=user.city)  # type: ignore
+            self.window[self.USEREDIT_PHONE_INPUT].update(  # type: ignore
                 value=user.phone_number if user.phone_number is not None else ""
             )
-            self.window[self.USEREDIT_EMAIL_INPUT].update(
+            self.window[self.USEREDIT_EMAIL_INPUT].update(  # type: ignore
                 value=user.email_address if user.email_address is not None else ""
             )
-            self.window[self.USEREDIT_ENTRYDATE_INPUT].update(
+            self.window[self.USEREDIT_ENTRYDATE_INPUT].update(  # type: ignore
                 value=user.entry_date.isoformat()
             )
-            self.window[self.USEREDIT_EXITDATE_INPUT].update(
+            self.window[self.USEREDIT_EXITDATE_INPUT].update(  # type: ignore
                 value=user.exit_date.isoformat() if user.exit_date is not None else ""
             )
-            self.window[self.USEREDIT_HONORABLEMEMBER_CHECKBOX].update(
+            self.window[self.USEREDIT_HONORABLEMEMBER_CHECKBOX].update(  # type: ignore
                 value=user.is_honorary_member
             )
 
             # Populate payment data
-            self.window[self.USEREDIT_HONORABLEMEMBER_CHECKBOX].update(
+            self.window[self.USEREDIT_HONORABLEMEMBER_CHECKBOX].update(  # type: ignore
                 value=user.is_honorary_member
             )
             if user.sepa_mandate_date is not None:
-                self.window[self.USEREDIT_SEPAMANDATEDATE_INPUT].update(
+                self.window[self.USEREDIT_SEPAMANDATEDATE_INPUT].update(  # type: ignore
                     value=user.sepa_mandate_date.isoformat()
                 )
                 self.set_value_and_fire_event(self.USEREDIT_IBAN_INPUT, user.iban)
-                self.window[self.USEREDIT_BIC_INPUT].update(value=user.bic)
-                self.window[self.USEREDIT_ACCOUNTOWNER_INPUT].update(
+                self.window[self.USEREDIT_BIC_INPUT].update(value=user.bic)  # type: ignore
+                self.window[self.USEREDIT_ACCOUNTOWNER_INPUT].update(  # type: ignore
                     value=user.account_owner
                 )
 
@@ -1298,12 +1298,12 @@ class MemmerGUI:
                 select(FeeOverride).where(FeeOverride.member_id == user.id)
             )
             if fee_overwrite is not None:
-                self.window[self.USEREDIT_FEEOVERWRITE_CHECK].update(value=True)
-                self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(
+                self.window[self.USEREDIT_FEEOVERWRITE_CHECK].update(value=True)  # type: ignore
+                self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(  # type: ignore
                     value="{:.2f}".format(fee_overwrite.amount), disabled=False
                 )
             else:
-                self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(
+                self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(  # type: ignore
                     value="{:.2f}".format(
                         compute_monthly_fee(session=self.session, member=user)
                     ),
@@ -1319,37 +1319,37 @@ class MemmerGUI:
                 len(onetime_fees), MAX_ONETIME_FEES
             )
             for i, fee in enumerate(onetime_fees):
-                self.window["-onetimefee_reason_{}-".format(i)].update(value=fee.reason)
-                self.window["-onetimefee_amount_{}-".format(i)].update(
+                self.window["-onetimefee_reason_{}-".format(i)].update(value=fee.reason)  # type: ignore
+                self.window["-onetimefee_amount_{}-".format(i)].update(  # type: ignore
                     value="{:.2f}".format(fee.amount)
                 )
 
             # Note: sessions are populated below by populate_user_sessions
 
-            self.window[self.USEREDIT_TABGROUP].metadata = {"user": user}
-            self.window[self.USEREDIT_DELETE_BUTTON].update(disabled=False)
+            self.window[self.USEREDIT_TABGROUP].metadata = {"user": user}  # type: ignore
+            self.window[self.USEREDIT_DELETE_BUTTON].update(disabled=False)  # type: ignore
         else:
             # Setup admission fee, if there is any
             admission_fee = self.session.scalar(
                 select(FixedCost).where(FixedCost.name == AdmissionFeeKey)
             )
             if admission_fee is not None and admission_fee.cost != 0:
-                self.window["-onetimefee_reason_0-"].update(value=_("Admission fee"))
-                self.window["-onetimefee_amount_0-"].update(
+                self.window["-onetimefee_reason_0-"].update(value=_("Admission fee"))  # type: ignore
+                self.window["-onetimefee_amount_0-"].update(  # type: ignore
                     value="{:.2f}".format(admission_fee.cost)
                 )
 
-            self.window[self.USEREDIT_TABGROUP].metadata = {}
-            self.window[self.USEREDIT_DELETE_BUTTON].update(disabled=True)
+            self.window[self.USEREDIT_TABGROUP].metadata = {}  # type: ignore
+            self.window[self.USEREDIT_DELETE_BUTTON].update(disabled=True)  # type: ignore
 
-            self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(
+            self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(  # type: ignore
                 value=_("Save and re-load to compute fee"), disabled=True
             )
 
         self.populate_user_sessions(user)
         self.populate_user_relatives(user)
 
-        self.window[self.USEREDITOR_COLUMN].update(visible=True)
+        self.window[self.USEREDITOR_COLUMN].update(visible=True)  # type: ignore
 
     def populate_user_sessions(self, member: Optional[Member]):
         assert self.session is not None
@@ -1358,17 +1358,17 @@ class MemmerGUI:
             select(Session).order_by(Session.name.asc())
         ).all()
 
-        n_existing_rows: int = self.window[self.USEREDITOR_SESSIONS_TAB].metadata[
+        n_existing_rows: int = self.window[self.USEREDITOR_SESSIONS_TAB].metadata[  # type: ignore
             "number_of_sessions"
         ]
 
-        name_width: int = self.window[self.USEREDITOR_SESSIONS_TAB].metadata[
+        name_width: int = self.window[self.USEREDITOR_SESSIONS_TAB].metadata[  # type: ignore
             "name_width"
         ]
-        participant_width: int = self.window[self.USEREDITOR_SESSIONS_TAB].metadata[
+        participant_width: int = self.window[self.USEREDITOR_SESSIONS_TAB].metadata[  # type: ignore
             "participant_width"
         ]
-        trainer_width: int = self.window[self.USEREDITOR_SESSIONS_TAB].metadata[
+        trainer_width: int = self.window[self.USEREDITOR_SESSIONS_TAB].metadata[  # type: ignore
             "trainer_width"
         ]
 
@@ -1397,7 +1397,7 @@ class MemmerGUI:
                         ]
                     ],
                 )
-            self.window[self.USEREDITOR_SESSIONS_TAB].metadata["number_of_sessions"] = (
+            self.window[self.USEREDITOR_SESSIONS_TAB].metadata["number_of_sessions"] = (  # type: ignore
                 len(sessions)
             )
             n_existing_rows = len(sessions)
@@ -1405,18 +1405,18 @@ class MemmerGUI:
         # Actually populate the rows with contents
         for i, current_session in enumerate(sessions):
             session_name = self.window["-user_session_name_{}-".format(i)]
-            session_name.update(value=current_session.name, visible=True)
-            session_name.metadata = {"session_id": current_session.id}
+            session_name.update(value=current_session.name, visible=True)  # type: ignore
+            session_name.metadata = {"session_id": current_session.id}  # type: ignore
             member_takes_part_in_session = (
                 current_session in member.participating_sessions
                 if member is not None
                 else False
             )
-            self.window["-user_session_participant_{}-".format(i)].update(
+            self.window["-user_session_participant_{}-".format(i)].update(  # type: ignore
                 value=member_takes_part_in_session,
                 visible=True,
             )
-            self.window["-user_session_trainer_{}-".format(i)].update(
+            self.window["-user_session_trainer_{}-".format(i)].update(  # type: ignore
                 value=(
                     current_session in member.trained_sessions
                     if member is not None
@@ -1432,19 +1432,19 @@ class MemmerGUI:
         # a "likely relative" will be made once the relatives tab is opened
         if user is not None:
             relatives = get_relatives(session=self.session, member=user)
-            self.window[self.USEREDIT_RELATIVES_LISTBOX].update(values=relatives)
+            self.window[self.USEREDIT_RELATIVES_LISTBOX].update(values=relatives)  # type: ignore
         else:
             relatives = []
 
         members = self.session.scalars(select(Member).order_by(Member.last_name))
         members = [x for x in members if not x in relatives and not x == user]
-        self.window[self.USEREDIT_POTENTIALRELATIVES_LISTBOX].update(values=members)
+        self.window[self.USEREDIT_POTENTIALRELATIVES_LISTBOX].update(values=members)  # type: ignore
 
     def on_member_birthday_changed(self, values: Dict[Any, Any]):
         date = validate_date(self.window[self.USEREDIT_BIRTHDAY_INPUT])
 
         if date is not None:
-            self.window[self.USEREDIT_AGE_LABEL].update(
+            self.window[self.USEREDIT_AGE_LABEL].update(  # type: ignore
                 value=_("({:d} years)").format(
                     nominal_year_diff(date, datetime.datetime.now().date())
                 )
@@ -1453,7 +1453,7 @@ class MemmerGUI:
             if nominal_year_diff(date, datetime.datetime.now().date()) < 0:
                 set_validation_state(self.window[self.USEREDIT_BIRTHDAY_INPUT], False)
         else:
-            self.window[self.USEREDIT_AGE_LABEL].update(value="")
+            self.window[self.USEREDIT_AGE_LABEL].update(value="")  # type: ignore
 
     def on_member_email_changed(self, values: Dict[Any, Any]):
         if values[self.USEREDIT_EMAIL_INPUT] == "":
@@ -1482,9 +1482,9 @@ class MemmerGUI:
             city = zip_code["place_name"]
 
             if type(city) == str:
-                self.window[self.USEREDIT_CITY_INPUT].update(value=city, disabled=True)
+                self.window[self.USEREDIT_CITY_INPUT].update(value=city, disabled=True)  # type: ignore
             else:
-                self.window[self.USEREDIT_CITY_INPUT].update(disabled=False)
+                self.window[self.USEREDIT_CITY_INPUT].update(disabled=False)  # type: ignore
 
     def on_member_sepa_mandate_date_changed(self, values: Dict[Any, Any]):
         if values[self.USEREDIT_SEPAMANDATEDATE_INPUT] == "":
@@ -1503,27 +1503,27 @@ class MemmerGUI:
         if values[self.USEREDIT_IBAN_INPUT] == "":
             # Leaving this empty is allowed
             set_validation_state(self.window[self.USEREDIT_IBAN_INPUT], True)
-            self.window[self.USEREDIT_BIC_INPUT].update(value="")
-            self.window[self.USEREDIT_CREDITINSTITUTE_INPUT].update(value="")
+            self.window[self.USEREDIT_BIC_INPUT].update(value="")  # type: ignore
+            self.window[self.USEREDIT_CREDITINSTITUTE_INPUT].update(value="")  # type: ignore
         else:
             iban = validate_iban(self.window[self.USEREDIT_IBAN_INPUT])
 
             if not iban is None:
                 if not iban.bic is None:
-                    self.window[self.USEREDIT_BIC_INPUT].update(
+                    self.window[self.USEREDIT_BIC_INPUT].update(  # type: ignore
                         value=iban.bic, disabled=True
                     )
                 else:
-                    self.window[self.USEREDIT_BIC_INPUT].update(
+                    self.window[self.USEREDIT_BIC_INPUT].update(  # type: ignore
                         value="", disabled=False
                     )
 
                 if iban.bank_name is not None:
-                    self.window[self.USEREDIT_CREDITINSTITUTE_INPUT].update(
+                    self.window[self.USEREDIT_CREDITINSTITUTE_INPUT].update(  # type: ignore
                         value=iban.bank_name
                     )
                 else:
-                    self.window[self.USEREDIT_CREDITINSTITUTE_INPUT].update(
+                    self.window[self.USEREDIT_CREDITINSTITUTE_INPUT].update(  # type: ignore
                         value=_("Unknown")
                     )
 
@@ -1532,11 +1532,11 @@ class MemmerGUI:
 
     def on_member_fee_overwrite_changed(self, values: Dict[Any, Any]):
         if values[self.USEREDIT_FEEOVERWRITE_CHECK]:
-            self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(disabled=False)
+            self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(disabled=False)  # type: ignore
         else:
             # TODO: Re-compute regular monthly fee and write that into the respective field
-            self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(disabled=True)
-            self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(
+            self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(disabled=True)  # type: ignore
+            self.window[self.USEREDIT_MONTHLYFEE_INPUT].update(  # type: ignore
                 value=_("Save and re-load to compute fee")
             )
 
@@ -1545,41 +1545,41 @@ class MemmerGUI:
             reason = self.window["-onetimefee_reason_{}-".format(i)]
             amount = self.window["-onetimefee_amount_{}-".format(i)]
 
-            if reason.get().strip() != "":
+            if reason.get().strip() != "":  # type: ignore
                 validate_non_empty(amount)
-            if amount.get().strip() != "":
+            if amount.get().strip() != "":  # type: ignore
                 validate_non_empty(reason)
                 validate_amount(amount)
 
     def on_useredit_cancel_pressed(self, values: Dict[Any, Any]):
-        self.window[self.USEREDITOR_COLUMN].update(visible=False)
+        self.window[self.USEREDITOR_COLUMN].update(visible=False)  # type: ignore
         self.open_management()
 
     def validate_useredit_contents(self, values: Dict[Any, Any]) -> Optional[str]:
         # Check presence of mandatory fields
-        if self.window[self.USEREDIT_FIRSTNAME_INPUT].get().strip() == "":
+        if self.window[self.USEREDIT_FIRSTNAME_INPUT].get().strip() == "":  # type: ignore
             return _("Missing first name")
-        elif self.window[self.USEREDIT_LASTNAME_INPUT].get().strip() == "":
+        elif self.window[self.USEREDIT_LASTNAME_INPUT].get().strip() == "":  # type: ignore
             return _("Missing last name")
-        elif self.window[self.USEREDIT_BIRTHDAY_INPUT].get().strip() == "":
+        elif self.window[self.USEREDIT_BIRTHDAY_INPUT].get().strip() == "":  # type: ignore
             return _("Missing birthday")
-        elif self.window[self.USEREDIT_STREET_INPUT].get().strip() == "":
+        elif self.window[self.USEREDIT_STREET_INPUT].get().strip() == "":  # type: ignore
             return _("Missing street")
-        elif self.window[self.USEREDIT_STREETNUM_INPUT].get().strip() == "":
+        elif self.window[self.USEREDIT_STREETNUM_INPUT].get().strip() == "":  # type: ignore
             return _("Missing street number")
-        elif self.window[self.USEREDIT_POSTALCODE_INPUT].get().strip() == "":
+        elif self.window[self.USEREDIT_POSTALCODE_INPUT].get().strip() == "":  # type: ignore
             return _("Missing postal code")
-        elif self.window[self.USEREDIT_CITY_INPUT].get().strip() == "":
+        elif self.window[self.USEREDIT_CITY_INPUT].get().strip() == "":  # type: ignore
             return _("Missing city")
-        elif self.window[self.USEREDIT_ENTRYDATE_INPUT].get().strip() == "":
+        elif self.window[self.USEREDIT_ENTRYDATE_INPUT].get().strip() == "":  # type: ignore
             return _("Missing entry date")
 
-        if self.window[self.USEREDIT_SEPAMANDATEDATE_INPUT].get().strip() != "":
-            if self.window[self.USEREDIT_IBAN_INPUT].get().strip() == "":
+        if self.window[self.USEREDIT_SEPAMANDATEDATE_INPUT].get().strip() != "":  # type: ignore
+            if self.window[self.USEREDIT_IBAN_INPUT].get().strip() == "":  # type: ignore
                 return _("If a SEPA mandate is configured, an IBAN is required")
-            elif self.window[self.USEREDIT_BIC_INPUT].get().strip() == "":
+            elif self.window[self.USEREDIT_BIC_INPUT].get().strip() == "":  # type: ignore
                 return _("If a SEPA mandate is configured, the BIC is required")
-            elif self.window[self.USEREDIT_ACCOUNTOWNER_INPUT].get().strip() == "":
+            elif self.window[self.USEREDIT_ACCOUNTOWNER_INPUT].get().strip() == "":  # type: ignore
                 return _(
                     "If a SEPA mandate is configured, the account owner is required"
                 )
@@ -1587,7 +1587,7 @@ class MemmerGUI:
         try:
             Gender(
                 self.window[self.USEREDIT_GENDER_COMBO]
-                .metadata["all_values"]
+                .metadata["all_values"]  # type: ignore
                 .index(values[self.USEREDIT_GENDER_COMBO])
             )
         except:
@@ -1632,9 +1632,11 @@ class MemmerGUI:
             validated_fields.append("-onetimefee_amount_{}-".format(i))
 
         for current in validated_fields:
-            if type(self.window[current].metadata) == dict and not self.window[
+            if type(self.window[current].metadata) == dict and not self.window[  # type: ignore
                 current
-            ].metadata.get("valid", True):
+            ].metadata.get(  # type: ignore
+                "valid", True
+            ):  # type: ignore
                 # This field has been considered invalid
                 sg.popup_ok(_("There are fields with invalid data").format(current))
                 return
@@ -1642,7 +1644,7 @@ class MemmerGUI:
         for current in field_map.keys():
             value: Optional[Union[str, bool, datetime.date]] = self.window[
                 field_map[current]
-            ].get()
+            ].get()  # type: ignore
 
             if type(value) == str:
                 value = value.strip()
@@ -1661,11 +1663,11 @@ class MemmerGUI:
 
         value_map["gender"] = Gender(
             self.window[self.USEREDIT_GENDER_COMBO]
-            .metadata["all_values"]
+            .metadata["all_values"]  # type: ignore
             .index(values[self.USEREDIT_GENDER_COMBO])
         )
 
-        member: Optional[Member] = self.window[self.USEREDIT_TABGROUP].metadata.get(
+        member: Optional[Member] = self.window[self.USEREDIT_TABGROUP].metadata.get(  # type: ignore
             "user", None
         )
 
@@ -1681,12 +1683,12 @@ class MemmerGUI:
         self.session.execute(
             delete(FeeOverride).where(FeeOverride.member_id == member.id)
         )
-        if self.window[self.USEREDIT_FEEOVERWRITE_CHECK].get():
+        if self.window[self.USEREDIT_FEEOVERWRITE_CHECK].get():  # type: ignore
             self.session.add(
                 FeeOverride(
                     member_id=member.id,
                     amount=Decimal(
-                        self.window[self.USEREDIT_MONTHLYFEE_INPUT].get().strip()
+                        self.window[self.USEREDIT_MONTHLYFEE_INPUT].get().strip()  # type: ignore
                     ),
                 )
             )
@@ -1696,8 +1698,8 @@ class MemmerGUI:
             delete(OneTimeFee).where(OneTimeFee.member_id == member.id)
         )
         for i in range(MAX_ONETIME_FEES):
-            reason = self.window["-onetimefee_reason_{}-".format(i)].get()
-            amount = self.window["-onetimefee_amount_{}-".format(i)].get()
+            reason = self.window["-onetimefee_reason_{}-".format(i)].get()  # type: ignore
+            amount = self.window["-onetimefee_amount_{}-".format(i)].get()  # type: ignore
 
             if reason.strip() == "" or amount.strip() == "":
                 continue
@@ -1720,16 +1722,16 @@ class MemmerGUI:
         participating_sessions = []
         trained_sessions = []
         for i in range(len(sessions)):
-            if not self.window["-user_session_name_{}-".format(i)].visible:
+            if not self.window["-user_session_name_{}-".format(i)].visible:  # type: ignore
                 # As soon as we start seeing the first invisible session row, we have reached
                 # the end of existing sessions
                 break
 
-            session_id: int = self.window["-user_session_name_{}-".format(i)].metadata[
+            session_id: int = self.window["-user_session_name_{}-".format(i)].metadata[  # type: ignore
                 "session_id"
             ]
-            takes_part = self.window["-user_session_participant_{}-".format(i)].get()
-            trains = self.window["-user_session_trainer_{}-".format(i)].get()
+            takes_part = self.window["-user_session_participant_{}-".format(i)].get()  # type: ignore
+            trains = self.window["-user_session_trainer_{}-".format(i)].get()  # type: ignore
 
             if takes_part:
                 participating_sessions.append(session_id)
@@ -1741,15 +1743,15 @@ class MemmerGUI:
         member.participating_sessions = participating_sessions
         member.trained_sessions = trained_sessions
 
-        self.window[self.USEREDITOR_COLUMN].update(visible=False)
+        self.window[self.USEREDITOR_COLUMN].update(visible=False)  # type: ignore
         self.open_management()
 
     def on_useredit_delete_pressed(self, values: Dict[Any, Any]):
-        if "user" not in self.window[self.USEREDIT_TABGROUP].metadata:
+        if "user" not in self.window[self.USEREDIT_TABGROUP].metadata:  # type: ignore
             # This should not have happened -> treat it as a cancel event
             sg.popup_ok(_("No active user set - this should not have been possible"))
         else:
-            user = self.window[self.USEREDIT_TABGROUP].metadata["user"]
+            user = self.window[self.USEREDIT_TABGROUP].metadata["user"]  # type: ignore
             assert type(user) == Member
             assert self.session is not None
 
@@ -1762,7 +1764,7 @@ class MemmerGUI:
 
             self.session.delete(user)
 
-        self.window[self.USEREDITOR_COLUMN].update(visible=False)
+        self.window[self.USEREDITOR_COLUMN].update(visible=False)  # type: ignore
         self.open_management()
 
     def on_useredit_relatives_tab_activated(self, values: Dict[Any, Any]):
@@ -1776,11 +1778,11 @@ class MemmerGUI:
         ].get_list_values()  # type: ignore
         likely_relatives: List[Member] = []
 
-        current_city = self.window[self.USEREDIT_CITY_INPUT].get()
-        current_street = self.window[self.USEREDIT_STREET_INPUT].get()
-        current_streetnum = self.window[self.USEREDIT_STREETNUM_INPUT].get()
+        current_city = self.window[self.USEREDIT_CITY_INPUT].get()  # type: ignore
+        current_street = self.window[self.USEREDIT_STREET_INPUT].get()  # type: ignore
+        current_streetnum = self.window[self.USEREDIT_STREETNUM_INPUT].get()  # type: ignore
         # We store IBANs without spaces and thus we have to remove any spaces before we compare
-        current_iban = self.window[self.USEREDIT_IBAN_INPUT].get().replace(" ", "")
+        current_iban = self.window[self.USEREDIT_IBAN_INPUT].get().replace(" ", "")  # type: ignore
 
         for current_member in potential_relatives:
             if current_member.iban == current_iban or (
@@ -1800,15 +1802,15 @@ class MemmerGUI:
         # Remove duplicates
         likely_relatives = list(set(likely_relatives))
 
-        self.window[self.USEREDIT_LIKELYRELATIVES_LISTBOX].update(
+        self.window[self.USEREDIT_LIKELYRELATIVES_LISTBOX].update(  # type: ignore
             values=likely_relatives
         )
-        self.window[self.USEREDIT_POTENTIALRELATIVES_LISTBOX].update(
+        self.window[self.USEREDIT_POTENTIALRELATIVES_LISTBOX].update(  # type: ignore
             values=[x for x in potential_relatives if not x in likely_relatives]
         )
 
     def on_useredit_relatives_list_activated(self, values: Dict[Any, Any]):
-        selection = self.window[self.USEREDIT_RELATIVES_LISTBOX].get()
+        selection = self.window[self.USEREDIT_RELATIVES_LISTBOX].get()  # type: ignore
         assert len(selection) in [0, 1]
 
         if len(selection) == 0:
@@ -1819,16 +1821,16 @@ class MemmerGUI:
         # Remove that entry from the list of relatives and clear selection
         relatives = self.window[self.USEREDIT_RELATIVES_LISTBOX].get_list_values()  # type: ignore
         relatives.remove(selected_relative)
-        self.window[self.USEREDIT_RELATIVES_LISTBOX].update(values=relatives)
+        self.window[self.USEREDIT_RELATIVES_LISTBOX].update(values=relatives)  # type: ignore
         self.window[self.USEREDIT_RELATIVES_LISTBOX].set_value([])  # type: ignore
 
         # Add it to the likely relatives instead
         likely_relatives = self.window[self.USEREDIT_LIKELYRELATIVES_LISTBOX].get_list_values()  # type: ignore
         likely_relatives.append(selected_relative)
-        self.window[self.USEREDIT_LIKELYRELATIVES_LISTBOX].update(likely_relatives)
+        self.window[self.USEREDIT_LIKELYRELATIVES_LISTBOX].update(likely_relatives)  # type: ignore
 
     def handle_add_relative(self, list_key: str):
-        selection = self.window[list_key].get()
+        selection = self.window[list_key].get()  # type: ignore
         assert len(selection) in [0, 1]
 
         if len(selection) == 0:
@@ -1839,12 +1841,12 @@ class MemmerGUI:
         # Add it as a relative
         relatives = self.window[self.USEREDIT_RELATIVES_LISTBOX].get_list_values()  # type: ignore
         relatives.append(selected_member)
-        self.window[self.USEREDIT_RELATIVES_LISTBOX].update(values=relatives)
+        self.window[self.USEREDIT_RELATIVES_LISTBOX].update(values=relatives)  # type: ignore
 
         # Remove it from the original list and clear selection
         original = self.window[list_key].get_list_values()  # type: ignore
         original.remove(selected_member)
-        self.window[list_key].update(values=original)
+        self.window[list_key].update(values=original)  # type: ignore
         self.window[list_key].set_value([])  # type: ignore
 
     def on_useredit_likelyrelatives_list_activated(self, values: Dict[Any, Any]):
@@ -1898,21 +1900,21 @@ class MemmerGUI:
     def open_sessioneditor(self, session: Optional[Session] = None):
         # Clear fields
         for field in [self.SESSIONEDIT_NAME_INPUT, self.SESSIONEDIT_FEE_INPUT]:
-            self.window[field].update(value="")
+            self.window[field].update(value="")  # type: ignore
 
-        self.window[self.SESSIONEDIT_COLUMN].metadata["session"] = None
+        self.window[self.SESSIONEDIT_COLUMN].metadata["session"] = None  # type: ignore
 
         if not session is None:
-            self.window[self.SESSIONEDIT_NAME_INPUT].update(value=session.name)
-            self.window[self.SESSIONEDIT_FEE_INPUT].update(
+            self.window[self.SESSIONEDIT_NAME_INPUT].update(value=session.name)  # type: ignore
+            self.window[self.SESSIONEDIT_FEE_INPUT].update(  # type: ignore
                 value="{:.2f}".format(session.membership_fee)
             )
 
-            self.window[self.SESSIONEDIT_COLUMN].metadata["session"] = session
+            self.window[self.SESSIONEDIT_COLUMN].metadata["session"] = session  # type: ignore
 
-        self.window[self.SESSIONEDIT_DELETE_BUTTON].update(disabled=session is None)
+        self.window[self.SESSIONEDIT_DELETE_BUTTON].update(disabled=session is None)  # type: ignore
 
-        self.window[self.SESSIONEDIT_COLUMN].update(visible=True)
+        self.window[self.SESSIONEDIT_COLUMN].update(visible=True)  # type: ignore
 
     def on_sessionedit_name_changed(self, values: Dict[Any, Any]):
         validate_non_empty(self.window[self.SESSIONEDIT_NAME_INPUT], strip=False)
@@ -1921,14 +1923,14 @@ class MemmerGUI:
         validate_amount(self.window[self.SESSIONEDIT_FEE_INPUT])
 
     def on_sessionedit_cancel_pressed(self, values: Dict[Any, Any]):
-        self.window[self.SESSIONEDIT_COLUMN].update(visible=False)
+        self.window[self.SESSIONEDIT_COLUMN].update(visible=False)  # type: ignore
         self.open_management()
 
     def validate_sessionedit_contents(self):
         # Check presence of mandatory data
-        if self.window[self.SESSIONEDIT_NAME_INPUT].get().strip() == "":
+        if self.window[self.SESSIONEDIT_NAME_INPUT].get().strip() == "":  # type: ignore
             return _("Missing session name")
-        elif self.window[self.SESSIONEDIT_FEE_INPUT].get().strip() == "":
+        elif self.window[self.SESSIONEDIT_FEE_INPUT].get().strip() == "":  # type: ignore
             return _("Missing session fee")
 
     def on_sessionedit_save_pressed(self, values: Dict[Any, Any]):
@@ -1948,20 +1950,22 @@ class MemmerGUI:
 
         validated_fields = list(field_map.values())
         for current in validated_fields:
-            if type(self.window[current].metadata) == dict and not self.window[
+            if type(self.window[current].metadata) == dict and not self.window[  # type: ignore
                 current
-            ].metadata.get("valid", True):
+            ].metadata.get(  # type: ignore
+                "valid", True
+            ):  # type: ignore
                 # This field has been considered invalid
                 sg.popup_ok(_("There are fields with invalid data").format(current))
                 return
 
         for current in field_map.keys():
             if current.endswith("_fee"):
-                field_map[current] = Decimal(self.window[field_map[current]].get())
+                field_map[current] = Decimal(self.window[field_map[current]].get())  # type: ignore
             else:
-                field_map[current] = self.window[field_map[current]].get().strip()
+                field_map[current] = self.window[field_map[current]].get().strip()  # type: ignore
 
-        session: Optional[Session] = self.window[self.SESSIONEDIT_COLUMN].metadata.get(
+        session: Optional[Session] = self.window[self.SESSIONEDIT_COLUMN].metadata.get(  # type: ignore
             "session", None
         )
 
@@ -1973,15 +1977,15 @@ class MemmerGUI:
             for current in field_map.keys():
                 setattr(session, current, field_map[current])
 
-        self.window[self.SESSIONEDIT_COLUMN].update(visible=False)
+        self.window[self.SESSIONEDIT_COLUMN].update(visible=False)  # type: ignore
         self.open_management()
 
     def on_sessionedit_delete_pressed(self, values: Dict[Any, Any]):
-        if "session" not in self.window[self.SESSIONEDIT_COLUMN].metadata:
+        if "session" not in self.window[self.SESSIONEDIT_COLUMN].metadata:  # type: ignore
             # This should not have happened -> treat it as a cancel event
             sg.popup_ok(_("No active session set - this should not have been possible"))
         else:
-            session = self.window[self.SESSIONEDIT_COLUMN].metadata["session"]
+            session = self.window[self.SESSIONEDIT_COLUMN].metadata["session"]  # type: ignore
             assert type(session) == Session
             assert self.session is not None
 
@@ -1994,7 +1998,7 @@ class MemmerGUI:
 
             self.session.delete(session)
 
-        self.window[self.SESSIONEDIT_COLUMN].update(visible=False)
+        self.window[self.SESSIONEDIT_COLUMN].update(visible=False)  # type: ignore
         self.open_management()
 
     def create_tally_creator(self):
@@ -2088,36 +2092,36 @@ class MemmerGUI:
         self.connect(self.TALLY_CREATE_BUTTON, self.on_tally_create_button_pressed)
 
     def open_tally_creator(self):
-        self.window[self.TALLY_COLUMN].update(visible=True)
+        self.window[self.TALLY_COLUMN].update(visible=True)  # type: ignore
 
         day_threshold = 20
 
         now = datetime.datetime.now()
         if now.month == 12 and now.day > day_threshold:
             # Select upcoming year
-            self.window[self.TALLY_YEAR_COMBO].update(set_to_index=1)
+            self.window[self.TALLY_YEAR_COMBO].update(set_to_index=1)  # type: ignore
         else:
             # Select current year
-            self.window[self.TALLY_YEAR_COMBO].update(set_to_index=0)
+            self.window[self.TALLY_YEAR_COMBO].update(set_to_index=0)  # type: ignore
 
         month_idx = now.month - 1
         if now.day > day_threshold:
             # Select upcoming month
-            self.window[self.TALLY_MONTH_COMBO].update(
+            self.window[self.TALLY_MONTH_COMBO].update(  # type: ignore
                 set_to_index=(month_idx + 1) % 12
             )
         else:
             # Select current month
-            self.window[self.TALLY_MONTH_COMBO].update(set_to_index=month_idx)
+            self.window[self.TALLY_MONTH_COMBO].update(set_to_index=month_idx)  # type: ignore
 
         # Send event to update the collection date field
         self.window.write_event_value(
-            self.TALLY_YEAR_COMBO, self.window[self.TALLY_YEAR_COMBO].get()
+            self.TALLY_YEAR_COMBO, self.window[self.TALLY_YEAR_COMBO].get()  # type: ignore
         )
 
         config = self.get_config()
 
-        self.window[self.TALLY_OUT_DIR_INPUT].update(
+        self.window[self.TALLY_OUT_DIR_INPUT].update(  # type: ignore
             value=config.tally_dir if config.tally_dir is not None else ""
         )
 
@@ -2126,7 +2130,7 @@ class MemmerGUI:
             datetime.datetime.now() + datetime.timedelta(days=2)
         ).date()
         selected_year: int = int(values[self.TALLY_YEAR_COMBO])
-        all_months = self.window[self.TALLY_MONTH_COMBO].metadata["all_values"]
+        all_months = self.window[self.TALLY_MONTH_COMBO].metadata["all_values"]  # type: ignore
         selected_month: int = all_months.index(values[self.TALLY_MONTH_COMBO])
 
         # Note that the entries here are 1-based - thus the +1
@@ -2159,7 +2163,7 @@ class MemmerGUI:
         validate_date(self.window[self.TALLY_COLLECTION_DATE_INPUT])
 
     def on_tally_cancel_button_pressed(self, values: Dict[Any, Any]):
-        self.window[self.TALLY_COLUMN].update(visible=False)
+        self.window[self.TALLY_COLUMN].update(visible=False)  # type: ignore
         self.open_overview()
 
     def on_tally_create_button_pressed(self, values: Dict[Any, Any]):
@@ -2182,7 +2186,7 @@ class MemmerGUI:
 
         self.write_to_config(ConfigKey.TALLY_DIR, values[self.TALLY_OUT_DIR_INPUT])
 
-        self.window[self.TALLY_COLUMN].update(visible=False)
+        self.window[self.TALLY_COLUMN].update(visible=False)  # type: ignore
         self.open_overview()
 
     def create_tally(self, collection_date: datetime.date, output_dir: str) -> bool:
