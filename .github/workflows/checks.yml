@@ -15,7 +15,7 @@ jobs:
       PYTHONPATH: '${{ github.workspace }}/packages'
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 1
 
@@ -28,5 +28,5 @@ jobs:
       shell: bash
 
     - name: Type checking
-      uses: jakebailey/pyright-action@v1
+      uses: jakebailey/pyright-action@v2
 
