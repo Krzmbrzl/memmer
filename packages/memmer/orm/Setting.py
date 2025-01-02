@@ -21,3 +21,10 @@ class Setting(Base):
     TALLY_CREDITOR_IBAN = "tally_creditor_iban"
     TALLY_CREDITOR_BIC = "tally_creditor_bic"
     TALLY_CREDITOR_ID = "tally_creditor_identification"
+
+    CLUB_NAME = "club_name"
+    CLUB_NUMBER = "club_number"
+    CLUB_FOUNDING_YEAR = "club_founding_year"
+    CLUB_CONTACT_PERSON = "club_contact_person"
+    CLUB_ASSOCIATION = "club_association"
+    CLUB_ASSOCIATION_NUMERIC = "club_association_numeric"
