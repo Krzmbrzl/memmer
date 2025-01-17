@@ -6,485 +6,492 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "POT-Creation-Date: 2024-02-18 09:41+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: Automatically generated\n"
-"Language-Team: none\n"
+"PO-Revision-Date: 2025-01-18 19:00+0000\n"
+"Last-Translator: தமிழ்நேரம் <anishprabu.t@gmail.com>\n"
+"Language-Team: Tamil <https://hosted.weblate.org/projects/memmer/gui/ta/>\n"
 "Language: ta\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 5.10-dev\n"
 "Generated-By: pygettext.py 1.5\n"
 
 #: MemmerGUI.py:330
 msgid "Do you want to persist your modifications?"
-msgstr ""
+msgstr "உங்கள் மாற்றங்களைத் தொடர விரும்புகிறீர்களா?"
 
 #: MemmerGUI.py:331
 msgid "Persist changes?"
-msgstr ""
+msgstr "தொடர்ந்து மாற்றங்கள்?"
 
 #: MemmerGUI.py:361
 msgid "Failed to parse config file ('{}'): {}"
-msgstr ""
+msgstr "கட்டமைப்பு கோப்பை அலசுவதில் தோல்வி ('{}'): {}"
 
 #: MemmerGUI.py:362
 msgid "Malformatted config"
-msgstr ""
+msgstr "Malformatted கட்டமைப்பு"
 
 #: MemmerGUI.py:372
 msgid "Backend:"
-msgstr ""
+msgstr "பின்தளத்தில்:"
 
 #: MemmerGUI.py:373 MemmerGUI.py:398
 msgid "User:"
-msgstr ""
+msgstr "பயனர்:"
 
 #: MemmerGUI.py:374 MemmerGUI.py:400
 msgid "Password:"
-msgstr ""
+msgstr "கடவுச்சொல்:"
 
 #: MemmerGUI.py:375
 msgid "Host:"
-msgstr ""
+msgstr "புரவலன்:"
 
 #: MemmerGUI.py:376 MemmerGUI.py:399
 msgid "Port:"
-msgstr ""
+msgstr "போர்ட்:"
 
 #: MemmerGUI.py:377
 msgid "Database:"
-msgstr ""
+msgstr "தரவுத்தளம்:"
 
 #: MemmerGUI.py:401
 msgid "Private key:"
-msgstr ""
+msgstr "தனிப்பட்ட விசை:"
 
 #: MemmerGUI.py:420
 msgid "Connection type:"
-msgstr ""
+msgstr "இணைப்பு வகை:"
 
 #: MemmerGUI.py:432
 msgid "Database"
-msgstr ""
+msgstr "தரவுத்தளம்"
 
 #: MemmerGUI.py:440
 msgid "SSH"
-msgstr ""
+msgstr "பாஓடு"
 
 #: MemmerGUI.py:449
 msgid "Connect"
-msgstr ""
+msgstr "இணை"
 
 #: MemmerGUI.py:584
 msgid "Failed to establish ssh tunnel: "
-msgstr ""
+msgstr "பாஓடு சுரங்கப்பாதையை நிறுவுவதில் தோல்வி: "
 
 #: MemmerGUI.py:593
 msgid "Warning: Using in-memory (temporary) SQLite database not supported"
 msgstr ""
+"எச்சரிக்கை: இன்-மெமரி (தற்காலிக) சதுர தரவுத்தளத்தைப் பயன்படுத்துதல் ஆதரிக்கப்படவில்லை"
 
 #: MemmerGUI.py:664
 msgid ""
 "Invalid connection parameters!\n"
 "{}"
 msgstr ""
+"தவறான இணைப்பு அளவுருக்கள்!\n"
+" {}"
 
 #: MemmerGUI.py:670
 msgid "Management"
-msgstr ""
+msgstr "மேலாண்மை"
 
 #: MemmerGUI.py:673
 msgid "Create tally"
-msgstr ""
+msgstr "எண்ணிக்கையை உருவாக்குங்கள்"
 
 #: MemmerGUI.py:703
 msgid "Add member"
-msgstr ""
+msgstr "உறுப்பினரைச் சேர்க்கவும்"
 
 #: MemmerGUI.py:706 MemmerGUI.py:724 MemmerGUI.py:1160
 msgid "Search:"
-msgstr ""
+msgstr "தேடல்:"
 
 #: MemmerGUI.py:721
 msgid "Add session"
-msgstr ""
+msgstr "அமர்வு சேர்க்கவும்"
 
 #: MemmerGUI.py:742
 msgid "Members"
-msgstr ""
+msgstr "உறுப்பினர்கள்"
 
 #: MemmerGUI.py:750 MemmerGUI.py:1214
 msgid "Sessions"
-msgstr ""
+msgstr "அமர்வுகள்"
 
 #: MemmerGUI.py:756
 msgid "Back"
-msgstr ""
+msgstr "பின்"
 
 #: MemmerGUI.py:841
 msgid "Selecting more than one member at once is not implemented"
 msgstr ""
+"ஒரே நேரத்தில் ஒன்றுக்கு மேற்பட்ட உறுப்பினர்களைத் தேர்ந்தெடுப்பது செயல்படுத்தப்படவில்லை"
 
 #: MemmerGUI.py:856
 msgid "Selecting more than one session at once is not implemented"
 msgstr ""
+"ஒரே நேரத்தில் ஒன்றுக்கு மேற்பட்ட அமர்வுகளைத் தேர்ந்தெடுப்பது செயல்படுத்தப்படவில்லை"
 
 #: MemmerGUI.py:870
 msgid "Diverse"
-msgstr ""
+msgstr "மாறுபட்ட"
 
 #: MemmerGUI.py:870
 msgid "Female"
-msgstr ""
+msgstr "பெண்"
 
 #: MemmerGUI.py:870
 msgid "Male"
-msgstr ""
+msgstr "ஆண்"
 
 #: MemmerGUI.py:875
 msgid "Gender:"
-msgstr ""
+msgstr "பாலினம்:"
 
 #: MemmerGUI.py:876
 msgid "First name:"
-msgstr ""
+msgstr "முதல் பெயர்:"
 
 #: MemmerGUI.py:877
 msgid "Last name:"
-msgstr ""
+msgstr "கடைசி பெயர்:"
 
 #: MemmerGUI.py:878
 msgid "Birthday:"
-msgstr ""
+msgstr "பிறந்த நாள்:"
 
 #: MemmerGUI.py:909
 msgid "Street:"
-msgstr ""
+msgstr "தெரு:"
 
 #: MemmerGUI.py:910
 msgid "Street number:"
-msgstr ""
+msgstr "தெரு எண்:"
 
 #: MemmerGUI.py:911
 msgid "Postal code:"
-msgstr ""
+msgstr "அஞ்சல் குறியீடு:"
 
 #: MemmerGUI.py:912
 msgid "City:"
-msgstr ""
+msgstr "நகரம்:"
 
 #: MemmerGUI.py:934
 msgid "Phone number:"
-msgstr ""
+msgstr "தொலைபேசி எண்:"
 
 #: MemmerGUI.py:935
 msgid "Email:"
-msgstr ""
+msgstr "மின்னஞ்சல்:"
 
 #: MemmerGUI.py:951
 msgid "Entry date:"
-msgstr ""
+msgstr "நுழைவு தேதி:"
 
 #: MemmerGUI.py:952
 msgid "Exit date:"
-msgstr ""
+msgstr "வெளியேறும் தேதி:"
 
 #: MemmerGUI.py:972
 msgid "Honorable member"
-msgstr ""
+msgstr "மாண்புமிகு உறுப்பினர்"
 
 #: MemmerGUI.py:986
 msgid "Personal"
-msgstr ""
+msgstr "தனிப்பட்ட"
 
 #: MemmerGUI.py:988
 msgid "Address"
-msgstr ""
+msgstr "முகவரி"
 
 #: MemmerGUI.py:990
 msgid "Contact"
-msgstr ""
+msgstr "தொடர்பு"
 
 #: MemmerGUI.py:992
 msgid "Membership"
-msgstr ""
+msgstr "உறுப்பினர்"
 
 #: MemmerGUI.py:999
 msgid "SEPA mandate date:"
-msgstr ""
+msgstr "செபா ஆணை தேதிகள்:"
 
 #: MemmerGUI.py:1000
 msgid "IBAN:"
-msgstr ""
+msgstr "இபான்:"
 
 #: MemmerGUI.py:1001
 msgid "BIC:"
-msgstr ""
+msgstr "பிக்:"
 
 #: MemmerGUI.py:1002
 msgid "Institute:"
-msgstr ""
+msgstr "நிறுவனம்:"
 
 #: MemmerGUI.py:1003
 msgid "Account owner:"
-msgstr ""
+msgstr "கணக்கு உரிமையாளர்:"
 
 #: MemmerGUI.py:1031
 msgid "Monthly fee:"
-msgstr ""
+msgstr "மாதாந்திர கட்டணம்:"
 
 #: MemmerGUI.py:1032
 msgid "One-time fees:"
-msgstr ""
+msgstr "ஒரு முறை கட்டணம்:"
 
 #: MemmerGUI.py:1047
 msgid "Overwrite"
-msgstr ""
+msgstr "மேலெழுதும்"
 
 #: MemmerGUI.py:1058
 msgid "Reason"
-msgstr ""
+msgstr "காரணம்"
 
 #: MemmerGUI.py:1062
 msgid "Amount"
-msgstr ""
+msgstr "தொகை"
 
 #: MemmerGUI.py:1091
 msgid "Bank details"
-msgstr ""
+msgstr "வங்கி விவரங்கள்"
 
 #: MemmerGUI.py:1093
 msgid "Fees"
-msgstr ""
+msgstr "கட்டணம்"
 
 #: MemmerGUI.py:1110 MemmerGUI.py:1121 MemmerGUI.py:1220
 msgid "Participant"
-msgstr ""
+msgstr "பங்கேற்பாளர்"
 
 #: MemmerGUI.py:1111 MemmerGUI.py:1126 MemmerGUI.py:1221
 msgid "Trainer"
-msgstr ""
+msgstr "பயிற்சியாளர்"
 
 #: MemmerGUI.py:1116
 msgid "Session"
-msgstr ""
+msgstr "அமர்வு"
 
 #: MemmerGUI.py:1135 MemmerGUI.py:1225
 msgid "Relatives"
-msgstr ""
+msgstr "உறவினர்கள்"
 
 #: MemmerGUI.py:1147
 msgid "Likely relatives"
-msgstr ""
+msgstr "உறவினர்கள்"
 
 #: MemmerGUI.py:1165
 msgid "Potential relatives"
-msgstr ""
+msgstr "சாத்தியமான உறவினர்கள்"
 
 #: MemmerGUI.py:1204
 msgid "General"
-msgstr ""
+msgstr "பொது"
 
 #: MemmerGUI.py:1209
 msgid "Payment"
-msgstr ""
+msgstr "கட்டணம்"
 
 #: MemmerGUI.py:1240 MemmerGUI.py:1940 MemmerGUI.py:2132
 msgid "Cancel"
-msgstr ""
+msgstr "ரத்துசெய்"
 
 #: MemmerGUI.py:1241 MemmerGUI.py:1941
 msgid "Save"
-msgstr ""
+msgstr "சேமி"
 
 #: MemmerGUI.py:1242 MemmerGUI.py:1942
 msgid "Delete"
-msgstr ""
+msgstr "நீக்கு"
 
 #: MemmerGUI.py:1404
 msgid "Admission fee"
-msgstr ""
+msgstr "சேர்க்கை கட்டணம்"
 
 #: MemmerGUI.py:1413 MemmerGUI.py:1605
 msgid "Save and re-load to compute fee"
-msgstr ""
+msgstr "கட்டணத்தை கணக்கிட சேமித்து மீண்டும் ஏற்றவும்"
 
 #: MemmerGUI.py:1513
 msgid "({:d} years)"
-msgstr ""
+msgstr "({:d} ஆண்டுகள்)"
 
 #: MemmerGUI.py:1592
 msgid "Unknown"
-msgstr ""
+msgstr "தெரியவில்லை"
 
 #: MemmerGUI.py:1626
 msgid "Missing first name"
-msgstr ""
+msgstr "முதல் பெயரைக் காணவில்லை"
 
 #: MemmerGUI.py:1628
 msgid "Missing last name"
-msgstr ""
+msgstr "கடைசி பெயரைக் காணவில்லை"
 
 #: MemmerGUI.py:1630
 msgid "Missing birthday"
-msgstr ""
+msgstr "பிறந்த நாள் இல்லை"
 
 #: MemmerGUI.py:1632
 msgid "Missing street"
-msgstr ""
+msgstr "தெரு இல்லை"
 
 #: MemmerGUI.py:1634
 msgid "Missing street number"
-msgstr ""
+msgstr "தெரு எண் இல்லை"
 
 #: MemmerGUI.py:1636
 msgid "Missing postal code"
-msgstr ""
+msgstr "அஞ்சல் குறியீடு இல்லை"
 
 #: MemmerGUI.py:1638
 msgid "Missing city"
-msgstr ""
+msgstr "நகரம் காணவில்லை"
 
 #: MemmerGUI.py:1640
 msgid "Missing entry date"
-msgstr ""
+msgstr "நுழைவு தேதி இல்லை"
 
 #: MemmerGUI.py:1644
 msgid "If a SEPA mandate is configured, an IBAN is required"
-msgstr ""
+msgstr "ஒரு செபா ஆணை கட்டமைக்கப்பட்டிருந்தால், ஒரு இபான் தேவை"
 
 #: MemmerGUI.py:1646
 msgid "If a SEPA mandate is configured, the BIC is required"
-msgstr ""
+msgstr "ஒரு செபா ஆணை கட்டமைக்கப்பட்டால், BIC தேவை"
 
 #: MemmerGUI.py:1648
 msgid "If a SEPA mandate is configured, the account owner is required"
-msgstr ""
+msgstr "ஒரு செபா ஆணை கட்டமைக்கப்பட்டிருந்தால், கணக்கு உரிமையாளர் தேவை"
 
 #: MemmerGUI.py:1659
 msgid "No gender specified"
-msgstr ""
+msgstr "பாலினம் எதுவும் குறிப்பிடப்படவில்லை"
 
 #: MemmerGUI.py:1669
 msgid "Invalid member data: {}"
-msgstr ""
+msgstr "தவறான உறுப்பினர் தரவு: {}"
 
 #: MemmerGUI.py:1669 MemmerGUI.py:2005
 msgid "Invalid data"
-msgstr ""
+msgstr "தவறான தரவு"
 
 #: MemmerGUI.py:1704 MemmerGUI.py:2020
 msgid "There are fields with invalid data"
-msgstr ""
+msgstr "தவறான தரவைக் கொண்ட புலங்கள் உள்ளன"
 
 #: MemmerGUI.py:1815
 msgid "No active user set - this should not have been possible"
-msgstr ""
+msgstr "செயலில் பயனர் தொகுப்பு இல்லை - இது சாத்தியமில்லை"
 
 #: MemmerGUI.py:1822 MemmerGUI.py:2054
 msgid "Are you sure you want to delete \"{}\"?"
-msgstr ""
+msgstr "\"{}\" ஐ நீக்க விரும்புகிறீர்களா?"
 
 #: MemmerGUI.py:1926
 msgid "Name:"
-msgstr ""
+msgstr "பெயர்:"
 
 #: MemmerGUI.py:1927
 msgid "Membership fee:"
-msgstr ""
+msgstr "உறுப்பினர் கட்டணம்:"
 
 #: MemmerGUI.py:1995
 msgid "Missing session name"
-msgstr ""
+msgstr "அமர்வு பெயர் காணவில்லை"
 
 #: MemmerGUI.py:1997
 msgid "Missing session fee"
-msgstr ""
+msgstr "அமர்வு கட்டணம் இல்லை"
 
 #: MemmerGUI.py:2005
 msgid "Invalid session data: {}"
-msgstr ""
+msgstr "தவறான அமர்வு தரவு: {}"
 
 #: MemmerGUI.py:2047
 msgid "No active session set - this should not have been possible"
-msgstr ""
+msgstr "செயலில் அமர்வு தொகுப்பு இல்லை - இது சாத்தியமில்லை"
 
 #: MemmerGUI.py:2067
 msgid "Year:"
-msgstr ""
+msgstr "ஆண்டு:"
 
 #: MemmerGUI.py:2068
 msgid "For month:"
-msgstr ""
+msgstr "மாதத்திற்கு:"
 
 #: MemmerGUI.py:2069
 msgid "Collection date:"
-msgstr ""
+msgstr "சேகரிப்பு தேதி:"
 
 #: MemmerGUI.py:2070
 msgid "Output dir:"
-msgstr ""
+msgstr "வெளியீடு dir:"
 
 #: MemmerGUI.py:2074
 msgid "January"
-msgstr ""
+msgstr "மா-தை"
 
 #: MemmerGUI.py:2075
 msgid "February"
-msgstr ""
+msgstr "தை-மாசி"
 
 #: MemmerGUI.py:2076
 msgid "March"
-msgstr ""
+msgstr "மா-பங்குனி"
 
 #: MemmerGUI.py:2077
 msgid "April"
-msgstr ""
+msgstr "ப-சித்திரை"
 
 #: MemmerGUI.py:2078
 msgid "May"
-msgstr ""
+msgstr "சி-வைகாசி"
 
 #: MemmerGUI.py:2079
 msgid "June"
-msgstr ""
+msgstr "வை-ஆனி"
 
 #: MemmerGUI.py:2080
 msgid "July"
-msgstr ""
+msgstr "ஆ-ஆடி"
 
 #: MemmerGUI.py:2081
 msgid "August"
-msgstr ""
+msgstr "ஆ-ஆவணி"
 
 #: MemmerGUI.py:2082
 msgid "September"
-msgstr ""
+msgstr "ஆ-புரட்டாசி"
 
 #: MemmerGUI.py:2083
 msgid "October"
-msgstr ""
+msgstr "பு-ஐப்பசி"
 
 #: MemmerGUI.py:2084
 msgid "November"
-msgstr ""
+msgstr "ஐ-கார்த்திகை"
 
 #: MemmerGUI.py:2085
 msgid "December"
-msgstr ""
+msgstr "கா-மார்கழி"
 
 #: MemmerGUI.py:2133
 msgid "Create"
-msgstr ""
+msgstr "உருவாக்கு"
 
 #: MemmerGUI.py:2238
 msgid "The given collection date '{}' is not of ISO format"
-msgstr ""
+msgstr "கொடுக்கப்பட்ட சேகரிப்பு தேதி '{}' ஐஎச்ஓ வடிவத்தில் இல்லை"
 
 #: MemmerGUI.py:2259
 msgid "Output directory '{}' doesn't exist or isn't a directory"
-msgstr ""
+msgstr "வெளியீட்டு அடைவு '{}' இல்லை அல்லது ஒரு அடைவு அல்ல"
 
 #: MemmerGUI.py:2328
 msgid "Memmer"
-msgstr ""
+msgstr "MOMMER"
