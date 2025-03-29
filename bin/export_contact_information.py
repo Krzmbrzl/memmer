@@ -164,7 +164,7 @@ def main():
         ref_date: date = args.target_date
 
         if args.min_age is not None:
-            query.where(
+            query = query.where(
                 Member.birthday
                 <= datetime(
                     year=ref_date.year - args.min_age,
@@ -173,7 +173,7 @@ def main():
                 )
             )
         if args.max_age is not None:
-            query.where(
+            query = query.where(
                 Member.birthday
                 >= datetime(
                     year=ref_date.year - args.max_age,
