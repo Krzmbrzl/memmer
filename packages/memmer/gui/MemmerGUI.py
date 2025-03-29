@@ -49,9 +49,9 @@ from memmer.queries import (
     compute_monthly_fee,
     get_relatives,
     set_relatives,
-    create_sepa_payment_initiation_message_object,
     serialize_sepa_message,
     CreditorInfo,
+    create_tally,
 )
 from memmer import AdmissionFeeKey
 
@@ -2200,64 +2200,9 @@ class MemmerGUI:
             )
             return False
 
-        creditor_name = (
-            self.session.scalars(
-                select(Setting).where(Setting.name == Setting.TALLY_CREDITOR_NAME)
-            )
-            .one()
-            .value
+        create_tally(
+            session=self.session, output_dir=output_dir, collection_date=collection_date
         )
-        creditor_iban = (
-            self.session.scalars(
-                select(Setting).where(Setting.name == Setting.TALLY_CREDITOR_IBAN)
-            )
-            .one()
-            .value
-        )
-        creditor_bic = (
-            self.session.scalars(
-                select(Setting).where(Setting.name == Setting.TALLY_CREDITOR_BIC)
-            )
-            .one()
-            .value
-        )
-        creditor_id = (
-            self.session.scalars(
-                select(Setting).where(Setting.name == Setting.TALLY_CREDITOR_ID)
-            )
-            .one()
-            .value
-        )
-
-        now = datetime.datetime.now()
-        message_id = "Memmer-{}-{:02d}-{:02d}-{:02d}".format(
-            now.date().isoformat(), now.hour, now.minute, now.second
-        )
-
-        message = create_sepa_payment_initiation_message_object(
-            session=self.session,
-            msg_id=message_id,
-            creditor_info=CreditorInfo(
-                name=creditor_name,
-                iban=creditor_iban,
-                bic=creditor_bic,
-                identification=creditor_id,
-            ),
-            collection_date=collection_date,
-        )
-
-        serialized_message = serialize_sepa_message(message)
-
-        with open(os.path.join(output_dir, message_id + ".xml"), "w") as out_file:
-            out_file.write(serialized_message)
-
-        tally = Tally(
-            creation_time=now,
-            collection_date=collection_date,
-            total_amount=Decimal(message.cstmr_drct_dbt_initn.grp_hdr.ctrl_sum),  # type: ignore
-            contents=serialized_message,
-        )
-        self.session.add(tally)
 
         return True
 
