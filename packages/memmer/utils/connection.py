@@ -96,6 +96,7 @@ def establish_ssh_tunnel(params: SSHTunnelParameter) -> SSHTunnelForwarder:
         ssh_password=params.password,
         ssh_pkey=params.key,
         remote_bind_address=(params.remote_address, params.remote_port),
+        local_bind_address=("127.0.0.1",),
     )
 
     tunnel.start()
