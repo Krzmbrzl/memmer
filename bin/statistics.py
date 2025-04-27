@@ -5,9 +5,15 @@ import datetime
 import os
 
 from memmer.orm import Member, Gender
-from memmer.utils import nominal_year_diff, restrict_to_active_members
+from memmer.utils import (
+    interactive_connect,
+    load_config,
+    ConnectionParameter,
+    restrict_to_active_members,
+    nominal_year_diff,
+)
 
-from sqlalchemy import create_engine, select, func
+from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
 import matplotlib.pyplot as plt
@@ -187,9 +193,6 @@ def create_statistics(
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--db-path", help="Path to the SQLite DB", required=True, metavar="PATH"
-    )
-    parser.add_argument(
         "--target-date",
         help="Date to generate the statistics for (in ISO format)",
         type=datetime.date.fromisoformat,
@@ -213,14 +216,20 @@ def main():
 
     args = parser.parse_args()
 
-    engine = create_engine("sqlite:///{}".format(args.db_path))
-    with Session(bind=engine) as session:
+    config = load_config()
+    params = ConnectionParameter.from_config(config)
+    session, tunnel = interactive_connect(params=params)
+
+    with session:
         create_statistics(
             session=session,
             target_date=args.target_date,
             since_date=args.since_date,
             output_path=args.out_path,
         )
+
+    if tunnel is not None:
+        tunnel.close()
 
 
 if __name__ == "__main__":
