@@ -3,6 +3,7 @@
 from typing import Dict
 
 import argparse
+import csv
 import datetime
 import xml.etree.cElementTree as ET
 
@@ -139,12 +140,45 @@ def create_wlsb_report(session: Session, output_path: str, target_date: datetime
     tree.write(output_path, encoding="utf-8", xml_declaration=True)
 
 
+def create_member_list(
+    session: Session,
+    output_path: str,
+    target_date: datetime.date,
+    minor_only: bool = False,
+):
+    with open(output_path, "w") as out_file:
+        writer = csv.writer(out_file)
+
+        # TODO Localize
+        writer.writerow(["Nachname", "Vorname(n)", "Geburtstag", "Straße", "Stadt"])
+
+        query = select(Member).order_by(Member.birthday.desc())
+        if minor_only:
+            earliest_birthday = datetime.date(
+                year=target_date.year - 18, month=target_date.month, day=target_date.day
+            )
+            query = query.filter(Member.birthday > earliest_birthday)
+        query = restrict_to_active_members(query=query, target_date=target_date)
+
+        for member in session.scalars(query).all():
+            assert type(member) is Member
+            writer.writerow(
+                [
+                    member.last_name,
+                    member.first_name,
+                    member.birthday,
+                    f"{member.street} {member.street_number}",
+                    f"{member.postal_code} {member.city}",
+                ]
+            )
+
+
 def main():
     parser = argparse.ArgumentParser(description="Utility to create various reports")
 
     parser.add_argument(
         "--kind",
-        choices=["DTV", "WLSB"],
+        choices=["DTV", "WLSB", "LIST"],
         required=True,
         help="The kind of report to create",
     )
@@ -177,6 +211,10 @@ def main():
             )
         elif args.kind == "WLSB":
             create_wlsb_report(
+                session=session, output_path=args.output, target_date=args.target_date
+            )
+        elif args.kind == "LIST":
+            create_member_list(
                 session=session, output_path=args.output, target_date=args.target_date
             )
         else:
