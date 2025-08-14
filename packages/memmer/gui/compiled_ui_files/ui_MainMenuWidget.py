@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'MainMenuWidget.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.7.2
+## Created by: Qt User Interface Compiler version 6.9.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -66,8 +66,6 @@ class Ui_MainMenuWidget(object):
         self.gridLayout.setColumnStretch(2, 1)
 
         self.retranslateUi(MainMenuWidget)
-
-        QMetaObject.connectSlotsByName(MainMenuWidget)
     # setupUi
 
     def retranslateUi(self, MainMenuWidget):

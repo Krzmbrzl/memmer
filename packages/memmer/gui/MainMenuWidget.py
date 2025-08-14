@@ -1,10 +1,10 @@
-from ui_MainMenuWidget import Ui_MainMenuWidget
+from .compiled_ui_files.ui_MainMenuWidget import Ui_MainMenuWidget
 
 from PySide6.QtWidgets import QWidget
 
 
 class MainMenuWidget(QWidget, Ui_MainMenuWidget):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(parent)
 
         self.setupUi(self)

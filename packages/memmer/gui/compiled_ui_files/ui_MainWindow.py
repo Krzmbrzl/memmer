@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'MainWindow.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.7.2
+## Created by: Qt User Interface Compiler version 6.9.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -20,10 +20,10 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QMenu, QMenuBar,
     QSizePolicy, QStackedWidget, QStatusBar, QVBoxLayout,
     QWidget)
 
-from ConnectWidget import ConnectWidget
-from MainMenuWidget import MainMenuWidget
-from OverviewWidget import OverviewWidget
-from TallyWidget import TallyWidget
+from ..ConnectWidget import ConnectWidget
+from ..MainMenuWidget import MainMenuWidget
+from ..OverviewWidget import OverviewWidget
+from ..TallyWidget import TallyWidget
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -78,8 +78,6 @@ class Ui_MainWindow(object):
 
         self.page_stack.setCurrentIndex(0)
 
-
-        QMetaObject.connectSlotsByName(MainWindow)
     # setupUi
 
     def retranslateUi(self, MainWindow):

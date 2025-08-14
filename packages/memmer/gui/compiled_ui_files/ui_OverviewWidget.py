@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'OverviewWidget.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.7.2
+## Created by: Qt User Interface Compiler version 6.9.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QHBoxLayout, QHe
     QPushButton, QSizePolicy, QSpacerItem, QTabWidget,
     QTableView, QVBoxLayout, QWidget)
 
-from FilterWidget import FilterWidget
+from ..FilterWidget import FilterWidget
 
 class Ui_OverviewWidget(object):
     def setupUi(self, OverviewWidget):
@@ -101,8 +101,6 @@ class Ui_OverviewWidget(object):
 
         self.tabWidget.setCurrentIndex(0)
 
-
-        QMetaObject.connectSlotsByName(OverviewWidget)
     # setupUi
 
     def retranslateUi(self, OverviewWidget):

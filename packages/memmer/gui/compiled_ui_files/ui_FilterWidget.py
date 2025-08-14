@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'FilterWidget.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.7.2
+## Created by: Qt User Interface Compiler version 6.9.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -46,8 +46,6 @@ class Ui_FilterWidget(object):
 
 
         self.retranslateUi(FilterWidget)
-
-        QMetaObject.connectSlotsByName(FilterWidget)
     # setupUi
 
     def retranslateUi(self, FilterWidget):

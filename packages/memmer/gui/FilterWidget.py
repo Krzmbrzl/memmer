@@ -1,4 +1,4 @@
-from ui_FilterWidget import Ui_FilterWidget
+from .compiled_ui_files.ui_FilterWidget import Ui_FilterWidget
 
 from PySide6.QtWidgets import QWidget
 

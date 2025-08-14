@@ -1,4 +1,4 @@
-from ui_PathSelectorWidget import Ui_PathSelectorWidget
+from .compiled_ui_files.ui_PathSelectorWidget import Ui_PathSelectorWidget
 
 from PySide6.QtWidgets import QWidget, QFileDialog, QDialog
 from PySide6.QtCore import Signal, Slot

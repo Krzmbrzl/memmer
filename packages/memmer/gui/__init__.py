@@ -3,5 +3,12 @@
 # LICENSE file at the root of the source tree or at
 # <https://github.com/Krzmbrzl/memmer/blob/main/LICENSE>.
 
-from .Types import Layout
-from .MemmerGUI import MemmerGUI
+# List helper widgets first as those are referenced from the other ones
+from .FilterWidget import FilterWidget
+from .PathSelectorWidget import PathSelectorWidget
+
+from .ConnectWidget import ConnectWidget
+from .MainMenuWidget import MainMenuWidget
+from .MainWindow import MainWindow
+from .OverviewWidget import OverviewWidget
+from .TallyWidget import TallyWidget

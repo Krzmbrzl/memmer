@@ -1,17 +1,42 @@
 #!/usr/bin/env python3
 
-# This file is part of memmer. Use of this source code is
-# governed by a BSD-style license that can be found in the
-# LICENSE file at the root of the source tree or at
-# <https://github.com/Krzmbrzl/memmer/blob/main/LICENSE>.
+import sys
+import signal
+import os
 
-from memmer.gui import MemmerGUI
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "packages"))
+
+from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QTimer
+from PySide6.QtUiTools import QUiLoader
+
+from memmer.gui import MainWindow
+
+
+def quit_app(*_):
+    QApplication.quit()
 
 
 def main():
-    gui = MemmerGUI()
+    signal.signal(signal.SIGINT, quit_app)
 
-    gui.show_and_execute()
+    app = QApplication(sys.argv)
+
+    # Required to ensure that the Python interpreter is called every now
+    # and then in order to allow for signal handling (e.g. Ctrl+C)
+    # to be done.
+    # Taken from https://stackoverflow.com/a/4939113
+    timer = QTimer()
+    timer.start(500)
+    timer.timeout.connect(lambda: None)
+
+    # loader = QUiLoader()
+    # win = loader.load("MainWindow.ui")
+    win = MainWindow()
+
+    win.show()
+
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":

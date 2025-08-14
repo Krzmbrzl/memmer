@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'TallyWidget.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.7.2
+## Created by: Qt User Interface Compiler version 6.9.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QDateEdit, QFormLayout,
     QSizePolicy, QSpacerItem, QSpinBox, QVBoxLayout,
     QWidget)
 
-from PathSelectorWidget import PathSelectorWidget
+from ..PathSelectorWidget import PathSelectorWidget
 
 class Ui_TallyWidget(object):
     def setupUi(self, TallyWidget):
@@ -36,17 +36,17 @@ class Ui_TallyWidget(object):
         self.label_15 = QLabel(self.groupBox_3)
         self.label_15.setObjectName(u"label_15")
 
-        self.formLayout_3.setWidget(0, QFormLayout.LabelRole, self.label_15)
+        self.formLayout_3.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label_15)
 
         self.spinBox_3 = QSpinBox(self.groupBox_3)
         self.spinBox_3.setObjectName(u"spinBox_3")
 
-        self.formLayout_3.setWidget(0, QFormLayout.FieldRole, self.spinBox_3)
+        self.formLayout_3.setWidget(0, QFormLayout.ItemRole.FieldRole, self.spinBox_3)
 
         self.label_16 = QLabel(self.groupBox_3)
         self.label_16.setObjectName(u"label_16")
 
-        self.formLayout_3.setWidget(1, QFormLayout.LabelRole, self.label_16)
+        self.formLayout_3.setWidget(1, QFormLayout.ItemRole.LabelRole, self.label_16)
 
         self.comboBox_3 = QComboBox(self.groupBox_3)
         self.comboBox_3.addItem("")
@@ -63,28 +63,28 @@ class Ui_TallyWidget(object):
         self.comboBox_3.addItem("")
         self.comboBox_3.setObjectName(u"comboBox_3")
 
-        self.formLayout_3.setWidget(1, QFormLayout.FieldRole, self.comboBox_3)
+        self.formLayout_3.setWidget(1, QFormLayout.ItemRole.FieldRole, self.comboBox_3)
 
         self.label_17 = QLabel(self.groupBox_3)
         self.label_17.setObjectName(u"label_17")
 
-        self.formLayout_3.setWidget(2, QFormLayout.LabelRole, self.label_17)
+        self.formLayout_3.setWidget(2, QFormLayout.ItemRole.LabelRole, self.label_17)
 
         self.label_18 = QLabel(self.groupBox_3)
         self.label_18.setObjectName(u"label_18")
 
-        self.formLayout_3.setWidget(3, QFormLayout.LabelRole, self.label_18)
+        self.formLayout_3.setWidget(3, QFormLayout.ItemRole.LabelRole, self.label_18)
 
         self.dateEdit = QDateEdit(self.groupBox_3)
         self.dateEdit.setObjectName(u"dateEdit")
 
-        self.formLayout_3.setWidget(2, QFormLayout.FieldRole, self.dateEdit)
+        self.formLayout_3.setWidget(2, QFormLayout.ItemRole.FieldRole, self.dateEdit)
 
         self.widget = PathSelectorWidget(self.groupBox_3)
         self.widget.setObjectName(u"widget")
         self.widget.setMinimumSize(QSize(10, 0))
 
-        self.formLayout_3.setWidget(3, QFormLayout.FieldRole, self.widget)
+        self.formLayout_3.setWidget(3, QFormLayout.ItemRole.FieldRole, self.widget)
 
 
         self.verticalLayout.addWidget(self.groupBox_3)
@@ -114,8 +114,6 @@ class Ui_TallyWidget(object):
 
 
         self.retranslateUi(TallyWidget)
-
-        QMetaObject.connectSlotsByName(TallyWidget)
     # setupUi
 
     def retranslateUi(self, TallyWidget):

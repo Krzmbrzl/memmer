@@ -1,4 +1,4 @@
-from ui_MainWindow import Ui_MainWindow
+from .compiled_ui_files.ui_MainWindow import Ui_MainWindow
 
 from PySide6.QtWidgets import QMainWindow
 
@@ -11,5 +11,3 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.statusbar.showMessage(self.tr("Ready"))
 
         self.setWindowTitle("Memmer")
-
-
