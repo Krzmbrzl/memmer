@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>697</width>
-    <height>576</height>
+    <height>628</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -30,8 +30,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>660</width>
-        <height>525</height>
+        <width>681</width>
+        <height>570</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -184,7 +184,7 @@
           <item row="5" column="1">
            <widget class="QLineEdit" name="db_name_input">
             <property name="placeholderText">
-             <string>awesome_dataset</string>
+             <string>awesome_database</string>
             </property>
            </widget>
           </item>
@@ -197,28 +197,28 @@
           <string>SSH</string>
          </property>
          <layout class="QFormLayout" name="formLayout_8">
-          <item row="0" column="0">
+          <item row="1" column="0">
            <widget class="QLabel" name="ssh_user_label">
             <property name="text">
              <string>User</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
+          <item row="1" column="1">
            <widget class="QLineEdit" name="ssh_user_input">
             <property name="placeholderText">
              <string>ssh_username</string>
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
+          <item row="2" column="0">
            <widget class="QLabel" name="ssh_port_label">
             <property name="text">
              <string>Port</string>
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
+          <item row="2" column="1">
            <widget class="QSpinBox" name="ssh_port_spinner">
             <property name="maximum">
              <number>999999</number>
@@ -228,29 +228,43 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
+          <item row="3" column="0">
            <widget class="QLabel" name="ssh_password_label">
             <property name="text">
              <string>Password</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
+          <item row="3" column="1">
            <widget class="QLineEdit" name="ssh_password_input">
             <property name="echoMode">
              <enum>QLineEdit::EchoMode::Password</enum>
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
+          <item row="4" column="0">
            <widget class="QLabel" name="ssh_key_label">
             <property name="text">
              <string>Private key</string>
             </property>
            </widget>
           </item>
-          <item row="3" column="1">
+          <item row="4" column="1">
            <widget class="PathSelectorWidget" name="ssh_key_input"/>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="ssh_host_label">
+            <property name="text">
+             <string>Host</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="ssh_host_input">
+            <property name="placeholderText">
+             <string>mydomain.com</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -288,17 +302,10 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_22">
+      <widget class="QPushButton" name="connect_button">
        <property name="enabled">
         <bool>false</bool>
        </property>
-       <property name="text">
-        <string>Cancel</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="connect_button_3">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
          <horstretch>0</horstretch>
