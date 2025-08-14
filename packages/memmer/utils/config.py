@@ -14,6 +14,7 @@ class ConfigKey(Enum):
     DB_HOST = "connector_db_host"
     DB_PORT = "connector_db_port"
     DB_NAME = "connector_db_name"
+    SSH_HOST = "connector_ssh_host"
     SSH_USER = "connector_ssh_user"
     SSH_PORT = "connector_ssh_port"
     SSH_KEY = "connector_ssh_key"
@@ -40,6 +41,7 @@ class MemmerConfig:
     db_host: Optional[str] = None
     db_port: Optional[int] = None
     db_name: Optional[str] = None
+    ssh_host: Optional[str] = None
     ssh_user: Optional[str] = None
     ssh_port: Optional[int] = None
     ssh_key: Optional[str] = None

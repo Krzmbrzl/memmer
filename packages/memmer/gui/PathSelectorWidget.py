@@ -9,6 +9,17 @@ from pathlib import Path
 class PathSelectorWidget(QWidget, Ui_PathSelectorWidget):
     pathChanged = Signal(str)
 
+    @property
+    def path(self) -> str:
+        return self.path_input.text()
+
+    @path.setter
+    def path(self, path: str) -> None:
+        self.path_input.setText(path)
+
+    def clear(self):
+        self.path_input.clear()
+
     def __init__(
         self,
         parent=None,
@@ -44,11 +55,4 @@ class PathSelectorWidget(QWidget, Ui_PathSelectorWidget):
 
         if file_chooser.exec() == QDialog.DialogCode.Accepted:
             assert len(file_chooser.selectedFiles()) == 1
-            self.setPath(file_chooser.selectedFiles()[0])
-
-    def path(self) -> str:
-        return self.path_input.text()
-
-    @Slot(str)
-    def setPath(self, path: str) -> None:
-        self.path_input.setText(path)
+            self.path = file_chooser.selectedFiles()[0]

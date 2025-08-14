@@ -29,13 +29,26 @@ class SSHTunnelParameter:
     remote_port: int = 80
 
     @staticmethod
+    def to_config(params: "SSHTunnelParameter", config: Optional[MemmerConfig] = None) -> MemmerConfig:
+        if not config:
+            config = MemmerConfig()
+
+        config.ssh_host = params.address
+        config.ssh_user = params.user
+        config.ssh_port = params.port
+        config.ssh_key = params.key
+
+        return config
+        
+
+    @staticmethod
     def from_config(config: MemmerConfig) -> "SSHTunnelParameter":
-        if config.db_host is None or config.ssh_user is None:
+        if config.ssh_host is None or config.ssh_user is None:
             raise RuntimeError(
                 "Mandatory arguments for SSHTunnelParameter not present!"
             )
 
-        params = SSHTunnelParameter(address=config.db_host, user=config.ssh_user)
+        params = SSHTunnelParameter(address=config.ssh_host, user=config.ssh_user)
 
         if config.ssh_port is not None:
             params.port = config.ssh_port
@@ -58,6 +71,22 @@ class ConnectionParameter:
     password: Optional[str] = None
 
     ssh_tunnel: Optional[SSHTunnelParameter] = None
+
+    @staticmethod
+    def to_config(params: "ConnectionParameter", config: Optional[MemmerConfig] = None) -> MemmerConfig:
+        if not config:
+            config = MemmerConfig()
+
+        config.db_backend = params.db_backend
+        config.db_name = params.database
+        config.db_host = params.address
+        config.db_port = params.port
+        config.db_user = params.user
+
+        if params.ssh_tunnel:
+            SSHTunnelParameter.to_config(params.ssh_tunnel, config)
+
+        return config
 
     @staticmethod
     def from_config(config: MemmerConfig) -> "ConnectionParameter":
