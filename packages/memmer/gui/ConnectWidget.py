@@ -3,6 +3,25 @@ from .compiled_ui_files.ui_ConnectWidget import Ui_ConnectWidget
 from PySide6.QtWidgets import QWidget
 from PySide6.QtCore import Signal
 
+from memmer.utils import DBBackend, ConnectType
+
+def backend_idx_to_type(idx: int) -> DBBackend:
+    if idx == 0:
+        return DBBackend.SQLite
+    elif idx == 1:
+        return DBBackend.PostgreSQL
+    elif idx == 2:
+        return DBBackend.MySQL
+
+    raise RuntimeError(f"Unknown DB backend index '{idx}'")
+
+def connect_idx_to_type(idx: int) -> ConnectType:
+    if idx == 0:
+        return ConnectType.REGULAR
+    elif idx == 1:
+        return ConnectType.SSH_TUNNEL
+
+    raise RuntimeError(f"Unknown connect type index '{idx}'")
 
 class ConnectWidget(QWidget, Ui_ConnectWidget):
     connected = Signal()
@@ -33,21 +52,18 @@ class ConnectWidget(QWidget, Ui_ConnectWidget):
         self.__db_name_changed(self.db_name_input.text())
 
     def __connect_type_changed(self, type_idx: int):
-        assert type_idx in [0, 1]
+        connect_type = connect_idx_to_type(idx=type_idx)
 
-        is_ssh = type_idx == 1
-
-        self.ssh_group.setVisible(is_ssh)
+        self.ssh_group.setVisible(connect_type == ConnectType.SSH_TUNNEL)
 
     def __db_backend_changed(self, backend_idx: int):
-        assert backend_idx in [0, 1, 2]
+        backend = backend_idx_to_type(idx=backend_idx)
 
-        is_sqlite = backend_idx == 0
-
-        self.db_host_label.setVisible(not is_sqlite)
-        self.db_host_input.setVisible(not is_sqlite)
-        self.db_port_label.setVisible(not is_sqlite)
-        self.db_port_spinner.setVisible(not is_sqlite)
+        # Disable options that aren't applicable for SQLite
+        self.db_host_label.setVisible(backend != DBBackend.SQLite)
+        self.db_host_input.setVisible(backend != DBBackend.SQLite)
+        self.db_port_label.setVisible(backend != DBBackend.SQLite)
+        self.db_port_spinner.setVisible(backend != DBBackend.SQLite)
 
     def __db_name_changed(self, name: str):
         self.connect_button.setEnabled(len(name.strip()) > 0)
