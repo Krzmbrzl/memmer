@@ -1,5 +1,5 @@
 SQLAlchemy >= 2.0
-FreeSimpleGUI
+PySide6
 schwifty
 sshtunnel
 pgeocode
