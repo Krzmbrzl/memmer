@@ -41,8 +41,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.main_menu.disconnect_requested.connect(self.__disconnect)
         self.main_menu.status_changed.connect(self.__status_update)
-        self.main_menu.overview_page_requested.connect(lambda: self.page_stack.setCurrentWidget(self.overview_page))
-        self.main_menu.tally_page_requested.connect(lambda: self.page_stack.setCurrentWidget(self.tally_page))
+        self.main_menu.overview_page_requested.connect(
+            lambda: self.page_stack.setCurrentWidget(self.overview_page)
+        )
+        self.main_menu.tally_page_requested.connect(
+            lambda: self.page_stack.setCurrentWidget(self.tally_page)
+        )
 
 
     def __init_state(self):
