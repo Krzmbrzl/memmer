@@ -220,7 +220,6 @@ class ConnectWidget(MemmerWidget, Ui_ConnectWidget):
                 )
 
                 self.connected.emit(session, ssh_tunnel)
-                self.status_changed.emit(self.tr("Connected"))
             except Exception as error:
                 self.status_changed.emit(self.tr("Connection failed"))
 

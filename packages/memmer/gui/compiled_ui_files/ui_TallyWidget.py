@@ -137,6 +137,6 @@ class Ui_TallyWidget(object):
         self.label_17.setText(QCoreApplication.translate("TallyWidget", u"Collection date", None))
         self.label_18.setText(QCoreApplication.translate("TallyWidget", u"Output directory", None))
         self.pushButton_9.setText(QCoreApplication.translate("TallyWidget", u"Back", None))
-        self.pushButton_8.setText(QCoreApplication.translate("TallyWidget", u"Generate", None))
+        self.pushButton_8.setText(QCoreApplication.translate("TallyWidget", u"Create", None))
     # retranslateUi
 

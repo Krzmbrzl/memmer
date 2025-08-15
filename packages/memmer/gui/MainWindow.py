@@ -37,15 +37,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.statusbar.messageChanged.connect(self.__status_update)
 
         self.connect_page.connected.connect(self.__connection_established)
-
         self.connect_page.status_changed.connect(self.__status_update)
+
+        self.main_menu.disconnect_requested.connect(self.__disconnect)
+        self.main_menu.status_changed.connect(self.__status_update)
+        self.main_menu.overview_page_requested.connect(lambda: self.page_stack.setCurrentWidget(self.overview_page))
+        self.main_menu.tally_page_requested.connect(lambda: self.page_stack.setCurrentWidget(self.tally_page))
+
 
     def __init_state(self):
         self.setWindowTitle("Memmer")
 
         self.__status_update(status=None)
 
-        self.connect_page.connection_parameter = ConnectionParameter.from_config(self.config)
+        self.connect_page.connection_parameter = ConnectionParameter.from_config(
+            self.config
+        )
 
     def __status_update(self, status: Optional[str]):
         if status:
@@ -66,11 +73,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.session = session
         self.ssh_tunnel = tunnel
 
-        ConnectionParameter.to_config(self.connect_page.connection_parameter, self.config)
+        ConnectionParameter.to_config(
+            self.connect_page.connection_parameter, self.config
+        )
 
         self.page_stack.setCurrentWidget(self.main_menu)
 
-    def closeEvent(self, event):
+        self.__status_update(status=self.tr("Connected"))
+
+        self.menuNew.setEnabled(True)
+
+    def __disconnect(self):
         if self.session:
             if has_uncommitted_changes(self.session):
                 # There are uncommitted changes
@@ -88,10 +101,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.session.rollback()
 
             self.session.close()
+            self.session = None
 
         if self.ssh_tunnel:
             self.ssh_tunnel.stop()
+            self.ssh_tunnel = None
 
         save_config(self.config)
+
+        self.page_stack.setCurrentWidget(self.connect_page)
+
+        self.__status_update(status=self.tr("Disconnected"))
+
+        self.menuNew.setEnabled(False)
+
+    def closeEvent(self, event):
+        self.__disconnect()
 
         super().closeEvent(event)

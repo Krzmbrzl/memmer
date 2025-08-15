@@ -169,7 +169,7 @@
      <item>
       <widget class="QPushButton" name="pushButton_8">
        <property name="text">
-        <string>Generate</string>
+        <string>Create</string>
        </property>
       </widget>
      </item>

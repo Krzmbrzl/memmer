@@ -37,7 +37,7 @@
       </property>
       <widget class="ConnectWidget" name="connect_page"/>
       <widget class="MainMenuWidget" name="main_menu"/>
-      <widget class="OverviewWidget" name="overview"/>
+      <widget class="OverviewWidget" name="overview_page"/>
       <widget class="TallyWidget" name="tally_page"/>
      </widget>
     </item>

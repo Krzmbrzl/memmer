@@ -15,7 +15,7 @@
   </property>
   <layout class="QGridLayout" name="gridLayout" columnstretch="1,1,1">
    <item row="1" column="1">
-    <widget class="QPushButton" name="pushButton">
+    <widget class="QPushButton" name="overview_button">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
        <horstretch>0</horstretch>
@@ -24,6 +24,48 @@
      </property>
      <property name="text">
       <string>Overview</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2">
+    <spacer name="horizontalSpacer_2">
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>136</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="0" column="1">
+    <widget class="QLabel" name="title_label">
+     <property name="font">
+      <font>
+       <pointsize>14</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Main menu</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="QPushButton" name="disconnect_button">
+     <property name="text">
+      <string>Disconnect</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QPushButton" name="tally_button">
+     <property name="text">
+      <string>Create tally</string>
      </property>
     </widget>
    </item>
@@ -40,28 +82,6 @@
      </property>
     </spacer>
    </item>
-   <item row="2" column="1">
-    <widget class="QPushButton" name="pushButton_2">
-     <property name="text">
-      <string>Create tally</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="1">
-    <widget class="QLabel" name="label">
-     <property name="font">
-      <font>
-       <pointsize>14</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>Main menu</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignmentFlag::AlignCenter</set>
-     </property>
-    </widget>
-   </item>
    <item row="1" column="0">
     <spacer name="horizontalSpacer">
      <property name="orientation">
@@ -75,18 +95,12 @@
      </property>
     </spacer>
    </item>
-   <item row="1" column="2">
-    <spacer name="horizontalSpacer_2">
-     <property name="orientation">
-      <enum>Qt::Orientation::Horizontal</enum>
+   <item row="4" column="1">
+    <widget class="QPushButton" name="commit_button">
+     <property name="text">
+      <string>Commit changes</string>
      </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>136</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
+    </widget>
    </item>
   </layout>
  </widget>
