@@ -48,6 +48,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             lambda: self.page_stack.setCurrentWidget(self.tally_page)
         )
 
+        self.tally_page.main_menu_requested.connect(
+            lambda: self.page_stack.setCurrentWidget(self.main_menu)
+        )
 
     def __init_state(self):
         self.setWindowTitle("Memmer")

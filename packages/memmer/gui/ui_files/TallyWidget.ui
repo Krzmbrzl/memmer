@@ -15,30 +15,34 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QGroupBox" name="groupBox_3">
+    <widget class="QGroupBox" name="tally_group">
      <property name="title">
       <string>Tally</string>
      </property>
      <layout class="QFormLayout" name="formLayout_3">
       <item row="0" column="0">
-       <widget class="QLabel" name="label_15">
+       <widget class="QLabel" name="year_label">
         <property name="text">
          <string>Year</string>
         </property>
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QSpinBox" name="spinBox_3"/>
+       <widget class="QSpinBox" name="year_spinner">
+        <property name="maximum">
+         <number>9999</number>
+        </property>
+       </widget>
       </item>
       <item row="1" column="0">
-       <widget class="QLabel" name="label_16">
+       <widget class="QLabel" name="month_label">
         <property name="text">
          <string>Month</string>
         </property>
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QComboBox" name="comboBox_3">
+       <widget class="QComboBox" name="month_combo">
         <item>
          <property name="text">
           <string>January</string>
@@ -102,24 +106,28 @@
        </widget>
       </item>
       <item row="2" column="0">
-       <widget class="QLabel" name="label_17">
+       <widget class="QLabel" name="collection_date_label">
         <property name="text">
          <string>Collection date</string>
         </property>
        </widget>
       </item>
       <item row="3" column="0">
-       <widget class="QLabel" name="label_18">
+       <widget class="QLabel" name="out_dir_label">
         <property name="text">
          <string>Output directory</string>
         </property>
        </widget>
       </item>
       <item row="2" column="1">
-       <widget class="QDateEdit" name="dateEdit"/>
+       <widget class="QDateEdit" name="collection_date_input">
+        <property name="calendarPopup">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
       <item row="3" column="1">
-       <widget class="PathSelectorWidget" name="widget" native="true">
+       <widget class="PathSelectorWidget" name="out_dir_input" native="true">
         <property name="minimumSize">
          <size>
           <width>10</width>
@@ -147,7 +155,7 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_8">
      <item>
-      <widget class="QPushButton" name="pushButton_9">
+      <widget class="QPushButton" name="back_button">
        <property name="text">
         <string>Back</string>
        </property>
@@ -167,7 +175,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_8">
+      <widget class="QPushButton" name="create_button">
        <property name="text">
         <string>Create</string>
        </property>
