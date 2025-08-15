@@ -1,6 +1,6 @@
 from .compiled_ui_files.ui_ConnectWidget import Ui_ConnectWidget
 
-from PySide6.QtWidgets import QWidget, QMessageBox
+from PySide6.QtWidgets import QMessageBox
 from PySide6.QtCore import Signal, QTimer
 
 from memmer.utils import (
@@ -10,6 +10,7 @@ from memmer.utils import (
     SSHTunnelParameter,
     connect,
 )
+from memmer.gui import MemmerWidget
 
 from sqlalchemy.orm import Session
 
@@ -56,9 +57,8 @@ def connect_type_to_index(connect_type: ConnectType) -> int:
     raise RuntimeError(f"Unknown connect type '{connect_type}'")
 
 
-class ConnectWidget(QWidget, Ui_ConnectWidget):
+class ConnectWidget(MemmerWidget, Ui_ConnectWidget):
     connected = Signal(Session, SSHTunnelForwarder)
-    status_changed = Signal(str)
 
     @property
     def connection_parameter(self) -> ConnectionParameter:

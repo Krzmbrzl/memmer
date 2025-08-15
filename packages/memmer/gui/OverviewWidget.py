@@ -1,9 +1,9 @@
 from .compiled_ui_files.ui_OverviewWidget import Ui_OverviewWidget
 
-from PySide6.QtWidgets import QWidget
+from memmer.gui import MemmerWidget
 
 
-class OverviewWidget(QWidget, Ui_OverviewWidget):
+class OverviewWidget(MemmerWidget, Ui_OverviewWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 

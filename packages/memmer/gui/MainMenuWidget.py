@@ -1,9 +1,12 @@
 from .compiled_ui_files.ui_MainMenuWidget import Ui_MainMenuWidget
 
-from PySide6.QtWidgets import QWidget
+from PySide6.QtCore import Signal
+
+from memmer.gui import MemmerWidget
 
 
-class MainMenuWidget(QWidget, Ui_MainMenuWidget):
+class MainMenuWidget(MemmerWidget, Ui_MainMenuWidget):
+
     def __init__(self, parent=None):
         super().__init__(parent)
 

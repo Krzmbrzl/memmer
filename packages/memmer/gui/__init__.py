@@ -4,6 +4,7 @@
 # <https://github.com/Krzmbrzl/memmer/blob/main/LICENSE>.
 
 # List helper widgets first as those are referenced from the other ones
+from .MemmerWidget import MemmerWidget
 from .FilterWidget import FilterWidget
 from .PathSelectorWidget import PathSelectorWidget
 
