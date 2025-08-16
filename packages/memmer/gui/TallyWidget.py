@@ -47,9 +47,11 @@ class TallyWidget(MemmerWidget, Ui_TallyWidget):
             # Select current month
             self.month_combo.setCurrentIndex(month_idx)
 
-        tally_dir = self.config().tally_dir
-        if tally_dir is not None:
-            self.out_dir_input.path = tally_dir
+    def opened(self, first_time: bool):
+        if first_time:
+            tally_dir = self.config().tally_dir
+            if tally_dir is not None:
+                self.out_dir_input.path = tally_dir
 
     def __update_collection_date(self):
         selected_year = self.year_spinner.value()

@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QWidget
-from PySide6.QtCore import Signal, QRunnable
+from PySide6.QtCore import Signal, QRunnable, Slot
 
 from sqlalchemy.orm import Session
 
@@ -61,3 +61,11 @@ class MemmerWidget(QWidget):
         assert config is not None
 
         return config
+
+    @Slot(bool)
+    def opened(self, first_time: bool):
+        pass
+
+    @Slot()
+    def closed(self):
+        pass

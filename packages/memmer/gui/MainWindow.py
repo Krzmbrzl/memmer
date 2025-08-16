@@ -1,6 +1,6 @@
 from .compiled_ui_files.ui_MainWindow import Ui_MainWindow
 
-from typing import Optional
+from typing import Optional, Set
 
 from PySide6.QtWidgets import QMainWindow, QMessageBox
 from PySide6.QtCore import QThreadPool
@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from sshtunnel import SSHTunnelForwarder
 
 from memmer.utils import load_config, save_config, MemmerConfig, ConnectionParameter
+from memmer.gui import MemmerWidget
 
 
 def has_uncommitted_changes(session: Session):
@@ -30,6 +31,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.session: Optional[Session] = None
         self.config: MemmerConfig = load_config()
         self.thread_pool = QThreadPool(self)
+        self.__opened_widgets: Set[MemmerWidget] = set()
 
         self.__connect_signals()
 
@@ -44,14 +46,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.main_menu.disconnect_requested.connect(self.__disconnect)
         self.main_menu.status_changed.connect(self.__status_update)
         self.main_menu.overview_page_requested.connect(
-            lambda: self.page_stack.setCurrentWidget(self.overview_page)
+            lambda: self.__switch_to(self.overview_page)
         )
         self.main_menu.tally_page_requested.connect(
-            lambda: self.page_stack.setCurrentWidget(self.tally_page)
+            lambda: self.__switch_to(self.tally_page)
         )
 
         self.tally_page.main_menu_requested.connect(
-            lambda: self.page_stack.setCurrentWidget(self.main_menu)
+            lambda: self.__switch_to(self.main_menu)
         )
 
     def __init_state(self):
@@ -62,6 +64,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.connect_page.connection_parameter = ConnectionParameter.from_config(
             self.config
         )
+
+        self.__switch_to(self.connect_page)
+
+    def __switch_to(self, widget):
+        old = self.page_stack.currentWidget()
+
+        if isinstance(old, MemmerWidget):
+            old.closed()
+
+        if isinstance(widget, MemmerWidget):
+            widget.opened(widget not in self.__opened_widgets)
+            self.__opened_widgets.add(widget)
+
+        self.page_stack.setCurrentWidget(widget)
 
     def __status_update(self, status: Optional[str]):
         if status:
@@ -86,7 +102,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.connect_page.connection_parameter, self.config
         )
 
-        self.page_stack.setCurrentWidget(self.main_menu)
+        self.__switch_to(self.main_menu)
 
         self.__status_update(status=self.tr("Connected"))
 
@@ -118,7 +134,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         save_config(self.config)
 
-        self.page_stack.setCurrentWidget(self.connect_page)
+        self.__switch_to(self.connect_page)
 
         self.__status_update(status=self.tr("Disconnected"))
 
