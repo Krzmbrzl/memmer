@@ -52,6 +52,9 @@ class Ui_OverviewWidget(object):
         self.member_table.setAutoScroll(True)
         self.member_table.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked|QAbstractItemView.EditTrigger.EditKeyPressed)
         self.member_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.member_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.member_table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.member_table.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.member_table.setSortingEnabled(True)
 
         self.verticalLayout_4.addWidget(self.member_table)
@@ -74,6 +77,9 @@ class Ui_OverviewWidget(object):
         self.session_table.setAutoScroll(True)
         self.session_table.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked|QAbstractItemView.EditTrigger.EditKeyPressed)
         self.session_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.session_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.session_table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.session_table.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.session_table.setSortingEnabled(True)
 
         self.verticalLayout_5.addWidget(self.session_table)

@@ -3,6 +3,9 @@
 # LICENSE file at the root of the source tree or at
 # <https://github.com/Krzmbrzl/memmer/blob/main/LICENSE>.
 
+from .MemberModel import MemberModel
+from .SessionModel import SessionModel
+
 # List helper widgets first as those are referenced from the other ones
 from .MemmerWidget import MemmerWidget
 from .FilterWidget import FilterWidget

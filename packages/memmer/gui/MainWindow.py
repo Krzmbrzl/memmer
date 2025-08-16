@@ -56,6 +56,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             lambda: self.__switch_to(self.main_menu)
         )
 
+        self.overview_page.main_menu_requested.connect(
+            lambda: self.__switch_to(self.main_menu)
+        )
+
     def __init_state(self):
         self.setWindowTitle("Memmer")
 
