@@ -1,7 +1,15 @@
+from typing import TYPE_CHECKING
+
 from PySide6.QtWidgets import QWidget
 from PySide6.QtCore import Signal
 
 from sqlalchemy.orm import Session
+
+if TYPE_CHECKING:
+    # This creates cyclic imports, so we only want to do this to bring in the
+    # symbol for type-checking but not at runtime
+    # See https://stackoverflow.com/a/39757388
+    from memmer.gui import MainWindow
 
 
 class MemmerWidget(QWidget):
