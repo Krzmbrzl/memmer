@@ -39,10 +39,15 @@ class PathSelectorWidget(QWidget, Ui_PathSelectorWidget):
 
         self.path_input.setPlaceholderText(placeholder)
 
-        self.__wire_signals()
+        self.__connect_signals()
 
-    def __wire_signals(self) -> None:
+        self.__init_state()
+
+    def __connect_signals(self) -> None:
         self.path_input.textChanged.connect(lambda path: self.pathChanged.emit(path))
+
+    def __init_state(self):
+        pass
 
     def __on_browse(self) -> None:
         file_chooser = QFileDialog(self)
