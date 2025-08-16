@@ -91,10 +91,13 @@ class TallyWidget(MemmerWidget, Ui_TallyWidget):
         else:
             self.config().tally_dir = output_dir
 
-        self.async_exec(
-            lambda: create_tally(
+        def create_impl():
+            create_tally(
                 self.session(), output_dir=output_dir, collection_date=collection_date
             )
-        )
+
+            self.status_changed.emit(self.tr("Tally created"))
+
+        self.async_exec(create_impl)
 
         self.status_changed.emit(self.tr("Creating tally…"))
