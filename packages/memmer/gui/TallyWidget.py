@@ -3,6 +3,7 @@ from .compiled_ui_files.ui_TallyWidget import Ui_TallyWidget
 from PySide6.QtCore import Signal, QDate
 
 from memmer.gui import MemmerWidget
+from memmer.queries import create_tally
 
 import datetime
 
@@ -23,6 +24,7 @@ class TallyWidget(MemmerWidget, Ui_TallyWidget):
         self.back_button.clicked.connect(self.main_menu_requested.emit)
         self.year_spinner.valueChanged.connect(self.__update_collection_date)
         self.month_combo.currentIndexChanged.connect(self.__update_collection_date)
+        self.create_button.clicked.connect(self.__create_tally)
 
     def __init_state(self):
         day_threshold = 20
@@ -44,6 +46,10 @@ class TallyWidget(MemmerWidget, Ui_TallyWidget):
         else:
             # Select current month
             self.month_combo.setCurrentIndex(month_idx)
+
+        tally_dir = self.config().tally_dir
+        if tally_dir is not None:
+            self.out_dir_input.path = tally_dir
 
     def __update_collection_date(self):
         selected_year = self.year_spinner.value()
@@ -72,3 +78,23 @@ class TallyWidget(MemmerWidget, Ui_TallyWidget):
         self.collection_date_input.setDate(
             QDate(collection_date.year, collection_date.month, collection_date.day)
         )
+
+    def __create_tally(self):
+        qt_date = self.collection_date_input.date()
+        collection_date = datetime.date(
+            year=qt_date.year(), month=qt_date.month(), day=qt_date.day()
+        )
+
+        output_dir = self.out_dir_input.path
+        if not output_dir:
+            output_dir = "."
+        else:
+            self.config().tally_dir = output_dir
+
+        self.async_exec(
+            lambda: create_tally(
+                self.session(), output_dir=output_dir, collection_date=collection_date
+            )
+        )
+
+        self.status_changed.emit(self.tr("Creating tally…"))

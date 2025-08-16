@@ -42,6 +42,7 @@ class MemmerWidget(QWidget):
         if isinstance(runnable, QRunnable):
             parent.thread_pool.start(runnable)
         else:
+
             class RunnableWrapper(QRunnable):
                 def __init__(self, runnable):
                     super().__init__()
@@ -51,6 +52,12 @@ class MemmerWidget(QWidget):
                     self.runnable()
 
             wrapper = RunnableWrapper(runnable)
-            
+
             parent.thread_pool.start(wrapper)
 
+    def config(self):
+        config = self.parent_mainwindow().config
+
+        assert config is not None
+
+        return config
