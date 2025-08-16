@@ -232,5 +232,4 @@ class ConnectWidget(MemmerWidget, Ui_ConnectWidget):
                     buttons=QMessageBox.StandardButton.Ok,
                 )
 
-        # Perform connection in next event loop iteration
-        QTimer.singleShot(0, perform_connection)
+        self.async_exec(perform_connection)

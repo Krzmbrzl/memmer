@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QWidget
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Signal, QRunnable
 
 from sqlalchemy.orm import Session
 
@@ -35,3 +35,22 @@ class MemmerWidget(QWidget):
         assert parent.session is not None
 
         return parent.session
+
+    def async_exec(self, runnable):
+        parent = self.parent_mainwindow()
+
+        if isinstance(runnable, QRunnable):
+            parent.thread_pool.start(runnable)
+        else:
+            class RunnableWrapper(QRunnable):
+                def __init__(self, runnable):
+                    super().__init__()
+                    self.runnable = runnable
+
+                def run(self):
+                    self.runnable()
+
+            wrapper = RunnableWrapper(runnable)
+            
+            parent.thread_pool.start(wrapper)
+

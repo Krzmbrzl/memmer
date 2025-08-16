@@ -3,6 +3,7 @@ from .compiled_ui_files.ui_MainWindow import Ui_MainWindow
 from typing import Optional
 
 from PySide6.QtWidgets import QMainWindow, QMessageBox
+from PySide6.QtCore import QThreadPool
 
 from sqlalchemy.orm import Session
 
@@ -28,6 +29,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.ssh_tunnel: Optional[SSHTunnelForwarder] = None
         self.session: Optional[Session] = None
         self.config: MemmerConfig = load_config()
+        self.thread_pool = QThreadPool(self)
 
         self.__connect_signals()
 
