@@ -10,12 +10,14 @@ from typing import Optional
 from PySide6.QtWidgets import QHeaderView
 from PySide6.QtCore import Signal, Qt, QModelIndex, QPersistentModelIndex
 
+
 from memmer.gui import (
     MemmerWidget,
     MemberModel,
     SessionModel,
     MemberDialog,
     SessionDialog,
+    GenericSortFilterProxyModel,
 )
 from memmer.orm import Member, Session
 
@@ -46,9 +48,17 @@ class OverviewWidget(MemmerWidget, Ui_OverviewWidget):
 
     def opened(self, first_time: bool):
         if first_time:
-            self.member_table.setModel(
-                MemberModel(members=self.members(), parent=self.member_table)
+            member_proxy = GenericSortFilterProxyModel(
+                sort_orders=[
+                    (MemberModel.Column.LastName, Qt.SortOrder.AscendingOrder),
+                    (MemberModel.Column.FirstName, Qt.SortOrder.AscendingOrder),
+                    (MemberModel.Column.City, Qt.SortOrder.AscendingOrder),
+                ],
+                parent=self.member_table,
             )
+            member_proxy.setSourceModel(MemberModel(self.members(), self.member_table))
+
+            self.member_table.setModel(member_proxy)
 
             self.member_table.horizontalHeader().setSectionResizeMode(
                 QHeaderView.ResizeMode.Stretch
@@ -60,9 +70,15 @@ class OverviewWidget(MemmerWidget, Ui_OverviewWidget):
                 MemberModel.Column.LastName, Qt.SortOrder.AscendingOrder
             )
 
-            self.session_table.setModel(
-                SessionModel(self.sessions(), self.session_table)
+            session_proxy = GenericSortFilterProxyModel(
+                sort_orders=[
+                    (SessionModel.Column.Name, Qt.SortOrder.AscendingOrder),
+                ],
+                parent=self.member_table,
             )
+            session_proxy.setSourceModel(SessionModel(self.sessions(), self.session_table))
+
+            self.session_table.setModel(session_proxy)
 
             self.session_table.horizontalHeader().setSectionResizeMode(
                 QHeaderView.ResizeMode.Stretch
