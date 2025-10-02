@@ -11,6 +11,7 @@ from .MemmerWidget import MemmerWidget
 from .FilterWidget import FilterWidget
 from .PathSelectorWidget import PathSelectorWidget
 
+from .MemberDialog import MemberDialog
 from .ConnectWidget import ConnectWidget
 from .MainMenuWidget import MainMenuWidget
 from .MainWindow import MainWindow
