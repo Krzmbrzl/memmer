@@ -1,4 +1,4 @@
-from typing import List, Any
+from typing import List, Any, Optional
 from enum import IntEnum
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt
@@ -80,3 +80,14 @@ class MemberModel(QAbstractTableModel):
                 return self.tr("Age")
 
         return None
+
+    def member_for(self, idx: QModelIndex | QPersistentModelIndex) -> Optional[Member]:
+        if not idx.isValid():
+            return None
+
+        row = idx.row()
+
+        if row >= len(self.members):
+            return None
+
+        return self.members[row]
