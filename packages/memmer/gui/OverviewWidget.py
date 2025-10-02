@@ -1,9 +1,11 @@
 from .compiled_ui_files.ui_OverviewWidget import Ui_OverviewWidget
 
-from PySide6.QtWidgets import QHeaderView
-from PySide6.QtCore import Signal, Qt
+from typing import Optional
 
-from memmer.gui import MemmerWidget, MemberModel, SessionModel
+from PySide6.QtWidgets import QHeaderView
+from PySide6.QtCore import Signal, Qt, QModelIndex, QPersistentModelIndex
+
+from memmer.gui import MemmerWidget, MemberModel, SessionModel, MemberDialog
 from memmer.orm import Member, Session
 
 from sqlalchemy import select
@@ -23,6 +25,8 @@ class OverviewWidget(MemmerWidget, Ui_OverviewWidget):
 
     def __connect_signals(self):
         self.back_button.clicked.connect(self.main_menu_requested.emit)
+
+        self.member_table.activated.connect(self.__member_activated)
 
     def __init_state(self):
         pass
@@ -57,3 +61,13 @@ class OverviewWidget(MemmerWidget, Ui_OverviewWidget):
             self.session_table.sortByColumn(
                 SessionModel.Column.Name, Qt.SortOrder.AscendingOrder
             )
+
+    def __member_activated(self, index: QModelIndex | QPersistentModelIndex):
+        model = index.model()
+        assert isinstance(model, MemberModel)
+        member: Optional[Member] = model.member_for(index)
+
+        if member is not None:
+            dialog = MemberDialog(member=member, parent=self)
+
+            dialog.show()
