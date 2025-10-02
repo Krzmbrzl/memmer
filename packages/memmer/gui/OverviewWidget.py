@@ -1,7 +1,7 @@
 from .compiled_ui_files.ui_OverviewWidget import Ui_OverviewWidget
 
 from PySide6.QtWidgets import QHeaderView
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Signal, Qt
 
 from memmer.gui import MemmerWidget, MemberModel, SessionModel
 from memmer.orm import Member, Session
@@ -41,6 +41,9 @@ class OverviewWidget(MemmerWidget, Ui_OverviewWidget):
             self.member_table.horizontalHeader().setSectionResizeMode(
                 MemberModel.Column.Age, QHeaderView.ResizeMode.ResizeToContents
             )
+            self.member_table.sortByColumn(
+                MemberModel.Column.LastName, Qt.SortOrder.AscendingOrder
+            )
 
             self.session_table.setModel(SessionModel(sessions, self.session_table))
 
@@ -50,4 +53,7 @@ class OverviewWidget(MemmerWidget, Ui_OverviewWidget):
             self.session_table.horizontalHeader().setSectionResizeMode(
                 SessionModel.Column.Participants,
                 QHeaderView.ResizeMode.ResizeToContents,
+            )
+            self.session_table.sortByColumn(
+                SessionModel.Column.Name, Qt.SortOrder.AscendingOrder
             )
