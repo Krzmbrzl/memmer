@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from sshtunnel import SSHTunnelForwarder
 
 from memmer.utils import load_config, save_config, MemmerConfig, ConnectionParameter
-from memmer.gui import MemmerWidget
+from memmer.gui import MemmerWidget, MemberDialog
 
 
 def has_uncommitted_changes(session: Session):
@@ -58,6 +58,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.overview_page.main_menu_requested.connect(
             lambda: self.__switch_to(self.main_menu)
+        )
+
+        self.new_member_action.triggered.connect(
+            lambda: MemberDialog(parent=self).show()
         )
 
     def __init_state(self):
@@ -110,7 +114,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.__status_update(status=self.tr("Connected"))
 
-        self.menuNew.setEnabled(True)
+        self.menu_new.setEnabled(True)
 
     def __disconnect(self):
         if self.session:
@@ -142,7 +146,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.__status_update(status=self.tr("Disconnected"))
 
-        self.menuNew.setEnabled(False)
+        self.menu_new.setEnabled(False)
 
     def closeEvent(self, event):
         self.__disconnect()

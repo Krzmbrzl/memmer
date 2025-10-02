@@ -52,7 +52,7 @@
      <height>30</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuNew">
+   <widget class="QMenu" name="menu_new">
     <property name="enabled">
      <bool>false</bool>
     </property>
@@ -62,18 +62,18 @@
     <property name="title">
      <string>&amp;New</string>
     </property>
-    <addaction name="actionMember"/>
-    <addaction name="actionSession"/>
+    <addaction name="new_member_action"/>
+    <addaction name="new_session_action"/>
    </widget>
-   <addaction name="menuNew"/>
+   <addaction name="menu_new"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionMember">
+  <action name="new_member_action">
    <property name="text">
     <string>&amp;Member</string>
    </property>
   </action>
-  <action name="actionSession">
+  <action name="new_session_action">
    <property name="text">
     <string>&amp;Session</string>
    </property>

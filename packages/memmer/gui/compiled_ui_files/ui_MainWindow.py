@@ -30,10 +30,10 @@ class Ui_MainWindow(object):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.resize(800, 612)
-        self.actionMember = QAction(MainWindow)
-        self.actionMember.setObjectName(u"actionMember")
-        self.actionSession = QAction(MainWindow)
-        self.actionSession.setObjectName(u"actionSession")
+        self.new_member_action = QAction(MainWindow)
+        self.new_member_action.setObjectName(u"new_member_action")
+        self.new_session_action = QAction(MainWindow)
+        self.new_session_action.setObjectName(u"new_session_action")
         self.main_widget = QWidget(MainWindow)
         self.main_widget.setObjectName(u"main_widget")
         self.verticalLayout = QVBoxLayout(self.main_widget)
@@ -61,18 +61,18 @@ class Ui_MainWindow(object):
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
         self.menubar.setGeometry(QRect(0, 0, 800, 30))
-        self.menuNew = QMenu(self.menubar)
-        self.menuNew.setObjectName(u"menuNew")
-        self.menuNew.setEnabled(False)
-        self.menuNew.setTearOffEnabled(False)
+        self.menu_new = QMenu(self.menubar)
+        self.menu_new.setObjectName(u"menu_new")
+        self.menu_new.setEnabled(False)
+        self.menu_new.setTearOffEnabled(False)
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
-        self.menubar.addAction(self.menuNew.menuAction())
-        self.menuNew.addAction(self.actionMember)
-        self.menuNew.addAction(self.actionSession)
+        self.menubar.addAction(self.menu_new.menuAction())
+        self.menu_new.addAction(self.new_member_action)
+        self.menu_new.addAction(self.new_session_action)
 
         self.retranslateUi(MainWindow)
 
@@ -82,8 +82,8 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
-        self.actionMember.setText(QCoreApplication.translate("MainWindow", u"&Member", None))
-        self.actionSession.setText(QCoreApplication.translate("MainWindow", u"&Session", None))
-        self.menuNew.setTitle(QCoreApplication.translate("MainWindow", u"&New", None))
+        self.new_member_action.setText(QCoreApplication.translate("MainWindow", u"&Member", None))
+        self.new_session_action.setText(QCoreApplication.translate("MainWindow", u"&Session", None))
+        self.menu_new.setTitle(QCoreApplication.translate("MainWindow", u"&New", None))
     # retranslateUi
 
