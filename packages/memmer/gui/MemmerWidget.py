@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
-from PySide6.QtWidgets import QWidget
-from PySide6.QtCore import Signal, QRunnable, Slot
+from PySide6.QtWidgets import QWidget, QDialog
+from PySide6.QtCore import Signal, QRunnable, Slot, QObject
 
 from sqlalchemy.orm import Session
 
@@ -12,22 +12,22 @@ if TYPE_CHECKING:
     from memmer.gui import MainWindow
 
 
-class MemmerWidget(QWidget):
+class MemmerBase:
     status_changed = Signal(str)
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
 
     def parent_mainwindow(self) -> "MainWindow":
         from memmer.gui import MainWindow
 
-        parent = self.parent()
+        parent = self.qt_parent()
         while parent is not None and type(parent) is not MainWindow:
             parent = parent.parent()
 
         assert parent is not None
 
         return parent
+
+    def qt_parent(self) -> QObject:
+        raise RuntimeError("Should have been overridden")
 
     def session(self) -> Session:
         parent = self.parent_mainwindow()
@@ -69,3 +69,19 @@ class MemmerWidget(QWidget):
     @Slot()
     def closed(self):
         pass
+
+
+class MemmerWidget(QWidget, MemmerBase):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+
+    def qt_parent(self):
+        return super().parent()
+
+
+class MemmerDialog(QDialog, MemmerBase):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+
+    def qt_parent(self):
+        return super().parent()

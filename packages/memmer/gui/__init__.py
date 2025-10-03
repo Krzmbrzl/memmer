@@ -7,7 +7,7 @@ from .MemberModel import MemberModel
 from .SessionModel import SessionModel
 
 # List helper widgets first as those are referenced from the other ones
-from .MemmerWidget import MemmerWidget
+from .MemmerWidget import MemmerWidget, MemmerDialog
 from .FilterWidget import FilterWidget
 from .PathSelectorWidget import PathSelectorWidget
 
