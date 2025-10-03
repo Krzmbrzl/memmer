@@ -15,10 +15,10 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDateEdit,
-    QDialog, QDoubleSpinBox, QFormLayout, QGroupBox,
-    QHBoxLayout, QHeaderView, QLabel, QLineEdit,
-    QListView, QPushButton, QScrollArea, QSizePolicy,
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComboBox,
+    QDateEdit, QDialog, QDoubleSpinBox, QFormLayout,
+    QGroupBox, QHBoxLayout, QHeaderView, QLabel,
+    QLineEdit, QPushButton, QScrollArea, QSizePolicy,
     QSpacerItem, QTabWidget, QTableView, QVBoxLayout,
     QWidget)
 
@@ -376,9 +376,13 @@ class Ui_MemberDialog(object):
         self.verticalLayout_5.setObjectName(u"verticalLayout_5")
         self.sessions_table = QTableView(self.sessions_tab)
         self.sessions_table.setObjectName(u"sessions_table")
-        self.sessions_table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.sessions_table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.sessions_table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.sessions_table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.sessions_table.setAutoScroll(False)
+        self.sessions_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.sessions_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.sessions_table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.sessions_table.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
 
         self.verticalLayout_5.addWidget(self.sessions_table)
 
@@ -392,26 +396,34 @@ class Ui_MemberDialog(object):
 
         self.verticalLayout_6.addWidget(self.relatives_label)
 
-        self.relatives_list = QListView(self.relatives_tab)
-        self.relatives_list.setObjectName(u"relatives_list")
-        self.relatives_list.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.relatives_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.relatives_list.setAutoScroll(False)
+        self.relatives_table = QTableView(self.relatives_tab)
+        self.relatives_table.setObjectName(u"relatives_table")
+        self.relatives_table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.relatives_table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.relatives_table.setAutoScroll(False)
+        self.relatives_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.relatives_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.relatives_table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.relatives_table.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
 
-        self.verticalLayout_6.addWidget(self.relatives_list)
+        self.verticalLayout_6.addWidget(self.relatives_table)
 
         self.likely_relatives_label = QLabel(self.relatives_tab)
         self.likely_relatives_label.setObjectName(u"likely_relatives_label")
 
         self.verticalLayout_6.addWidget(self.likely_relatives_label)
 
-        self.likely_relatives_list = QListView(self.relatives_tab)
-        self.likely_relatives_list.setObjectName(u"likely_relatives_list")
-        self.likely_relatives_list.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.likely_relatives_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.likely_relatives_list.setAutoScroll(False)
+        self.likely_relatives_table = QTableView(self.relatives_tab)
+        self.likely_relatives_table.setObjectName(u"likely_relatives_table")
+        self.likely_relatives_table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.likely_relatives_table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.likely_relatives_table.setAutoScroll(False)
+        self.likely_relatives_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.likely_relatives_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.likely_relatives_table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.likely_relatives_table.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
 
-        self.verticalLayout_6.addWidget(self.likely_relatives_list)
+        self.verticalLayout_6.addWidget(self.likely_relatives_table)
 
         self.potential_relatives_label = QLabel(self.relatives_tab)
         self.potential_relatives_label.setObjectName(u"potential_relatives_label")
@@ -423,13 +435,17 @@ class Ui_MemberDialog(object):
 
         self.verticalLayout_6.addWidget(self.potential_relatives_search)
 
-        self.potential__relatives_list = QListView(self.relatives_tab)
-        self.potential__relatives_list.setObjectName(u"potential__relatives_list")
-        self.potential__relatives_list.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.potential__relatives_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.potential__relatives_list.setAutoScroll(False)
+        self.potential_relatives_table = QTableView(self.relatives_tab)
+        self.potential_relatives_table.setObjectName(u"potential_relatives_table")
+        self.potential_relatives_table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.potential_relatives_table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.potential_relatives_table.setAutoScroll(False)
+        self.potential_relatives_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.potential_relatives_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.potential_relatives_table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.potential_relatives_table.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
 
-        self.verticalLayout_6.addWidget(self.potential__relatives_list)
+        self.verticalLayout_6.addWidget(self.potential_relatives_table)
 
         self.tabWidget.addTab(self.relatives_tab, "")
 

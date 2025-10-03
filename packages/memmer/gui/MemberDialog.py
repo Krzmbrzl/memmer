@@ -3,26 +3,65 @@ from .compiled_ui_files.ui_MemberDialog import Ui_MemberDialog
 from typing import Optional
 from datetime import datetime, date
 
-from PySide6.QtWidgets import QDialog
+from PySide6.QtWidgets import QHeaderView
 from PySide6.QtCore import QDate, QDateTime, Qt
 
-from memmer.orm import Member
+from memmer.gui import (
+    MemmerDialog,
+    MemberModel,
+    SessionModel,
+    SessionParticipationModel,
+)
+from memmer.orm import Member, Session
 from memmer.utils import nominal_year_diff
+from memmer.queries import get_relatives
+
+from sqlalchemy import select
 
 default_date = QDate(1870, 1, 1)
 
 
-class MemberDialog(QDialog, Ui_MemberDialog):
+class MemberDialog(MemmerDialog, Ui_MemberDialog):
     def __init__(self, member: Optional[Member] = None, parent=None):
         super().__init__(parent)
 
         self.setupUi(self)
 
+        self.member = member
+
+        self.__create_models()
+
         self.__connect_signals()
 
-        self.__init_state(member)
+        self.__init_state()
 
-        self.member = member
+    def __create_models(self):
+        # TODO: Obtain list from buffer / manager
+        sessions = list(self.session().scalars(select(Session)).all())
+        members = list(self.session().scalars(select(Member)).all())
+
+        self.sessions_table.setModel(
+            SessionParticipationModel(
+                member=self.member, sessions=sessions, parent=self.sessions_table
+            )
+        )
+        self.sessions_table.horizontalHeader().setSectionResizeMode(
+            SessionModel.Column.Name, QHeaderView.ResizeMode.Stretch
+        )
+
+        relatives = get_relatives(self.session(), self.member) if self.member else []
+        self.relatives_table.setModel(
+            MemberModel(members=relatives, parent=self.relatives_table)
+        )
+
+        for current in relatives:
+            members.remove(current)
+
+        # TODO: likely relatives
+
+        self.potential_relatives_table.setModel(
+            MemberModel(members=members, parent=self.potential_relatives_table)
+        )
 
     def __connect_signals(self):
         self.cancel_button.clicked.connect(self.close)
@@ -34,19 +73,19 @@ class MemberDialog(QDialog, Ui_MemberDialog):
             self.__fee_overwrite_toggled
         )
 
-    def __init_state(self, member: Optional[Member]):
+    def __init_state(self):
         # Set all to known default values
         self.birthday_edit.setDate(default_date)
         self.entry_date_edit.setDate(default_date)
         self.exit_date_edit.setDate(default_date)
         self.sepa_mandate_date_edit.setDate(default_date)
 
-        if member is None:
+        if self.member is None:
             # Set entry date to today
             self.entry_date_edit.setDate(QDateTime.currentDateTime().date())
             # TODO: Add admission fee as one-time cost
         else:
-            self.load(member)
+            self.load(self.member)
 
     def load(self, member: Member):
         # General
