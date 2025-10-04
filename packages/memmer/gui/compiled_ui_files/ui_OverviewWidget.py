@@ -56,6 +56,7 @@ class Ui_OverviewWidget(object):
         self.member_table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.member_table.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.member_table.setSortingEnabled(True)
+        self.member_table.setCornerButtonEnabled(False)
 
         self.verticalLayout_4.addWidget(self.member_table)
 
@@ -81,6 +82,7 @@ class Ui_OverviewWidget(object):
         self.session_table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.session_table.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.session_table.setSortingEnabled(True)
+        self.session_table.setCornerButtonEnabled(False)
 
         self.verticalLayout_5.addWidget(self.session_table)
 
