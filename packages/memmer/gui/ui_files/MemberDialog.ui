@@ -542,13 +542,19 @@
               <item row="1" column="1">
                <widget class="QTableView" name="one_time_fees_table">
                 <property name="verticalScrollBarPolicy">
-                 <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+                 <enum>Qt::ScrollBarPolicy::ScrollBarAsNeeded</enum>
                 </property>
                 <property name="horizontalScrollBarPolicy">
-                 <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+                 <enum>Qt::ScrollBarPolicy::ScrollBarAsNeeded</enum>
                 </property>
                 <property name="autoScroll">
                  <bool>false</bool>
+                </property>
+                <property name="verticalScrollMode">
+                 <enum>QAbstractItemView::ScrollMode::ScrollPerPixel</enum>
+                </property>
+                <property name="horizontalScrollMode">
+                 <enum>QAbstractItemView::ScrollMode::ScrollPerPixel</enum>
                 </property>
                </widget>
               </item>

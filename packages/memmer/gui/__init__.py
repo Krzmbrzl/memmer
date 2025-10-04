@@ -6,6 +6,7 @@
 from .MemberModel import MemberModel
 from .SessionModel import SessionModel
 from .SessionParticipationModel import SessionParticipationModel
+from .OneTimeFeeModel import OneTimeFeeModel
 
 # List helper widgets first as those are referenced from the other ones
 from .MemmerWidget import MemmerWidget, MemmerDialog

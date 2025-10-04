@@ -11,6 +11,7 @@ from memmer.gui import (
     MemberModel,
     SessionModel,
     SessionParticipationModel,
+    OneTimeFeeModel,
 )
 from memmer.orm import Member, Session
 from memmer.utils import nominal_year_diff
@@ -61,6 +62,13 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
 
         self.potential_relatives_table.setModel(
             MemberModel(members=members, parent=self.potential_relatives_table)
+        )
+
+        self.one_time_fees_table.setModel(
+            OneTimeFeeModel(member=self.member, parent=self.one_time_fees_table)
+        )
+        self.one_time_fees_table.horizontalHeader().setSectionResizeMode(
+            OneTimeFeeModel.Column.Reason, QHeaderView.ResizeMode.Stretch
         )
 
     def __connect_signals(self):

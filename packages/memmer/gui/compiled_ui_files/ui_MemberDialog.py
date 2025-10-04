@@ -356,9 +356,11 @@ class Ui_MemberDialog(object):
 
         self.one_time_fees_table = QTableView(self.fee_group)
         self.one_time_fees_table.setObjectName(u"one_time_fees_table")
-        self.one_time_fees_table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.one_time_fees_table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.one_time_fees_table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.one_time_fees_table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.one_time_fees_table.setAutoScroll(False)
+        self.one_time_fees_table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.one_time_fees_table.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
 
         self.formLayout_6.setWidget(1, QFormLayout.ItemRole.FieldRole, self.one_time_fees_table)
 
