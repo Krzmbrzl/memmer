@@ -54,14 +54,35 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         self.relatives_table.setModel(
             MemberModel(members=relatives, parent=self.relatives_table)
         )
+        self.relatives_table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.Stretch
+        )
+        self.relatives_table.horizontalHeader().setSectionResizeMode(
+            MemberModel.Column.Age, QHeaderView.ResizeMode.ResizeToContents
+        )
 
         for current in relatives:
             members.remove(current)
 
-        # TODO: likely relatives
+        # TODO: Determine likely relatives
+        self.likely_relatives_table.setModel(
+            MemberModel(members=[], parent=self.relatives_table)
+        )
+        self.likely_relatives_table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.Stretch
+        )
+        self.likely_relatives_table.horizontalHeader().setSectionResizeMode(
+            MemberModel.Column.Age, QHeaderView.ResizeMode.ResizeToContents
+        )
 
         self.potential_relatives_table.setModel(
             MemberModel(members=members, parent=self.potential_relatives_table)
+        )
+        self.potential_relatives_table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.Stretch
+        )
+        self.potential_relatives_table.horizontalHeader().setSectionResizeMode(
+            MemberModel.Column.Age, QHeaderView.ResizeMode.ResizeToContents
         )
 
         self.one_time_fees_table.setModel(
