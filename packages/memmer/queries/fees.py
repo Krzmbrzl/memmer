@@ -150,10 +150,10 @@ def compute_monthly_fee(
             .where(morm.Participation.member_id == member.id)
             .where(morm.Participation.session_id == current_session.id)
         )
-        assert participation != None
 
-        if participation.since <= target_date and (
-            participation.until is None or participation.until > target_date
+        if participation is None or (
+            participation.since <= target_date
+            and (participation.until is None or participation.until > target_date)
         ):
             session_fees.append(current_session.membership_fee)
 
