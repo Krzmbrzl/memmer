@@ -53,6 +53,11 @@ def get_relatives(session: Session, member: Member) -> List[Member]:
         if member != second and not second in relatedMembers:
             relatedMembers.append(second)
 
+    # Also consider dummy relatives added directly to Member instances
+    if hasattr(member, "relatives"):
+        for current in member.relatives:  # type: ignore
+            relatedMembers.append(current)
+
     return relatedMembers
 
 

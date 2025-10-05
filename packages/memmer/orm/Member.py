@@ -11,7 +11,7 @@ import enum
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
-from sqlalchemy import CheckConstraint
+from sqlalchemy import CheckConstraint, event
 
 from .Base import Base
 
@@ -75,3 +75,10 @@ class Member(Base):
 
     def __str__(self):
         return "{}, {} ({})".format(self.last_name, self.first_name, self.city)
+
+
+@event.listens_for(Member, "init", propagate=True)
+def add_special_members(target, args, kwargs):
+    # Note: These members will only be part of Member instances that are explicitly created
+    # via the constructor (not for ones loaded from the DB)
+    target.relatives = []
