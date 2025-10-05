@@ -13,7 +13,8 @@ from memmer.gui import (
     SessionParticipationModel,
     OneTimeFeeModel,
 )
-from memmer.orm import Member, Session
+from memmer import AdmissionFeeKey
+from memmer.orm import Member, Session, FixedCost
 from memmer.utils import nominal_year_diff
 from memmer.queries import get_relatives
 
@@ -112,7 +113,17 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         if self.member is None:
             # Set entry date to today
             self.entry_date_edit.setDate(QDateTime.currentDateTime().date())
-            # TODO: Add admission fee as one-time cost
+
+            # Handle admission fee (if any)
+            fee = (
+                self.session()
+                .scalars(select(FixedCost).where(FixedCost.name == AdmissionFeeKey))
+                .one_or_none()
+            )
+            if fee is not None:
+                model = self.one_time_fees_table.model()
+                assert isinstance(model, OneTimeFeeModel)
+                model.add_fee(reason=self.tr("Admissing fee"), amount=fee.cost)
         else:
             self.load(self.member)
 
