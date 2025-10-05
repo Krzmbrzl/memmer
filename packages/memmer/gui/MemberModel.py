@@ -91,3 +91,6 @@ class MemberModel(QAbstractTableModel):
             return None
 
         return self.members[row]
+
+    def get_members(self) -> List[Member]:
+        return self.members

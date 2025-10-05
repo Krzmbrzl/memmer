@@ -16,7 +16,7 @@ from memmer.gui import (
 from memmer import AdmissionFeeKey
 from memmer.orm import Member, Session, FixedCost
 from memmer.utils import nominal_year_diff
-from memmer.queries import get_relatives
+from memmer.queries import get_relatives, compute_monthly_fee, compute_discount
 
 from sqlalchemy import select
 
@@ -212,6 +212,36 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             self.__recompute_monthly_fee()
 
     def __recompute_monthly_fee(self):
-        # TODO compute fee without requiring to save the member details yet
-        # -> maybe use a dummy member created only for fee computation?
-        pass
+        # Create dummy member object with the current data
+        dummy = Member()
+        dummy.birthday = self.birthday_edit.date().toPython()  # type: ignore
+        dummy.entry_date = self.entry_date_edit.date().toPython()  # type: ignore
+        if self.exited_checkbox.isChecked():
+            dummy.exit_date = self.exit_date_edit.date().toPython()  # type: ignore
+        dummy.is_honorary_member = self.honorary_member_checkbox.isChecked()
+
+        participation_model = self.sessions_table.model()
+        assert isinstance(participation_model, SessionParticipationModel)
+        dummy.participating_sessions = participation_model.get_participated_sessions()
+
+        relatives_model = self.relatives_table.model()
+        assert isinstance(relatives_model, MemberModel)
+        dummy.relatives = relatives_model.get_members()  # type: ignore
+
+        discount = compute_discount(
+            session=self.session(), member=dummy, target_date=datetime.now().date()
+        )
+        fee = compute_monthly_fee(
+            session=self.session(),
+            member=dummy,
+            apply_discounts=False,
+            target_date=datetime.now().date(),
+        )
+
+        self.base_fee_label.setText(f"{fee:.2f}€")
+        self.discount_label.setText(f"{int(100 * discount):3d}%")
+
+        if not self.monthly_fee_overwrite_checkbox.isChecked():
+            fee *= discount
+
+            self.monthly_fee_edit.setValue(float(fee))

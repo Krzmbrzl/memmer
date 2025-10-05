@@ -17,10 +17,10 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComboBox,
     QDateEdit, QDialog, QDoubleSpinBox, QFormLayout,
-    QGroupBox, QHBoxLayout, QHeaderView, QLabel,
-    QLineEdit, QPushButton, QScrollArea, QSizePolicy,
-    QSpacerItem, QTabWidget, QTableView, QVBoxLayout,
-    QWidget)
+    QGridLayout, QGroupBox, QHBoxLayout, QHeaderView,
+    QLabel, QLineEdit, QPushButton, QScrollArea,
+    QSizePolicy, QSpacerItem, QTabWidget, QTableView,
+    QVBoxLayout, QWidget)
 
 from ..FilterWidget import FilterWidget
 
@@ -28,7 +28,7 @@ class Ui_MemberDialog(object):
     def setupUi(self, MemberDialog):
         if not MemberDialog.objectName():
             MemberDialog.setObjectName(u"MemberDialog")
-        MemberDialog.resize(614, 791)
+        MemberDialog.resize(614, 792)
         self.verticalLayout_2 = QVBoxLayout(MemberDialog)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.scrollArea = QScrollArea(MemberDialog)
@@ -36,7 +36,7 @@ class Ui_MemberDialog(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 598, 733))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 598, 734))
         self.verticalLayout_3 = QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.tabWidget = QTabWidget(self.scrollAreaWidgetContents)
@@ -322,37 +322,76 @@ class Ui_MemberDialog(object):
 
         self.fee_group = QGroupBox(self.payment_tab)
         self.fee_group.setObjectName(u"fee_group")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.fee_group.sizePolicy().hasHeightForWidth())
+        self.fee_group.setSizePolicy(sizePolicy1)
         self.formLayout_6 = QFormLayout(self.fee_group)
         self.formLayout_6.setObjectName(u"formLayout_6")
+        self.formLayout_6.setLabelAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTop|Qt.AlignmentFlag.AlignTrailing)
         self.monthly_fee_label = QLabel(self.fee_group)
         self.monthly_fee_label.setObjectName(u"monthly_fee_label")
+        self.monthly_fee_label.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
 
-        self.formLayout_6.setWidget(0, QFormLayout.ItemRole.LabelRole, self.monthly_fee_label)
+        self.formLayout_6.setWidget(1, QFormLayout.ItemRole.LabelRole, self.monthly_fee_label)
 
-        self.horizontalLayout_3 = QHBoxLayout()
-        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
-        self.monthly_fee_edit = QDoubleSpinBox(self.fee_group)
-        self.monthly_fee_edit.setObjectName(u"monthly_fee_edit")
-        self.monthly_fee_edit.setEnabled(False)
+        self.gridLayout = QGridLayout()
+        self.gridLayout.setObjectName(u"gridLayout")
+        self.horizontalLayout_6 = QHBoxLayout()
+        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
+        self.base_fee_label = QLabel(self.fee_group)
+        self.base_fee_label.setObjectName(u"base_fee_label")
+        self.base_fee_label.setText(u"0,00\u20ac")
 
-        self.horizontalLayout_3.addWidget(self.monthly_fee_edit)
+        self.horizontalLayout_6.addWidget(self.base_fee_label)
 
-        self.horizontalSpacer_5 = QSpacerItem(20, 10, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
+        self.times_label = QLabel(self.fee_group)
+        self.times_label.setObjectName(u"times_label")
+        self.times_label.setText(u"\u00d7")
 
-        self.horizontalLayout_3.addItem(self.horizontalSpacer_5)
+        self.horizontalLayout_6.addWidget(self.times_label)
+
+        self.discount_label = QLabel(self.fee_group)
+        self.discount_label.setObjectName(u"discount_label")
+        self.discount_label.setText(u"100%")
+
+        self.horizontalLayout_6.addWidget(self.discount_label)
+
+
+        self.gridLayout.addLayout(self.horizontalLayout_6, 0, 0, 1, 1)
 
         self.monthly_fee_overwrite_checkbox = QCheckBox(self.fee_group)
         self.monthly_fee_overwrite_checkbox.setObjectName(u"monthly_fee_overwrite_checkbox")
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.monthly_fee_overwrite_checkbox.sizePolicy().hasHeightForWidth())
+        self.monthly_fee_overwrite_checkbox.setSizePolicy(sizePolicy2)
 
-        self.horizontalLayout_3.addWidget(self.monthly_fee_overwrite_checkbox)
+        self.gridLayout.addWidget(self.monthly_fee_overwrite_checkbox, 1, 1, 1, 1)
+
+        self.monthly_fee_edit = QDoubleSpinBox(self.fee_group)
+        self.monthly_fee_edit.setObjectName(u"monthly_fee_edit")
+        self.monthly_fee_edit.setEnabled(False)
+        sizePolicy2.setHeightForWidth(self.monthly_fee_edit.sizePolicy().hasHeightForWidth())
+        self.monthly_fee_edit.setSizePolicy(sizePolicy2)
+        self.monthly_fee_edit.setMaximum(999.990000000000009)
+
+        self.gridLayout.addWidget(self.monthly_fee_edit, 1, 0, 1, 1)
+
+        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout.addItem(self.horizontalSpacer_5, 1, 2, 1, 1)
 
 
-        self.formLayout_6.setLayout(0, QFormLayout.ItemRole.FieldRole, self.horizontalLayout_3)
+        self.formLayout_6.setLayout(1, QFormLayout.ItemRole.FieldRole, self.gridLayout)
 
         self.one_time_fees_label = QLabel(self.fee_group)
         self.one_time_fees_label.setObjectName(u"one_time_fees_label")
+        self.one_time_fees_label.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
 
-        self.formLayout_6.setWidget(1, QFormLayout.ItemRole.LabelRole, self.one_time_fees_label)
+        self.formLayout_6.setWidget(2, QFormLayout.ItemRole.LabelRole, self.one_time_fees_label)
 
         self.one_time_fees_table = QTableView(self.fee_group)
         self.one_time_fees_table.setObjectName(u"one_time_fees_table")
@@ -362,7 +401,7 @@ class Ui_MemberDialog(object):
         self.one_time_fees_table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.one_time_fees_table.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
 
-        self.formLayout_6.setWidget(1, QFormLayout.ItemRole.FieldRole, self.one_time_fees_table)
+        self.formLayout_6.setWidget(2, QFormLayout.ItemRole.FieldRole, self.one_time_fees_table)
 
 
         self.verticalLayout_4.addWidget(self.fee_group)
@@ -537,8 +576,8 @@ class Ui_MemberDialog(object):
         self.account_owner_edit.setPlaceholderText(QCoreApplication.translate("MemberDialog", u"Mr. & Ms. Smith", None))
         self.fee_group.setTitle(QCoreApplication.translate("MemberDialog", u"Fees", None))
         self.monthly_fee_label.setText(QCoreApplication.translate("MemberDialog", u"Monthly fee", None))
-        self.monthly_fee_edit.setSuffix(QCoreApplication.translate("MemberDialog", u"\u20ac", None))
         self.monthly_fee_overwrite_checkbox.setText(QCoreApplication.translate("MemberDialog", u"Overwrite", None))
+        self.monthly_fee_edit.setSuffix(QCoreApplication.translate("MemberDialog", u"\u20ac", None))
         self.one_time_fees_label.setText(QCoreApplication.translate("MemberDialog", u"One-time fees", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.payment_tab), QCoreApplication.translate("MemberDialog", u"Payment", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.sessions_tab), QCoreApplication.translate("MemberDialog", u"Sessions", None))

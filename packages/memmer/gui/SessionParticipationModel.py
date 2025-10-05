@@ -80,3 +80,12 @@ class SessionParticipationModel(SessionModel):
         )
 
         return True
+
+    def get_participated_sessions(self) -> List[Session]:
+        participated_sessions: List[Session] = []
+
+        for i, participating in enumerate(self.participations):
+            if participating:
+                participated_sessions.append(self.sessions[i])
+
+        return participated_sessions
