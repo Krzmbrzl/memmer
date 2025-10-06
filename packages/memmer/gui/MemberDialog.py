@@ -4,7 +4,7 @@ from typing import Optional
 from datetime import datetime, date
 
 from PySide6.QtWidgets import QHeaderView
-from PySide6.QtCore import QDate, QDateTime, Qt
+from PySide6.QtCore import QDate, QDateTime, Qt, QModelIndex, QPersistentModelIndex
 
 from memmer.gui import (
     MemmerDialog,
@@ -53,7 +53,7 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
 
         relatives = get_relatives(self.session(), self.member) if self.member else []
         self.relatives_table.setModel(
-            MemberModel(members=relatives, parent=self.relatives_table)
+            MemberModel(members=members, active=relatives, parent=self.relatives_table)
         )
         self.relatives_table.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.Stretch
@@ -61,13 +61,10 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         self.relatives_table.horizontalHeader().setSectionResizeMode(
             MemberModel.Column.Age, QHeaderView.ResizeMode.ResizeToContents
         )
-
-        for current in relatives:
-            members.remove(current)
 
         # TODO: Determine likely relatives
         self.likely_relatives_table.setModel(
-            MemberModel(members=[], parent=self.relatives_table)
+            MemberModel(members=members, active=[], parent=self.relatives_table)
         )
         self.likely_relatives_table.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.Stretch
@@ -76,8 +73,16 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             MemberModel.Column.Age, QHeaderView.ResizeMode.ResizeToContents
         )
 
+        if self.member:
+            # Don't offer oneself as relative
+            relatives.append(self.member)
+
         self.potential_relatives_table.setModel(
-            MemberModel(members=members, parent=self.potential_relatives_table)
+            MemberModel(
+                members=members,
+                inactive=relatives,
+                parent=self.potential_relatives_table,
+            )
         )
         self.potential_relatives_table.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.Stretch
@@ -101,6 +106,12 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         self.sepa_mandate_checkbox.toggled.connect(self.__sepa_mandate_given)
         self.monthly_fee_overwrite_checkbox.toggled.connect(
             self.__fee_overwrite_toggled
+        )
+
+        self.relatives_table.activated.connect(self.__relative_activated)
+        self.likely_relatives_table.activated.connect(self.__likely_relative_activated)
+        self.potential_relatives_table.activated.connect(
+            self.__potential_relative_activated
         )
 
     def __init_state(self):
@@ -245,3 +256,45 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             fee *= discount
 
             self.monthly_fee_edit.setValue(float(fee))
+
+    def __relative_activated(self, idx: QModelIndex | QPersistentModelIndex):
+        member_id = idx.data(MemberModel.MemberIdRole)
+
+        from_model = self.relatives_table.model()
+        to_model = self.likely_relatives_table.model()
+
+        assert isinstance(from_model, MemberModel)
+        assert isinstance(to_model, MemberModel)
+
+        from_model.make_inactive(member_id=member_id)
+        to_model.make_active(member_id=member_id)
+
+        self.__recompute_monthly_fee()
+
+    def __likely_relative_activated(self, idx: QModelIndex | QPersistentModelIndex):
+        member_id = idx.data(MemberModel.MemberIdRole)
+
+        from_model = self.likely_relatives_table.model()
+        to_model = self.relatives_table.model()
+
+        assert isinstance(from_model, MemberModel)
+        assert isinstance(to_model, MemberModel)
+
+        from_model.make_inactive(member_id=member_id)
+        to_model.make_active(member_id=member_id)
+
+        self.__recompute_monthly_fee()
+
+    def __potential_relative_activated(self, idx: QModelIndex | QPersistentModelIndex):
+        member_id = idx.data(MemberModel.MemberIdRole)
+
+        from_model = self.potential_relatives_table.model()
+        to_model = self.relatives_table.model()
+
+        assert isinstance(from_model, MemberModel)
+        assert isinstance(to_model, MemberModel)
+
+        from_model.make_inactive(member_id=member_id)
+        to_model.make_active(member_id=member_id)
+
+        self.__recompute_monthly_fee()

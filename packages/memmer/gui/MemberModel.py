@@ -1,4 +1,4 @@
-from typing import List, Any, Optional
+from typing import List, Any, Optional, Sequence
 from enum import IntEnum
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt
@@ -18,15 +18,38 @@ class MemberModel(QAbstractTableModel):
 
     MemberIdRole = Qt.ItemDataRole.UserRole
 
-    def __init__(self, members: List[Member] = [], parent=None):
+    def __init__(
+        self,
+        members: List[Member] = [],
+        active: Optional[Sequence[Member | int]] = None,
+        inactive: Optional[Sequence[Member | int]] = None,
+        parent=None,
+    ):
         super().__init__(parent)
 
         self.members = members
+        self.active: List[int] = []
+
+        if active is None:
+            self.active = list(range(0, len(self.members)))
+        else:
+            for current in active:
+                if isinstance(current, Member):
+                    self.active.append(self.members.index(current))
+                else:
+                    self.active.append(current)
+
+        if inactive is not None:
+            for current in inactive:
+                if isinstance(current, Member):
+                    self.active.remove(self.members.index(current))
+                else:
+                    self.active.remove(current)
 
     def rowCount(
         self, parent: QModelIndex | QPersistentModelIndex = QModelIndex()
     ) -> int:
-        return len(self.members)
+        return len(self.active)
 
     def columnCount(
         self, parent: QModelIndex | QPersistentModelIndex = QModelIndex()
@@ -45,10 +68,10 @@ class MemberModel(QAbstractTableModel):
         row = idx.row()
         col = idx.column()
 
-        if row >= len(self.members):
+        if row >= len(self.active):
             return None
 
-        member: Member = self.members[row]
+        member: Member = self.members[self.active[row]]
 
         if role == Qt.ItemDataRole.DisplayRole:
             if col == MemberModel.Column.LastName:
@@ -91,10 +114,72 @@ class MemberModel(QAbstractTableModel):
 
         row = idx.row()
 
-        if row >= len(self.members):
+        if row >= len(self.active):
             return None
 
-        return self.members[row]
+        return self.members[self.active[row]]
 
     def get_members(self) -> List[Member]:
-        return self.members
+        return [self.members[x] for x in self.active]
+
+    def make_active(
+        self, member: Optional[Member] = None, member_id: Optional[int] = None
+    ):
+        if member is not None and member_id is not None:
+            raise RuntimeError("Can only specify member or member_id, but not both")
+        if member is None and member_id is None:
+            raise RuntimeError("Have to specify member or member_id")
+
+        if member is not None:
+            idx = self.members.index(member)
+        else:
+            assert member_id is not None
+            idx = None
+            for i, current in enumerate(self.members):
+                if current.id == member_id:
+                    idx = i
+                    break
+
+            if idx is None:
+                return
+
+        if idx in self.active:
+            return
+
+        self.beginInsertRows(QModelIndex(), len(self.active), len(self.active))
+
+        self.active.append(idx)
+
+        self.endInsertRows()
+
+    def make_inactive(
+        self, member: Optional[Member] = None, member_id: Optional[int] = None
+    ):
+        if member is not None and member_id is not None:
+            raise RuntimeError("Can only specify member or member_id, but not both")
+        if member is None and member_id is None:
+            raise RuntimeError("Have to specify member or member_id")
+
+        if member is not None:
+            idx = self.members.index(member)
+        else:
+            assert member_id is not None
+            idx = None
+            for i, current in enumerate(self.members):
+                if current.id == member_id:
+                    idx = i
+                    break
+
+            if idx is None:
+                return
+
+        if idx not in self.active:
+            return
+
+        active_idx = self.active.index(idx)
+
+        self.beginRemoveRows(QModelIndex(), active_idx, active_idx)
+
+        del self.active[active_idx]
+
+        self.endRemoveRows()
