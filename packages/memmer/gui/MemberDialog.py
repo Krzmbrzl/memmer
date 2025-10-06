@@ -2,9 +2,17 @@ from .compiled_ui_files.ui_MemberDialog import Ui_MemberDialog
 
 from typing import Optional
 from datetime import datetime, date
+from decimal import Decimal
 
 from PySide6.QtWidgets import QHeaderView
-from PySide6.QtCore import QDate, QDateTime, Qt, QModelIndex, QPersistentModelIndex
+from PySide6.QtCore import (
+    QDate,
+    QDateTime,
+    Qt,
+    QModelIndex,
+    QPersistentModelIndex,
+    Signal,
+)
 
 from memmer.gui import (
     MemmerDialog,
@@ -24,6 +32,9 @@ default_date = QDate(1870, 1, 1)
 
 
 class MemberDialog(MemmerDialog, Ui_MemberDialog):
+    __monthly_fee_changed = Signal(Decimal, Decimal)
+    __fee_related_data_changed = Signal()
+
     def __init__(self, member: Optional[Member] = None, parent=None):
         super().__init__(parent)
 
@@ -36,6 +47,8 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         self.__connect_signals()
 
         self.__init_state()
+
+        self.__fee_related_data_changed.emit()
 
     def __create_models(self):
         # TODO: Obtain list from buffer / manager
@@ -114,6 +127,11 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             self.__potential_relative_activated
         )
 
+        self.__fee_related_data_changed.connect(
+            lambda: self.async_exec(self.__recompute_monthly_fee)
+        )
+        self.__monthly_fee_changed.connect(self.__update_monthly_fee)
+
     def __init_state(self):
         # Set all to known default values
         self.birthday_edit.setDate(default_date)
@@ -181,10 +199,7 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             self.bic_edit.setText(member.bic)
             self.account_owner_edit.setText(member.account_owner)
 
-        # TODO: populate sessions and relatives
-
-        # TODO: check if fee overwrite exists
-        self.__recompute_monthly_fee()
+        self.__fee_related_data_changed.emit()
 
     def __birthday_changed(self, birthday: QDate):
         if birthday == default_date:
@@ -196,7 +211,7 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
 
         self.age_label.setText(self.tr(f"({age} years)"))
 
-        self.__recompute_monthly_fee()
+        self.__fee_related_data_changed.emit()
 
     def __exited_state_changed(self, enabled: bool):
         self.exit_date_edit.setEnabled(enabled)
@@ -205,7 +220,7 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             # Init to today
             self.exit_date_edit.setDate(QDateTime.currentDateTime().date())
 
-        self.__recompute_monthly_fee()
+        self.__fee_related_data_changed.emit()
 
     def __sepa_mandate_given(self, given: bool):
         self.sepa_mandate_date_edit.setEnabled(given)
@@ -220,7 +235,16 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         self.monthly_fee_edit.setEnabled(overwrite)
 
         if not overwrite:
-            self.__recompute_monthly_fee()
+            self.__fee_related_data_changed.emit()
+
+    def __update_monthly_fee(self, base_fee: Decimal, discount: Decimal):
+        self.base_fee_label.setText(f"{base_fee:.2f}€")
+        self.discount_label.setText(f"{int(100 * discount):3d}%")
+
+        if not self.monthly_fee_overwrite_checkbox.isChecked():
+            fee = base_fee * discount
+
+            self.monthly_fee_edit.setValue(float(fee))
 
     def __recompute_monthly_fee(self):
         # Create dummy member object with the current data
@@ -239,23 +263,17 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         assert isinstance(relatives_model, MemberModel)
         dummy.relatives = relatives_model.get_members()  # type: ignore
 
-        discount = compute_discount(
-            session=self.session(), member=dummy, target_date=datetime.now().date()
-        )
         fee = compute_monthly_fee(
             session=self.session(),
             member=dummy,
             apply_discounts=False,
             target_date=datetime.now().date(),
         )
+        discount = compute_discount(
+            session=self.session(), member=dummy, target_date=datetime.now().date()
+        )
 
-        self.base_fee_label.setText(f"{fee:.2f}€")
-        self.discount_label.setText(f"{int(100 * discount):3d}%")
-
-        if not self.monthly_fee_overwrite_checkbox.isChecked():
-            fee *= discount
-
-            self.monthly_fee_edit.setValue(float(fee))
+        self.__monthly_fee_changed.emit(fee, discount)
 
     def __relative_activated(self, idx: QModelIndex | QPersistentModelIndex):
         member_id = idx.data(MemberModel.MemberIdRole)
@@ -269,7 +287,7 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         from_model.make_inactive(member_id=member_id)
         to_model.make_active(member_id=member_id)
 
-        self.__recompute_monthly_fee()
+        self.__fee_related_data_changed.emit()
 
     def __likely_relative_activated(self, idx: QModelIndex | QPersistentModelIndex):
         member_id = idx.data(MemberModel.MemberIdRole)
@@ -283,7 +301,7 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         from_model.make_inactive(member_id=member_id)
         to_model.make_active(member_id=member_id)
 
-        self.__recompute_monthly_fee()
+        self.__fee_related_data_changed.emit()
 
     def __potential_relative_activated(self, idx: QModelIndex | QPersistentModelIndex):
         member_id = idx.data(MemberModel.MemberIdRole)
@@ -297,4 +315,4 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         from_model.make_inactive(member_id=member_id)
         to_model.make_active(member_id=member_id)
 
-        self.__recompute_monthly_fee()
+        self.__fee_related_data_changed.emit()
