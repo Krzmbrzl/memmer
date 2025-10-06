@@ -11,6 +11,8 @@ class SessionModel(QAbstractTableModel):
         Name = 0
         Participants = 1
 
+    SessionIdRole: int = Qt.ItemDataRole.UserRole
+
     def __init__(self, sessions: List[Session] = [], parent=None):
         super().__init__(parent)
 
@@ -50,6 +52,8 @@ class SessionModel(QAbstractTableModel):
                 # TODO: This seems to take a non-trivial amount of time
                 # -> prefetch linked members?
                 return len(session.members)
+        elif role == SessionModel.SessionIdRole:
+            return session.id
 
         return None
 

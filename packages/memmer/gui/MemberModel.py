@@ -16,6 +16,8 @@ class MemberModel(QAbstractTableModel):
         City = 2
         Age = 3
 
+    MemberIdRole = Qt.ItemDataRole.UserRole
+
     def __init__(self, members: List[Member] = [], parent=None):
         super().__init__(parent)
 
@@ -57,6 +59,8 @@ class MemberModel(QAbstractTableModel):
                 return member.city
             elif col == MemberModel.Column.Age:
                 return nominal_year_diff(member.birthday, datetime.now().date())
+        elif role == MemberModel.MemberIdRole:
+            return member.id
 
         return None
 
