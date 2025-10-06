@@ -37,7 +37,9 @@ class OverviewWidget(MemmerWidget, Ui_OverviewWidget):
             members = list(self.session().scalars(select(Member)).all())
             sessions = list(self.session().scalars(select(Session)).all())
 
-            self.member_table.setModel(MemberModel(members, self.member_table))
+            self.member_table.setModel(
+                MemberModel(members=members, parent=self.member_table)
+            )
 
             self.member_table.horizontalHeader().setSectionResizeMode(
                 QHeaderView.ResizeMode.Stretch
