@@ -56,7 +56,8 @@ def get_relatives(session: Session, member: Member) -> List[Member]:
     # Also consider dummy relatives added directly to Member instances
     if hasattr(member, "relatives"):
         for current in member.relatives:  # type: ignore
-            relatedMembers.append(current)
+            if current not in relatedMembers:
+                relatedMembers.append(current)
 
     return relatedMembers
 
