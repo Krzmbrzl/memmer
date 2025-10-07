@@ -458,24 +458,41 @@
                  <bool>false</bool>
                 </property>
                 <property name="placeholderText">
-                 <string>BYLADEM1001</string>
+                 <string/>
                 </property>
                </widget>
               </item>
-              <item row="4" column="0">
+              <item row="5" column="0">
                <widget class="QLabel" name="account_owner_label">
                 <property name="text">
                  <string>Account owner</string>
                 </property>
                </widget>
               </item>
-              <item row="4" column="1">
+              <item row="5" column="1">
                <widget class="QLineEdit" name="account_owner_edit">
                 <property name="enabled">
                  <bool>false</bool>
                 </property>
                 <property name="placeholderText">
                  <string>Mr. &amp; Ms. Smith</string>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="0">
+               <widget class="QLabel" name="institute_label">
+                <property name="text">
+                 <string>Institute</string>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="1">
+               <widget class="QLineEdit" name="institute_edit">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="placeholderText">
+                 <string/>
                 </property>
                </widget>
               </item>

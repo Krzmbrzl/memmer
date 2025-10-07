@@ -30,6 +30,9 @@ from memmer.queries import get_relatives, compute_monthly_fee, compute_discount
 
 from sqlalchemy import select
 
+from schwifty import IBAN
+from schwifty.exceptions import SchwiftyException
+
 default_date = QDate(1870, 1, 1)
 
 
@@ -120,6 +123,7 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
 
         self.sepa_mandate_checkbox.toggled.connect(self.__sepa_mandate_given)
         self.iban_edit.textChanged.connect(self.__format_iban)
+        self.iban_edit.textChanged.connect(self.__deduce_data_from_iban)
         self.monthly_fee_overwrite_checkbox.toggled.connect(
             self.__fee_overwrite_toggled
         )
@@ -199,7 +203,7 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             )
 
             self.iban_edit.setText(member.iban)
-            self.bic_edit.setText(member.bic)
+            # Note: BIC and institute are inferred from IBAN
             self.account_owner_edit.setText(member.account_owner)
 
         self.__fee_related_data_changed.emit()
@@ -228,7 +232,6 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
     def __sepa_mandate_given(self, given: bool):
         self.sepa_mandate_date_edit.setEnabled(given)
         self.iban_edit.setEnabled(given)
-        self.bic_edit.setEnabled(given)
         self.account_owner_edit.setEnabled(given)
 
         if given and self.sepa_mandate_date_edit.date() == default_date:
@@ -347,3 +350,20 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         blocker.unblock()
 
         self.iban_edit.setCursorPosition(cursor_pos)
+
+    def __deduce_data_from_iban(self, text):
+        try:
+            iban = IBAN(text)
+
+            assert iban.bic is not None
+            self.bic_edit.setText(iban.bic)
+
+            if iban.bank_name is not None:
+                self.institute_edit.setText(iban.bank_name)
+            else:
+                self.institute_edit.setText(self.tr("Unknown"))
+
+        except SchwiftyException:
+            # Invalid IBAN
+            self.bic_edit.clear()
+            self.institute_edit.clear()

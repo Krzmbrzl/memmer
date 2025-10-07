@@ -309,13 +309,24 @@ class Ui_MemberDialog(object):
         self.account_owner_label = QLabel(self.bank_group)
         self.account_owner_label.setObjectName(u"account_owner_label")
 
-        self.formLayout_5.setWidget(4, QFormLayout.ItemRole.LabelRole, self.account_owner_label)
+        self.formLayout_5.setWidget(5, QFormLayout.ItemRole.LabelRole, self.account_owner_label)
 
         self.account_owner_edit = QLineEdit(self.bank_group)
         self.account_owner_edit.setObjectName(u"account_owner_edit")
         self.account_owner_edit.setEnabled(False)
 
-        self.formLayout_5.setWidget(4, QFormLayout.ItemRole.FieldRole, self.account_owner_edit)
+        self.formLayout_5.setWidget(5, QFormLayout.ItemRole.FieldRole, self.account_owner_edit)
+
+        self.institute_label = QLabel(self.bank_group)
+        self.institute_label.setObjectName(u"institute_label")
+
+        self.formLayout_5.setWidget(4, QFormLayout.ItemRole.LabelRole, self.institute_label)
+
+        self.institute_edit = QLineEdit(self.bank_group)
+        self.institute_edit.setObjectName(u"institute_edit")
+        self.institute_edit.setEnabled(False)
+
+        self.formLayout_5.setWidget(4, QFormLayout.ItemRole.FieldRole, self.institute_edit)
 
 
         self.verticalLayout_4.addWidget(self.bank_group)
@@ -571,9 +582,11 @@ class Ui_MemberDialog(object):
         self.iban_label.setText(QCoreApplication.translate("MemberDialog", u"IBAN", None))
         self.iban_edit.setPlaceholderText(QCoreApplication.translate("MemberDialog", u"DE75 5121 0800 1245 1261 99", None))
         self.bic_label.setText(QCoreApplication.translate("MemberDialog", u"BIC", None))
-        self.bic_edit.setPlaceholderText(QCoreApplication.translate("MemberDialog", u"BYLADEM1001", None))
+        self.bic_edit.setPlaceholderText("")
         self.account_owner_label.setText(QCoreApplication.translate("MemberDialog", u"Account owner", None))
         self.account_owner_edit.setPlaceholderText(QCoreApplication.translate("MemberDialog", u"Mr. & Ms. Smith", None))
+        self.institute_label.setText(QCoreApplication.translate("MemberDialog", u"Institute", None))
+        self.institute_edit.setPlaceholderText("")
         self.fee_group.setTitle(QCoreApplication.translate("MemberDialog", u"Fees", None))
         self.monthly_fee_label.setText(QCoreApplication.translate("MemberDialog", u"Monthly fee", None))
         self.monthly_fee_overwrite_checkbox.setText(QCoreApplication.translate("MemberDialog", u"Overwrite", None))
