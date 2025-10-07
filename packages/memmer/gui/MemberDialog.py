@@ -321,8 +321,7 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         self.__fee_related_data_changed.emit()
 
     def __format_iban(self, text: str):
-        if len(text) <= 4:
-            return
+        text = text.upper()
 
         cursor_pos = self.iban_edit.cursorPosition()
 
