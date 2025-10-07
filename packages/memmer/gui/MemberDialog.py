@@ -3,6 +3,7 @@ from .compiled_ui_files.ui_MemberDialog import Ui_MemberDialog
 from typing import Optional
 from datetime import datetime, date
 from decimal import Decimal
+import re
 
 from PySide6.QtWidgets import QHeaderView
 from PySide6.QtCore import (
@@ -12,6 +13,7 @@ from PySide6.QtCore import (
     QModelIndex,
     QPersistentModelIndex,
     Signal,
+    QSignalBlocker,
 )
 
 from memmer.gui import (
@@ -117,6 +119,7 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         self.exited_checkbox.toggled.connect(self.__exited_state_changed)
 
         self.sepa_mandate_checkbox.toggled.connect(self.__sepa_mandate_given)
+        self.iban_edit.textChanged.connect(self.__format_iban)
         self.monthly_fee_overwrite_checkbox.toggled.connect(
             self.__fee_overwrite_toggled
         )
@@ -316,3 +319,32 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         to_model.make_active(member_id=member_id)
 
         self.__fee_related_data_changed.emit()
+
+    def __format_iban(self, text: str):
+        if len(text) <= 4:
+            return
+
+        cursor_pos = self.iban_edit.cursorPosition()
+
+        num_spaces_before_cursor = text[:cursor_pos].count(" ")
+
+        # Remove spaces
+        text = text.replace(" ", "")
+
+        # Insert a space every 4 characters
+        text = re.sub(r"(.{4})", r"\1 ", text).strip()
+
+        # Re-position cursor accordingly
+        pos_without_spaces = cursor_pos - num_spaces_before_cursor
+        cursor_pos = (
+            pos_without_spaces
+            + pos_without_spaces // 4
+            - (1 if pos_without_spaces % 4 == 0 else 0)
+        )
+
+        # To avoid endless recursion
+        blocker = QSignalBlocker(self.iban_edit)
+        self.iban_edit.setText(text)
+        blocker.unblock()
+
+        self.iban_edit.setCursorPosition(cursor_pos)
