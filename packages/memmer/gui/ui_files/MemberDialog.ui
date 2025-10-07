@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>614</width>
-    <height>792</height>
+    <height>773</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,8 +24,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>598</width>
-        <height>734</height>
+        <width>577</width>
+        <height>728</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -188,13 +188,6 @@
                 </property>
                </widget>
               </item>
-              <item row="3" column="0">
-               <widget class="QLabel" name="city_label">
-                <property name="text">
-                 <string>City</string>
-                </property>
-               </widget>
-              </item>
               <item row="0" column="1">
                <widget class="QLineEdit" name="street_edit">
                 <property name="placeholderText">
@@ -209,17 +202,72 @@
                 </property>
                </widget>
               </item>
-              <item row="3" column="1">
-               <widget class="QLineEdit" name="city_edit">
-                <property name="placeholderText">
-                 <string>Los Angeles</string>
-                </property>
-               </widget>
-              </item>
               <item row="2" column="1">
                <widget class="QLineEdit" name="postal_code_edit">
                 <property name="placeholderText">
                  <string>90059</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <widget class="QStackedWidget" name="city_selection_stack">
+                <property name="currentIndex">
+                 <number>0</number>
+                </property>
+                <widget class="QWidget" name="city_edit_page">
+                 <layout class="QVBoxLayout" name="verticalLayout_7">
+                  <property name="spacing">
+                   <number>0</number>
+                  </property>
+                  <property name="leftMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <widget class="QLineEdit" name="city_edit">
+                    <property name="placeholderText">
+                     <string>Los Angeles</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="city_combo_page">
+                 <layout class="QVBoxLayout" name="verticalLayout_8">
+                  <property name="spacing">
+                   <number>0</number>
+                  </property>
+                  <property name="leftMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <widget class="QComboBox" name="city_combo"/>
+                  </item>
+                 </layout>
+                </widget>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="city_label">
+                <property name="text">
+                 <string>City</string>
                 </property>
                </widget>
               </item>

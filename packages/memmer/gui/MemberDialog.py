@@ -33,6 +33,9 @@ from sqlalchemy import select
 from schwifty import IBAN
 from schwifty.exceptions import SchwiftyException
 
+from pgeocode import Nominatim
+
+
 default_date = QDate(1870, 1, 1)
 
 
@@ -119,6 +122,7 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
     def __connect_signals(self):
         self.cancel_button.clicked.connect(self.close)
         self.birthday_edit.dateChanged.connect(self.__birthday_changed)
+        self.postal_code_edit.textEdited.connect(self.__deduce_city_from_postal_code)
         self.exited_checkbox.toggled.connect(self.__exited_state_changed)
 
         self.sepa_mandate_checkbox.toggled.connect(self.__sepa_mandate_given)
@@ -175,6 +179,7 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         self.street_number_edit.setText(member.street_number)
         self.postal_code_edit.setText(member.postal_code)
         self.city_edit.setText(member.city)
+        self.city_edit.setEnabled(len(member.city) == 0)
 
         if member.phone_number:
             self.phone_number_edit.setText(member.phone_number)
@@ -367,3 +372,30 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             # Invalid IBAN
             self.bic_edit.clear()
             self.institute_edit.clear()
+
+    def __deduce_city_from_postal_code(self, text: str):
+        # TODO: country should be configurable
+        zip_code_locator = Nominatim(country="de", unique=False)
+
+        try:
+            code = int(text)
+        except:
+            return
+
+        places = zip_code_locator.query_postal_code(code)["place_name"]
+        assert len(places) > 0
+
+        if len(places) == 1:
+            self.city_selection_stack.setCurrentWidget(self.city_edit_page)
+            if type(places[0]) is not str:
+                # Unknown postal code
+                self.city_edit.clear()
+                self.city_edit.setEnabled(True)
+            else:
+                self.city_edit.setText(places[0])  # type: ignore
+                self.city_edit.setEnabled(False)
+        else:
+            self.city_selection_stack.setCurrentWidget(self.city_combo_page)
+            self.city_combo.clear()
+            self.city_combo.addItems([x for x in places])
+            self.city_combo.setCurrentIndex(0)

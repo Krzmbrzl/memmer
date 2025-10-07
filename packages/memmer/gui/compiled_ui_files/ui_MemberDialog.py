@@ -19,8 +19,8 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComb
     QDateEdit, QDialog, QDoubleSpinBox, QFormLayout,
     QGridLayout, QGroupBox, QHBoxLayout, QHeaderView,
     QLabel, QLineEdit, QPushButton, QScrollArea,
-    QSizePolicy, QSpacerItem, QTabWidget, QTableView,
-    QVBoxLayout, QWidget)
+    QSizePolicy, QSpacerItem, QStackedWidget, QTabWidget,
+    QTableView, QVBoxLayout, QWidget)
 
 from ..FilterWidget import FilterWidget
 
@@ -28,7 +28,7 @@ class Ui_MemberDialog(object):
     def setupUi(self, MemberDialog):
         if not MemberDialog.objectName():
             MemberDialog.setObjectName(u"MemberDialog")
-        MemberDialog.resize(614, 792)
+        MemberDialog.resize(614, 773)
         self.verticalLayout_2 = QVBoxLayout(MemberDialog)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.scrollArea = QScrollArea(MemberDialog)
@@ -36,7 +36,7 @@ class Ui_MemberDialog(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 598, 734))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 577, 728))
         self.verticalLayout_3 = QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.tabWidget = QTabWidget(self.scrollAreaWidgetContents)
@@ -137,11 +137,6 @@ class Ui_MemberDialog(object):
 
         self.formLayout_2.setWidget(2, QFormLayout.ItemRole.LabelRole, self.postal_code_label)
 
-        self.city_label = QLabel(self.address_group)
-        self.city_label.setObjectName(u"city_label")
-
-        self.formLayout_2.setWidget(3, QFormLayout.ItemRole.LabelRole, self.city_label)
-
         self.street_edit = QLineEdit(self.address_group)
         self.street_edit.setObjectName(u"street_edit")
 
@@ -152,15 +147,44 @@ class Ui_MemberDialog(object):
 
         self.formLayout_2.setWidget(1, QFormLayout.ItemRole.FieldRole, self.street_number_edit)
 
-        self.city_edit = QLineEdit(self.address_group)
-        self.city_edit.setObjectName(u"city_edit")
-
-        self.formLayout_2.setWidget(3, QFormLayout.ItemRole.FieldRole, self.city_edit)
-
         self.postal_code_edit = QLineEdit(self.address_group)
         self.postal_code_edit.setObjectName(u"postal_code_edit")
 
         self.formLayout_2.setWidget(2, QFormLayout.ItemRole.FieldRole, self.postal_code_edit)
+
+        self.city_selection_stack = QStackedWidget(self.address_group)
+        self.city_selection_stack.setObjectName(u"city_selection_stack")
+        self.city_edit_page = QWidget()
+        self.city_edit_page.setObjectName(u"city_edit_page")
+        self.verticalLayout_7 = QVBoxLayout(self.city_edit_page)
+        self.verticalLayout_7.setSpacing(0)
+        self.verticalLayout_7.setObjectName(u"verticalLayout_7")
+        self.verticalLayout_7.setContentsMargins(0, 0, 0, 0)
+        self.city_edit = QLineEdit(self.city_edit_page)
+        self.city_edit.setObjectName(u"city_edit")
+
+        self.verticalLayout_7.addWidget(self.city_edit)
+
+        self.city_selection_stack.addWidget(self.city_edit_page)
+        self.city_combo_page = QWidget()
+        self.city_combo_page.setObjectName(u"city_combo_page")
+        self.verticalLayout_8 = QVBoxLayout(self.city_combo_page)
+        self.verticalLayout_8.setSpacing(0)
+        self.verticalLayout_8.setObjectName(u"verticalLayout_8")
+        self.verticalLayout_8.setContentsMargins(0, 0, 0, 0)
+        self.city_combo = QComboBox(self.city_combo_page)
+        self.city_combo.setObjectName(u"city_combo")
+
+        self.verticalLayout_8.addWidget(self.city_combo)
+
+        self.city_selection_stack.addWidget(self.city_combo_page)
+
+        self.formLayout_2.setWidget(3, QFormLayout.ItemRole.FieldRole, self.city_selection_stack)
+
+        self.city_label = QLabel(self.address_group)
+        self.city_label.setObjectName(u"city_label")
+
+        self.formLayout_2.setWidget(3, QFormLayout.ItemRole.LabelRole, self.city_label)
 
 
         self.verticalLayout.addWidget(self.address_group)
@@ -536,6 +560,7 @@ class Ui_MemberDialog(object):
 
         self.tabWidget.setCurrentIndex(0)
         self.gender_combo.setCurrentIndex(-1)
+        self.city_selection_stack.setCurrentIndex(0)
 
     # setupUi
 
@@ -557,11 +582,11 @@ class Ui_MemberDialog(object):
         self.street_label.setText(QCoreApplication.translate("MemberDialog", u"Street", None))
         self.street_number_label.setText(QCoreApplication.translate("MemberDialog", u"Street number", None))
         self.postal_code_label.setText(QCoreApplication.translate("MemberDialog", u"Postal code", None))
-        self.city_label.setText(QCoreApplication.translate("MemberDialog", u"City", None))
         self.street_edit.setPlaceholderText(QCoreApplication.translate("MemberDialog", u"Hollywood Boulevard", None))
         self.street_number_edit.setPlaceholderText(QCoreApplication.translate("MemberDialog", u"12", None))
-        self.city_edit.setPlaceholderText(QCoreApplication.translate("MemberDialog", u"Los Angeles", None))
         self.postal_code_edit.setPlaceholderText(QCoreApplication.translate("MemberDialog", u"90059", None))
+        self.city_edit.setPlaceholderText(QCoreApplication.translate("MemberDialog", u"Los Angeles", None))
+        self.city_label.setText(QCoreApplication.translate("MemberDialog", u"City", None))
         self.contact_group.setTitle(QCoreApplication.translate("MemberDialog", u"Contact", None))
         self.phone_number_label.setText(QCoreApplication.translate("MemberDialog", u"Phone number", None))
         self.phone_number_edit.setPlaceholderText(QCoreApplication.translate("MemberDialog", u"773-702-1000", None))
