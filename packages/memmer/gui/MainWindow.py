@@ -21,7 +21,7 @@ from memmer.utils import (
     ConnectionParameter,
     Prefetcher,
 )
-from memmer.gui import MemmerWidget, MemberDialog
+from memmer.gui import MemmerWidget, MemberDialog, SessionDialog
 
 
 def has_uncommitted_changes(session: Session):
@@ -74,6 +74,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.new_member_action.triggered.connect(
             lambda: MemberDialog(parent=self).show()
+        )
+        self.new_session_action.triggered.connect(
+            lambda: SessionDialog(parent=self).show()
         )
 
     def __init_state(self):

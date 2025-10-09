@@ -14,6 +14,7 @@ from .FilterWidget import FilterWidget
 from .PathSelectorWidget import PathSelectorWidget
 
 from .MemberDialog import MemberDialog
+from .SessionDialog import SessionDialog
 from .ConnectWidget import ConnectWidget
 from .MainMenuWidget import MainMenuWidget
 from .MainWindow import MainWindow

@@ -3,7 +3,7 @@
 # LICENSE file at the root of the source tree or at
 # <https://github.com/Krzmbrzl/memmer/blob/main/LICENSE>.
 
-from typing import List, Any
+from typing import List, Any, Optional
 from enum import IntEnum
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt
@@ -78,3 +78,16 @@ class SessionModel(QAbstractTableModel):
                 return self.tr("Participants")
 
         return None
+
+    def session_for(
+        self, idx: QModelIndex | QPersistentModelIndex
+    ) -> Optional[Session]:
+        if not idx.isValid():
+            return None
+
+        row = idx.row()
+
+        if row >= len(self.sessions):
+            return None
+
+        return self.sessions[row]
