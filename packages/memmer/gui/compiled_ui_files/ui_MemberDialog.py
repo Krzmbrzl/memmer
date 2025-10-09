@@ -36,7 +36,7 @@ class Ui_MemberDialog(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 577, 728))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 577, 722))
         self.verticalLayout_3 = QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.tabWidget = QTabWidget(self.scrollAreaWidgetContents)
@@ -467,12 +467,11 @@ class Ui_MemberDialog(object):
         self.relatives_tab.setObjectName(u"relatives_tab")
         self.verticalLayout_6 = QVBoxLayout(self.relatives_tab)
         self.verticalLayout_6.setObjectName(u"verticalLayout_6")
-        self.relatives_label = QLabel(self.relatives_tab)
-        self.relatives_label.setObjectName(u"relatives_label")
-
-        self.verticalLayout_6.addWidget(self.relatives_label)
-
-        self.relatives_table = QTableView(self.relatives_tab)
+        self.relatives_group = QGroupBox(self.relatives_tab)
+        self.relatives_group.setObjectName(u"relatives_group")
+        self.verticalLayout_9 = QVBoxLayout(self.relatives_group)
+        self.verticalLayout_9.setObjectName(u"verticalLayout_9")
+        self.relatives_table = QTableView(self.relatives_group)
         self.relatives_table.setObjectName(u"relatives_table")
         self.relatives_table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.relatives_table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -482,14 +481,16 @@ class Ui_MemberDialog(object):
         self.relatives_table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.relatives_table.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
 
-        self.verticalLayout_6.addWidget(self.relatives_table)
+        self.verticalLayout_9.addWidget(self.relatives_table)
 
-        self.likely_relatives_label = QLabel(self.relatives_tab)
-        self.likely_relatives_label.setObjectName(u"likely_relatives_label")
 
-        self.verticalLayout_6.addWidget(self.likely_relatives_label)
+        self.verticalLayout_6.addWidget(self.relatives_group)
 
-        self.likely_relatives_table = QTableView(self.relatives_tab)
+        self.likely_relatives_group = QGroupBox(self.relatives_tab)
+        self.likely_relatives_group.setObjectName(u"likely_relatives_group")
+        self.verticalLayout_10 = QVBoxLayout(self.likely_relatives_group)
+        self.verticalLayout_10.setObjectName(u"verticalLayout_10")
+        self.likely_relatives_table = QTableView(self.likely_relatives_group)
         self.likely_relatives_table.setObjectName(u"likely_relatives_table")
         self.likely_relatives_table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.likely_relatives_table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -499,19 +500,21 @@ class Ui_MemberDialog(object):
         self.likely_relatives_table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.likely_relatives_table.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
 
-        self.verticalLayout_6.addWidget(self.likely_relatives_table)
+        self.verticalLayout_10.addWidget(self.likely_relatives_table)
 
-        self.potential_relatives_label = QLabel(self.relatives_tab)
-        self.potential_relatives_label.setObjectName(u"potential_relatives_label")
 
-        self.verticalLayout_6.addWidget(self.potential_relatives_label)
+        self.verticalLayout_6.addWidget(self.likely_relatives_group)
 
-        self.potential_relatives_search = FilterWidget(self.relatives_tab)
+        self.potential_relatives_group = QGroupBox(self.relatives_tab)
+        self.potential_relatives_group.setObjectName(u"potential_relatives_group")
+        self.verticalLayout_11 = QVBoxLayout(self.potential_relatives_group)
+        self.verticalLayout_11.setObjectName(u"verticalLayout_11")
+        self.potential_relatives_search = FilterWidget(self.potential_relatives_group)
         self.potential_relatives_search.setObjectName(u"potential_relatives_search")
 
-        self.verticalLayout_6.addWidget(self.potential_relatives_search)
+        self.verticalLayout_11.addWidget(self.potential_relatives_search)
 
-        self.potential_relatives_table = QTableView(self.relatives_tab)
+        self.potential_relatives_table = QTableView(self.potential_relatives_group)
         self.potential_relatives_table.setObjectName(u"potential_relatives_table")
         self.potential_relatives_table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.potential_relatives_table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -521,7 +524,10 @@ class Ui_MemberDialog(object):
         self.potential_relatives_table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.potential_relatives_table.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
 
-        self.verticalLayout_6.addWidget(self.potential_relatives_table)
+        self.verticalLayout_11.addWidget(self.potential_relatives_table)
+
+
+        self.verticalLayout_6.addWidget(self.potential_relatives_group)
 
         self.tabWidget.addTab(self.relatives_tab, "")
 
@@ -619,9 +625,9 @@ class Ui_MemberDialog(object):
         self.one_time_fees_label.setText(QCoreApplication.translate("MemberDialog", u"One-time fees", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.payment_tab), QCoreApplication.translate("MemberDialog", u"Payment", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.sessions_tab), QCoreApplication.translate("MemberDialog", u"Sessions", None))
-        self.relatives_label.setText(QCoreApplication.translate("MemberDialog", u"Relatives", None))
-        self.likely_relatives_label.setText(QCoreApplication.translate("MemberDialog", u"Likely relatives", None))
-        self.potential_relatives_label.setText(QCoreApplication.translate("MemberDialog", u"Potential relatives", None))
+        self.relatives_group.setTitle(QCoreApplication.translate("MemberDialog", u"Relatives", None))
+        self.likely_relatives_group.setTitle(QCoreApplication.translate("MemberDialog", u"Likely relatives", None))
+        self.potential_relatives_group.setTitle(QCoreApplication.translate("MemberDialog", u"Potential relatives", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.relatives_tab), QCoreApplication.translate("MemberDialog", u"Relatives", None))
         self.delete_button.setText(QCoreApplication.translate("MemberDialog", u"Delete", None))
         self.cancel_button.setText(QCoreApplication.translate("MemberDialog", u"Cancel", None))
