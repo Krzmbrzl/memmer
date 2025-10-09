@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from PySide6.QtWidgets import QWidget, QDialog
 from PySide6.QtCore import Signal, QRunnable, Slot, QObject
 
-from sqlalchemy.orm import Session
+from sqlalchemy import orm
 
 if TYPE_CHECKING:
     # This creates cyclic imports, so we only want to do this to bring in the
@@ -34,7 +34,7 @@ class MemmerBase:
     def qt_parent(self) -> QObject:
         raise RuntimeError("Should have been overridden")
 
-    def session(self) -> Session:
+    def sql_session(self) -> orm.Session:
         parent = self.parent_mainwindow()
 
         assert parent.session is not None

@@ -77,7 +77,9 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             SessionModel.Column.Name, QHeaderView.ResizeMode.Stretch
         )
 
-        relatives = get_relatives(self.session(), self.member) if self.member else []
+        relatives = (
+            get_relatives(self.sql_session(), self.member) if self.member else []
+        )
         self.relatives_table.setModel(
             MemberModel(members=members, active=relatives, parent=self.relatives_table)
         )
@@ -161,7 +163,7 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
 
             # Handle admission fee (if any)
             fee = (
-                self.session()
+                self.sql_session()
                 .scalars(select(FixedCost).where(FixedCost.name == AdmissionFeeKey))
                 .one_or_none()
             )
@@ -280,13 +282,13 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         dummy.relatives = relatives_model.get_members()  # type: ignore
 
         fee = compute_monthly_fee(
-            session=self.session(),
+            session=self.sql_session(),
             member=dummy,
             apply_discounts=False,
             target_date=datetime.now().date(),
         )
         discount = compute_discount(
-            session=self.session(), member=dummy, target_date=datetime.now().date()
+            session=self.sql_session(), member=dummy, target_date=datetime.now().date()
         )
 
         self.__monthly_fee_changed.emit(fee, discount)
