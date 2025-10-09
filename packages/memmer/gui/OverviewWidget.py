@@ -38,12 +38,8 @@ class OverviewWidget(MemmerWidget, Ui_OverviewWidget):
 
     def opened(self, first_time: bool):
         if first_time:
-            # TODO: store member/session list in MainWindow instead of fetching it here
-            members = list(self.session().scalars(select(Member)).all())
-            sessions = list(self.session().scalars(select(Session)).all())
-
             self.member_table.setModel(
-                MemberModel(members=members, parent=self.member_table)
+                MemberModel(members=self.members(), parent=self.member_table)
             )
 
             self.member_table.horizontalHeader().setSectionResizeMode(
@@ -56,7 +52,9 @@ class OverviewWidget(MemmerWidget, Ui_OverviewWidget):
                 MemberModel.Column.LastName, Qt.SortOrder.AscendingOrder
             )
 
-            self.session_table.setModel(SessionModel(sessions, self.session_table))
+            self.session_table.setModel(
+                SessionModel(self.sessions(), self.session_table)
+            )
 
             self.session_table.horizontalHeader().setSectionResizeMode(
                 QHeaderView.ResizeMode.Stretch

@@ -3,10 +3,12 @@
 # LICENSE file at the root of the source tree or at
 # <https://github.com/Krzmbrzl/memmer/blob/main/LICENSE>.
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 from PySide6.QtWidgets import QWidget, QDialog
 from PySide6.QtCore import Signal, QRunnable, Slot, QObject
+
+from memmer.orm import Member, Session
 
 from sqlalchemy import orm
 
@@ -66,6 +68,20 @@ class MemmerBase:
         assert config is not None
 
         return config
+
+    def sessions(self) -> List[Session]:
+        manager = self.parent_mainwindow().data_manager
+
+        assert manager is not None
+
+        return manager.sessions
+
+    def members(self) -> List[Member]:
+        manager = self.parent_mainwindow().data_manager
+
+        assert manager is not None
+
+        return manager.members
 
     @Slot(bool)
     def opened(self, first_time: bool):

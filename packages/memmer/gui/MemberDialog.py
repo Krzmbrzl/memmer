@@ -64,13 +64,9 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         self.__fee_related_data_changed.emit()
 
     def __create_models(self):
-        # TODO: Obtain list from buffer / manager
-        sessions = list(self.session().scalars(select(Session)).all())
-        members = list(self.session().scalars(select(Member)).all())
-
         self.sessions_table.setModel(
             SessionParticipationModel(
-                member=self.member, sessions=sessions, parent=self.sessions_table
+                member=self.member, sessions=self.sessions(), parent=self.sessions_table
             )
         )
         self.sessions_table.horizontalHeader().setSectionResizeMode(
@@ -81,7 +77,9 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             get_relatives(self.sql_session(), self.member) if self.member else []
         )
         self.relatives_table.setModel(
-            MemberModel(members=members, active=relatives, parent=self.relatives_table)
+            MemberModel(
+                members=self.members(), active=relatives, parent=self.relatives_table
+            )
         )
         self.relatives_table.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.Stretch
@@ -92,7 +90,7 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
 
         # TODO: Determine likely relatives
         self.likely_relatives_table.setModel(
-            MemberModel(members=members, active=[], parent=self.relatives_table)
+            MemberModel(members=self.members(), active=[], parent=self.relatives_table)
         )
         self.likely_relatives_table.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.Stretch
@@ -107,7 +105,7 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
 
         self.potential_relatives_table.setModel(
             MemberModel(
-                members=members,
+                members=self.members(),
                 inactive=relatives,
                 parent=self.potential_relatives_table,
             )

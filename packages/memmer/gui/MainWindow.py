@@ -14,7 +14,13 @@ from sqlalchemy.orm import Session
 
 from sshtunnel import SSHTunnelForwarder
 
-from memmer.utils import load_config, save_config, MemmerConfig, ConnectionParameter
+from memmer.utils import (
+    load_config,
+    save_config,
+    MemmerConfig,
+    ConnectionParameter,
+    Prefetcher,
+)
 from memmer.gui import MemmerWidget, MemberDialog
 
 
@@ -36,6 +42,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.session: Optional[Session] = None
         self.config: MemmerConfig = load_config()
         self.thread_pool = QThreadPool(self)
+        self.data_manager = None
         self.__opened_widgets: Set[MemmerWidget] = set()
 
         self.__connect_signals()
@@ -110,6 +117,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.session = session
         self.ssh_tunnel = tunnel
+
+        self.data_manager = Prefetcher(session=self.session)
 
         ConnectionParameter.to_config(
             self.connect_page.connection_parameter, self.config
