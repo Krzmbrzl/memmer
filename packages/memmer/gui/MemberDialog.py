@@ -125,7 +125,8 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         )
 
     def __connect_signals(self):
-        self.cancel_button.clicked.connect(self.close)
+        self.cancel_button.clicked.connect(self.reject)
+
         self.birthday_edit.dateChanged.connect(self.__birthday_changed)
         self.postal_code_edit.textEdited.connect(self.__deduce_city_from_postal_code)
         self.exited_checkbox.toggled.connect(self.__exited_state_changed)
