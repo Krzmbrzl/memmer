@@ -29,7 +29,9 @@ class SSHTunnelParameter:
     remote_port: int = 80
 
     @staticmethod
-    def to_config(params: "SSHTunnelParameter", config: Optional[MemmerConfig] = None) -> MemmerConfig:
+    def to_config(
+        params: "SSHTunnelParameter", config: Optional[MemmerConfig] = None
+    ) -> MemmerConfig:
         if not config:
             config = MemmerConfig()
 
@@ -39,7 +41,6 @@ class SSHTunnelParameter:
         config.ssh_key = params.key
 
         return config
-        
 
     @staticmethod
     def from_config(config: MemmerConfig) -> "SSHTunnelParameter":
@@ -73,7 +74,9 @@ class ConnectionParameter:
     ssh_tunnel: Optional[SSHTunnelParameter] = None
 
     @staticmethod
-    def to_config(params: "ConnectionParameter", config: Optional[MemmerConfig] = None) -> MemmerConfig:
+    def to_config(
+        params: "ConnectionParameter", config: Optional[MemmerConfig] = None
+    ) -> MemmerConfig:
         if not config:
             config = MemmerConfig()
 
@@ -228,6 +231,7 @@ class CLIInteractionProvider(InteractionProvider):
 def interactive_connect(
     params: Optional[ConnectionParameter] = None,
     interacter: InteractionProvider = CLIInteractionProvider(),
+    enable_sql_echo: bool = False,
 ) -> Tuple[Session, Optional[SSHTunnelForwarder]]:
     if params is None:
         config = load_config()
@@ -247,4 +251,4 @@ def interactive_connect(
         if params.ssh_tunnel.key is None:
             params.ssh_tunnel.password = interacter.query_password("SSH password:")
 
-    return connect(params=params)
+    return connect(params=params, enable_sql_echo=enable_sql_echo)
