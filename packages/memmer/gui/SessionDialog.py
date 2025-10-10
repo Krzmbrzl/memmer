@@ -11,6 +11,7 @@ from collections import Counter
 from decimal import Decimal
 import re
 
+from PySide6.QtCore import QModelIndex, QPersistentModelIndex
 from PySide6.QtWidgets import QHeaderView, QMessageBox
 
 from memmer.gui import MemmerDialog, MemberModel
@@ -109,15 +110,23 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
             lambda checked: self.__hourly_fee_model_selected() if checked else None
         )
 
+        self.trainer_table.activated.connect(self.__trainer_activated)
         self.trainer_table.model().rowsInserted.connect(self.__trainer_count_changed)
         self.trainer_table.model().rowsRemoved.connect(self.__trainer_count_changed)
 
+        self.potential_trainers_table.activated.connect(
+            self.__potential_trainer_activated
+        )
+
+        self.session_member_table.activated.connect(self.__session_member_activated)
         self.session_member_table.model().rowsInserted.connect(
             self.__session_member_count_changed
         )
         self.session_member_table.model().rowsRemoved.connect(
             self.__session_member_count_changed
         )
+
+        self.remaining_member_table.activated.connect(self.__remaining_member_activated)
 
     def __init_state(self):
         self.__trainer_count_changed()
@@ -162,6 +171,58 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
         title += f" ({self.session_member_table.model().rowCount()})"
 
         self.session_member_group.setTitle(title)
+
+    def __trainer_activated(self, idx: QModelIndex | QPersistentModelIndex):
+        from_model = self.trainer_table.model()
+        to_model = self.potential_trainers_table.model()
+
+        assert isinstance(from_model, MemberModel)
+        assert isinstance(to_model, MemberModel)
+
+        member = from_model.member_for(idx)
+
+        if member:
+            from_model.make_inactive(member)
+            to_model.make_active(member)
+
+    def __potential_trainer_activated(self, idx: QModelIndex | QPersistentModelIndex):
+        from_model = self.potential_trainers_table.model()
+        to_model = self.trainer_table.model()
+
+        assert isinstance(from_model, MemberModel)
+        assert isinstance(to_model, MemberModel)
+
+        member = from_model.member_for(idx)
+
+        if member:
+            from_model.make_inactive(member)
+            to_model.make_active(member)
+
+    def __session_member_activated(self, idx: QModelIndex | QPersistentModelIndex):
+        from_model = self.session_member_table.model()
+        to_model = self.remaining_member_table.model()
+
+        assert isinstance(from_model, MemberModel)
+        assert isinstance(to_model, MemberModel)
+
+        member = from_model.member_for(idx)
+
+        if member:
+            from_model.make_inactive(member)
+            to_model.make_active(member)
+
+    def __remaining_member_activated(self, idx: QModelIndex | QPersistentModelIndex):
+        from_model = self.remaining_member_table.model()
+        to_model = self.session_member_table.model()
+
+        assert isinstance(from_model, MemberModel)
+        assert isinstance(to_model, MemberModel)
+
+        member = from_model.member_for(idx)
+
+        if member:
+            from_model.make_inactive(member)
+            to_model.make_active(member)
 
     def __delete_triggered(self):
         if not self.session:
