@@ -5,14 +5,14 @@
 
 from typing import Any
 
-from datetime import date
+from datetime import date, datetime
 
 from memmer.orm import Member
 
 from sqlalchemy import Select, or_
 
 
-def is_active(member: Member, target_date: date) -> bool:
+def is_active(member: Member, target_date: date = datetime.now().date()) -> bool:
     if member.entry_date > target_date:
         # No member yet
         return False
