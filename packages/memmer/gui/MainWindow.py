@@ -8,12 +8,13 @@ from .compiled_ui_files.ui_MainWindow import Ui_MainWindow
 from typing import Optional, Set
 
 from PySide6.QtWidgets import QMainWindow, QMessageBox
-from PySide6.QtCore import QThreadPool
+from PySide6.QtCore import QThreadPool, Signal
 
-from sqlalchemy.orm import Session
+from sqlalchemy import orm
 
 from sshtunnel import SSHTunnelForwarder
 
+from memmer.orm import Member, Session
 from memmer.utils import (
     load_config,
     save_config,
@@ -24,7 +25,7 @@ from memmer.utils import (
 from memmer.gui import MemmerWidget, MemberDialog, SessionDialog
 
 
-def has_uncommitted_changes(session: Session):
+def has_uncommitted_changes(session: orm.Session):
     return (
         any(session.new)
         or any(session.deleted)
@@ -34,12 +35,21 @@ def has_uncommitted_changes(session: Session):
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
+    session_about_to_be_deleted = Signal(Session)
+    session_deleted = Signal(Session)
+    session_created = Signal(Session)
+    session_changed = Signal(Session)
+    member_deleted = Signal(Member)
+    member_about_to_be_deleted = Signal(Member)
+    member_created = Signal(Member)
+    member_changed = Signal(Member)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
 
         self.ssh_tunnel: Optional[SSHTunnelForwarder] = None
-        self.session: Optional[Session] = None
+        self.session: Optional[orm.Session] = None
         self.config: MemmerConfig = load_config()
         self.thread_pool = QThreadPool(self)
         self.data_manager = None
@@ -79,6 +89,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             lambda: SessionDialog(parent=self).show()
         )
 
+        self.session_deleted.connect(
+            lambda session: self.__status_update(
+                self.tr("Session '{}' deleted").format(session.name)
+            )
+        )
+        self.session_created.connect(
+            lambda session: self.__status_update(
+                self.tr("Session '{}' created").format(session.name)
+            )
+        )
+
+        self.member_deleted.connect(
+            lambda member: self.__status_update(
+                self.tr("Member '{} {}' deleted").format(
+                    member.first_name, member.last_name
+                )
+            )
+        )
+        self.member_created.connect(
+            lambda member: self.__status_update(
+                self.tr("Member '{} {}' created").format(
+                    member.first_name, member.last_name
+                )
+            )
+        )
+
     def __init_state(self):
         self.setWindowTitle("Memmer")
 
@@ -109,7 +145,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.statusbar.showMessage(self.tr("Ready"))
 
     def __connection_established(
-        self, session: Session, tunnel: Optional[SSHTunnelForwarder]
+        self, session: orm.Session, tunnel: Optional[SSHTunnelForwarder]
     ):
         if self.session:
             self.session.rollback()
