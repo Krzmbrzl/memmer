@@ -46,7 +46,7 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
             QHeaderView.ResizeMode.Stretch
         )
         self.trainer_table.horizontalHeader().setSectionResizeMode(
-            MemberModel.Column.Age, QHeaderView.ResizeMode.Fixed
+            MemberModel.Column.Age, QHeaderView.ResizeMode.ResizeToContents
         )
         self.potential_trainers_table.setModel(
             MemberModel(
@@ -60,7 +60,7 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
             QHeaderView.ResizeMode.Stretch
         )
         self.potential_trainers_table.horizontalHeader().setSectionResizeMode(
-            MemberModel.Column.Age, QHeaderView.ResizeMode.Fixed
+            MemberModel.Column.Age, QHeaderView.ResizeMode.ResizeToContents
         )
 
         participants = self.session.members if self.session is not None else []
@@ -76,7 +76,7 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
             QHeaderView.ResizeMode.Stretch
         )
         self.session_member_table.horizontalHeader().setSectionResizeMode(
-            MemberModel.Column.Age, QHeaderView.ResizeMode.Fixed
+            MemberModel.Column.Age, QHeaderView.ResizeMode.ResizeToContents
         )
         self.remaining_member_table.setModel(
             MemberModel(
@@ -90,7 +90,7 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
             QHeaderView.ResizeMode.Stretch
         )
         self.remaining_member_table.horizontalHeader().setSectionResizeMode(
-            MemberModel.Column.Age, QHeaderView.ResizeMode.Fixed
+            MemberModel.Column.Age, QHeaderView.ResizeMode.ResizeToContents
         )
 
     def __connect_signals(self):
