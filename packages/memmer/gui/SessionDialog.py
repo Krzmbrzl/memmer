@@ -7,6 +7,8 @@ from .compiled_ui_files.ui_SessionDialog import Ui_SessionDialog
 
 from typing import Optional
 
+import re
+
 from PySide6.QtWidgets import QHeaderView
 
 from memmer.gui import MemmerDialog, MemberModel
@@ -103,7 +105,20 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
             lambda checked: self.__hourly_fee_model_selected() if checked else None
         )
 
+        self.trainer_table.model().rowsInserted.connect(self.__trainer_count_changed)
+        self.trainer_table.model().rowsRemoved.connect(self.__trainer_count_changed)
+
+        self.session_member_table.model().rowsInserted.connect(
+            self.__session_member_count_changed
+        )
+        self.session_member_table.model().rowsRemoved.connect(
+            self.__session_member_count_changed
+        )
+
     def __init_state(self):
+        self.__trainer_count_changed()
+        self.__session_member_count_changed()
+
         if self.session is None:
             return
 
@@ -123,3 +138,21 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
 
     def __hourly_fee_model_selected(self):
         self.fee_stack.setCurrentWidget(self.hourly_fee_widget)
+
+    def __trainer_count_changed(self, *_):
+        title = self.trainers_group.title()
+
+        title = re.sub(r" \([^()]*\)$", "", title)
+
+        title += f" ({self.trainer_table.model().rowCount()})"
+
+        self.trainers_group.setTitle(title)
+
+    def __session_member_count_changed(self, *_):
+        title = self.session_member_group.title()
+
+        title = re.sub(r" \([^()]*\)$", "", title)
+
+        title += f" ({self.session_member_table.model().rowCount()})"
+
+        self.session_member_group.setTitle(title)
