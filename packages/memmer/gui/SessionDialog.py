@@ -10,7 +10,12 @@ from typing import Optional
 from PySide6.QtWidgets import QHeaderView
 
 from memmer.gui import MemmerDialog, MemberModel
-from memmer.orm import Session
+from memmer.orm import Session, Member
+from memmer.utils import is_active
+
+
+def is_inactive(member: Member) -> bool:
+    return not is_active(member=member)
 
 
 class SessionDialog(MemmerDialog, Ui_SessionDialog):
@@ -28,11 +33,13 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
         self.__init_state()
 
     def __create_models(self):
-        # TODO: restrict to active members
         trainers = self.session.trainers if self.session is not None else []
         self.trainer_table.setModel(
             MemberModel(
-                members=self.members(), active=trainers, parent=self.trainer_table
+                members=self.members(),
+                active=trainers,
+                inactive_predicate=is_inactive,
+                parent=self.trainer_table,
             )
         )
         self.trainer_table.horizontalHeader().setSectionResizeMode(
@@ -45,6 +52,7 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
             MemberModel(
                 members=self.members(),
                 inactive=trainers,
+                inactive_predicate=is_inactive,
                 parent=self.potential_trainers_table,
             )
         )
@@ -60,6 +68,7 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
             MemberModel(
                 members=self.members(),
                 active=participants,
+                inactive_predicate=is_inactive,
                 parent=self.session_member_table,
             )
         )
@@ -73,6 +82,7 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
             MemberModel(
                 members=self.members(),
                 inactive=participants,
+                inactive_predicate=is_inactive,
                 parent=self.remaining_member_table,
             )
         )
