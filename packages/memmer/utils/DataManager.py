@@ -13,14 +13,14 @@ from memmer import (
     BasicFeeYouthsKey,
     BasicFeeTrainersKey,
 )
-from memmer.orm import Member, Session, FixedCost
+from memmer.orm import Member, Session, FixedCost, FeeOverride
 
 from sqlalchemy import select
 from sqlalchemy import orm
 from sqlalchemy.orm import subqueryload
 
 
-class Prefetcher:
+class DataManager:
     def __init__(self, session: orm.Session):
         self.sql_session = session
 
@@ -85,3 +85,4 @@ class Prefetcher:
             self.sql_session.scalars(
                 select(FixedCost).where(FixedCost.name == key)
             ).one()
+

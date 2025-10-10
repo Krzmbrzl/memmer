@@ -19,7 +19,7 @@ from memmer.utils import (
     save_config,
     MemmerConfig,
     ConnectionParameter,
-    Prefetcher,
+    DataManager,
 )
 from memmer.gui import MemmerWidget, MemberDialog, SessionDialog
 
@@ -121,7 +121,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.session = session
         self.ssh_tunnel = tunnel
 
-        self.data_manager = Prefetcher(session=self.session)
+        self.data_manager = DataManager(session=self.session)
 
         ConnectionParameter.to_config(
             self.connect_page.connection_parameter, self.config

@@ -21,4 +21,4 @@ from .connection import (
     establish_ssh_tunnel,
     interactive_connect,
 )
-from .Prefetcher import Prefetcher
+from .DataManager import DataManager
