@@ -9,6 +9,7 @@ from enum import IntEnum
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt
 
 from memmer.orm import Session
+from memmer.utils import is_active
 
 
 class SessionModel(QAbstractTableModel):
@@ -54,9 +55,7 @@ class SessionModel(QAbstractTableModel):
             if col == SessionModel.Column.Name:
                 return session.name
             elif col == SessionModel.Column.Participants:
-                # TODO: This seems to take a non-trivial amount of time
-                # -> prefetch linked members?
-                return len(session.members)
+                return sum((1 for x in session.members if is_active(x)))
         elif role == SessionModel.SessionIdRole:
             return session.id
 
