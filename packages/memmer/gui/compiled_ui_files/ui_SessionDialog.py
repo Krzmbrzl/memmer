@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QDialog, QDouble
     QFormLayout, QGroupBox, QHBoxLayout, QHeaderView,
     QLabel, QLineEdit, QPushButton, QRadioButton,
     QSizePolicy, QSpacerItem, QStackedWidget, QTabWidget,
-    QTableView, QTimeEdit, QVBoxLayout, QWidget)
+    QTableView, QVBoxLayout, QWidget)
 
 from ..FilterWidget import FilterWidget
 
@@ -107,10 +107,11 @@ class Ui_SessionDialog(object):
 
         self.formLayout_2.setWidget(0, QFormLayout.ItemRole.LabelRole, self.duration_label)
 
-        self.duration_edit = QTimeEdit(self.hourly_fee_widget)
+        self.duration_edit = QDoubleSpinBox(self.hourly_fee_widget)
         self.duration_edit.setObjectName(u"duration_edit")
         sizePolicy.setHeightForWidth(self.duration_edit.sizePolicy().hasHeightForWidth())
         self.duration_edit.setSizePolicy(sizePolicy)
+        self.duration_edit.setSingleStep(0.250000000000000)
 
         self.formLayout_2.setWidget(0, QFormLayout.ItemRole.FieldRole, self.duration_edit)
 
@@ -249,6 +250,7 @@ class Ui_SessionDialog(object):
         self.fixed_fee_label.setText(QCoreApplication.translate("SessionDialog", u"Monthly fee", None))
         self.fixed_fee_edit.setSuffix(QCoreApplication.translate("SessionDialog", u"\u20ac", None))
         self.duration_label.setText(QCoreApplication.translate("SessionDialog", u"Duration", None))
+        self.duration_edit.setSuffix(QCoreApplication.translate("SessionDialog", u"h", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.general_tab), QCoreApplication.translate("SessionDialog", u"General", None))
         self.trainers_group.setTitle(QCoreApplication.translate("SessionDialog", u"Trainers", None))
         self.potential_trainers_group.setTitle(QCoreApplication.translate("SessionDialog", u"Potential trainers", None))
