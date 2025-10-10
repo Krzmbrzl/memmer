@@ -7,9 +7,11 @@ from .compiled_ui_files.ui_SessionDialog import Ui_SessionDialog
 
 from typing import Optional
 
+from collections import Counter
+from decimal import Decimal
 import re
 
-from PySide6.QtWidgets import QHeaderView
+from PySide6.QtWidgets import QHeaderView, QMessageBox
 
 from memmer.gui import MemmerDialog, MemberModel
 from memmer.orm import Session, Member
@@ -96,7 +98,9 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
         )
 
     def __connect_signals(self):
+        self.delete_button.clicked.connect(self.__delete_triggered)
         self.cancel_button.clicked.connect(self.reject)
+        self.save_button.clicked.connect(self.__save_triggered)
 
         self.fixed_fee_button.toggled.connect(
             lambda checked: self.__fixed_fee_model_selected() if checked else None
@@ -120,6 +124,8 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
         self.__session_member_count_changed()
 
         if self.session is None:
+            self.delete_button.setEnabled(False)
+            self.save_button.setText(self.tr("Create"))
             return
 
         self.name_edit.setText(self.session.name)
@@ -156,3 +162,78 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
         title += f" ({self.session_member_table.model().rowCount()})"
 
         self.session_member_group.setTitle(title)
+
+    def __delete_triggered(self):
+        if not self.session:
+            return
+
+        button = QMessageBox.question(
+            self,
+            self.tr("Delete session?"),
+            self.tr("Are you sure you want to delete session '{}'?").format(
+                self.session.name
+            ),
+        )
+
+        if button != QMessageBox.StandardButton.Yes:
+            return
+
+        self.parent_mainwindow().session_about_to_be_deleted.emit(self.session)
+
+        self.sessions().remove(self.session)
+
+        self.sql_session().delete(self.session)
+        self.parent_mainwindow().session_deleted.emit(self.session)
+
+        self.accept()
+
+    def __save_triggered(self):
+        created_session = False
+        if not self.session:
+            self.session = Session()
+            created_session = True
+
+        changed = False
+
+        set_name = self.name_edit.text().strip()
+        assert len(set_name) > 0
+        if self.session.name != set_name:
+            self.session.name = set_name
+            changed = True
+
+        if self.fixed_fee_button.isChecked():
+            if self.session.membership_fee is None:
+                # TODO: Delete hourly fee
+                pass
+
+            set_fee = Decimal(f"{self.fixed_fee_edit.value():.2f}")
+            if self.session.membership_fee != set_fee:
+                self.session.membership_fee = set_fee
+                changed = True
+        else:
+            assert self.hourly_fee_button.isChecked()
+            # TODO
+
+        trainer_model = self.trainer_table.model()
+        assert isinstance(trainer_model, MemberModel)
+        set_trainers = trainer_model.get_members()
+        if set(set_trainers) != set(self.session.trainers):
+            self.session.trainers = set_trainers
+            changed = True
+
+        session_member_model = self.session_member_table.model()
+        assert isinstance(session_member_model, MemberModel)
+        set_participants = session_member_model.get_members()
+        if set(set_participants) != set(self.session.members):
+            self.session.members = set_participants
+            changed = True
+
+        if created_session:
+            self.sessions().append(self.session)
+
+            self.sql_session().add(self.session)
+            self.parent_mainwindow().session_created.emit(self.session)
+        elif changed:
+            self.parent_mainwindow().session_changed.emit(self.session)
+
+        self.accept()
