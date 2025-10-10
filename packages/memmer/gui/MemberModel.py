@@ -3,8 +3,9 @@
 # LICENSE file at the root of the source tree or at
 # <https://github.com/Krzmbrzl/memmer/blob/main/LICENSE>.
 
-from typing import List, Any, Optional, Sequence
+from typing import List, Any, Optional, Sequence, Callable
 from enum import IntEnum
+from copy import copy
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt
 
@@ -28,6 +29,8 @@ class MemberModel(QAbstractTableModel):
         members: List[Member] = [],
         active: Optional[Sequence[Member | int]] = None,
         inactive: Optional[Sequence[Member | int]] = None,
+        active_predicate: Optional[Callable[[Member], bool]] = None,
+        inactive_predicate: Optional[Callable[[Member], bool]] = None,
         parent=None,
     ):
         super().__init__(parent)
@@ -50,6 +53,16 @@ class MemberModel(QAbstractTableModel):
                     self.active.remove(self.members.index(current))
                 else:
                     self.active.remove(current)
+
+        if active_predicate is not None:
+            for i, current in enumerate(self.members):
+                if active_predicate(current) and i not in self.active:
+                    self.active.append(i)
+
+        if inactive_predicate is not None:
+            self.active = [
+                x for x in self.active if not inactive_predicate(self.members[x])
+            ]
 
     def rowCount(
         self, parent: QModelIndex | QPersistentModelIndex = QModelIndex()
