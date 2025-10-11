@@ -182,7 +182,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 )
 
                 if answer == QMessageBox.StandardButton.Yes:
+                    self.__status_update(self.tr("Committing changes…"))
+
                     self.session.commit()
+
+                    self.__status_update(self.tr("Changes committed"))
                 else:
                     self.session.rollback()
 

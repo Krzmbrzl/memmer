@@ -37,6 +37,8 @@ class MainMenuWidget(MemmerWidget, Ui_MainMenuWidget):
         pass
 
     def __commit_changes(self):
+        self.status_changed.emit(self.tr("Committing changes…"))
+
         self.sql_session().commit()
 
         self.status_changed.emit(self.tr("Changes committed"))
