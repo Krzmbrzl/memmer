@@ -7,7 +7,6 @@ from .compiled_ui_files.ui_SessionDialog import Ui_SessionDialog
 
 from typing import Optional
 
-from collections import Counter
 from decimal import Decimal
 import re
 
