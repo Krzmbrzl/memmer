@@ -242,8 +242,8 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
         self.parent_mainwindow().session_about_to_be_deleted.emit(self.session)
 
         self.sessions().remove(self.session)
-
         self.sql_session().delete(self.session)
+
         self.parent_mainwindow().session_deleted.emit(self.session)
 
         self.accept()
