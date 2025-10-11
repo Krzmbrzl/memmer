@@ -129,7 +129,13 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
 
         self.birthday_edit.dateChanged.connect(self.__birthday_changed)
         self.postal_code_edit.textEdited.connect(self.__deduce_city_from_postal_code)
+        self.entry_date_edit.dateChanged.connect(
+            lambda _: self.__fee_related_data_changed.emit()
+        )
         self.exited_checkbox.toggled.connect(self.__exited_state_changed)
+        self.exit_date_edit.dateChanged.connect(
+            lambda _: self.__fee_related_data_changed.emit()
+        )
 
         self.sepa_mandate_checkbox.toggled.connect(self.__sepa_mandate_given)
         self.iban_edit.textChanged.connect(self.__format_iban)
