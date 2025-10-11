@@ -391,7 +391,10 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
 
         try:
             code = int(text)
+            self.city_edit.setEnabled(False)
         except:
+            self.city_edit.clear()
+            self.city_edit.setEnabled(True)
             return
 
         places = zip_code_locator.query_postal_code(code)["place_name"]
