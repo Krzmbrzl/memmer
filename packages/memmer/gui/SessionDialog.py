@@ -231,8 +231,8 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
         button = QMessageBox.question(
             self,
             self.tr("Delete session?"),
-            self.tr("Are you sure you want to delete session '{}'?").format(
-                self.session.name
+            self.tr("Are you sure you want to delete session '{name}'?").format(
+                name=self.session.name
             ),
         )
 

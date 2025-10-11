@@ -91,26 +91,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.session_deleted.connect(
             lambda session: self.__status_update(
-                self.tr("Session '{}' deleted").format(session.name)
+                self.tr("Session '{name}' deleted").format(name=session.name)
             )
         )
         self.session_created.connect(
             lambda session: self.__status_update(
-                self.tr("Session '{}' created").format(session.name)
+                self.tr("Session '{name}' created").format(name=session.name)
             )
         )
 
         self.member_deleted.connect(
             lambda member: self.__status_update(
-                self.tr("Member '{} {}' deleted").format(
-                    member.first_name, member.last_name
+                self.tr("Member '{first_name} {last_name}' deleted").format(
+                    first_name=member.first_name, last_name=member.last_name
                 )
             )
         )
         self.member_created.connect(
             lambda member: self.__status_update(
-                self.tr("Member '{} {}' created").format(
-                    member.first_name, member.last_name
+                self.tr("Member '{first_name} {last_name}' created").format(
+                    first_name=member.first_name, last_name=member.last_name
                 )
             )
         )
