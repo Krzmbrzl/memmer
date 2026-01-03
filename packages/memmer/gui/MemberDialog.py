@@ -223,6 +223,17 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             # Note: BIC and institute are inferred from IBAN
             self.account_owner_edit.setText(member.account_owner)
 
+        existing_fee_overwrite = (
+            self.sql_session()
+            .scalars(select(FeeOverride).where(FeeOverride.member_id == member.id))
+            .one_or_none()
+        )
+        if existing_fee_overwrite is not None:
+            self.monthly_fee_overwrite_checkbox.setChecked(True)
+            self.monthly_fee_edit.setValue(float(existing_fee_overwrite.amount))
+        else:
+            self.monthly_fee_overwrite_checkbox.setChecked(False)
+
         self.__fee_related_data_changed.emit()
 
     def __birthday_changed(self, birthday: QDate):
