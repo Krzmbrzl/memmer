@@ -367,7 +367,6 @@ class TestOperations(unittest.TestCase):
             sally, sam, _, _, _ = get_users(session)
             shortSession, _, longSession = get_sessions(session)
 
-            print("Now")
             sally.participating_sessions.append(longSession)
             sam.participating_sessions.append(shortSession)
 
