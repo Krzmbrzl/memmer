@@ -18,20 +18,12 @@ from memmer.orm import Member, Session
 from memmer.utils import (
     load_config,
     save_config,
+    has_uncommitted_changes,
     MemmerConfig,
     ConnectionParameter,
     DataManager,
 )
 from memmer.gui import MemmerWidget, MemberDialog, SessionDialog
-
-
-def has_uncommitted_changes(session: orm.Session):
-    return (
-        any(session.new)
-        or any(session.deleted)
-        or any([x for x in session.dirty if session.is_modified(x)])
-        or session.info.get("flushed", False)
-    )
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):

@@ -22,3 +22,7 @@ from .connection import (
     interactive_connect,
 )
 from .DataManager import DataManager
+from .session import (
+    register_session_for_uncommitted_state_tracking,
+    has_uncommitted_changes,
+)

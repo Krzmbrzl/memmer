@@ -16,6 +16,7 @@ from sqlalchemy import URL, create_engine, event
 from sshtunnel import SSHTunnelForwarder
 
 from .config import MemmerConfig, DBBackend, ConnectType, load_config
+from .session import register_session_for_uncommitted_state_tracking
 
 
 @dataclass
@@ -194,6 +195,8 @@ def connect(
         raise DBConnectionError(f"{e.orig}" if e.orig is not None else f"{e}")
 
     session = Session(bind=engine)
+
+    register_session_for_uncommitted_state_tracking(session)
 
     return (session, tunnel)
 
