@@ -8,7 +8,7 @@
 import unittest
 from datetime import date
 
-from memmer.utils import nominal_year_diff
+from memmer.utils import nominal_year_diff, container_unordered_equals
 
 
 class TestOperations(unittest.TestCase):
@@ -76,6 +76,32 @@ class TestOperations(unittest.TestCase):
             ),
             -2,
         )
+
+    def test_container_unordered_equals(self):
+        self.assertTrue(
+            container_unordered_equals("ab", "ab")
+        )
+        self.assertFalse(
+            container_unordered_equals("abd", "abc")
+        )
+        self.assertTrue(
+            container_unordered_equals(["ab", "ac"], ["ab", "ac"])
+        )
+        self.assertTrue(
+            container_unordered_equals(set(["ab", "ac"]), set(["ab", "ac"]))
+        )
+
+        def cmp_first_letter(lhs, rhs):
+            return lhs[0] == rhs[0]
+
+        self.assertTrue(
+            container_unordered_equals(["ab", "ac"], ["ae", "af"], eq_cmp=cmp_first_letter)
+        )
+        self.assertTrue(
+            container_unordered_equals(set(["ab", "ac"]), set(["ae", "af"]), eq_cmp=cmp_first_letter)
+        )
+
+
 
 
 if __name__ == "__main__":

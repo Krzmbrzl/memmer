@@ -5,12 +5,12 @@
 
 from .compiled_ui_files.ui_MemberDialog import Ui_MemberDialog
 
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime, date
 from decimal import Decimal
 import re
 
-from PySide6.QtWidgets import QHeaderView
+from PySide6.QtWidgets import QHeaderView, QMessageBox
 from PySide6.QtCore import (
     QDate,
     QDateTime,
@@ -29,9 +29,16 @@ from memmer.gui import (
     OneTimeFeeModel,
 )
 from memmer import AdmissionFeeKey
-from memmer.orm import Member, Session, FixedCost
-from memmer.utils import nominal_year_diff
-from memmer.queries import get_relatives, compute_monthly_fee, compute_discount
+from memmer.orm import Member, FixedCost, Gender, OneTimeFee, FeeOverride
+from memmer.utils import nominal_year_diff, container_unordered_equals
+from memmer.queries import (
+    get_relatives,
+    compute_monthly_fee,
+    compute_discount,
+    get_relatives,
+    clear_relations,
+    set_relatives,
+)
 
 from sqlalchemy import select
 
@@ -125,7 +132,9 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         )
 
     def __connect_signals(self):
+        self.delete_button.clicked.connect(self.__delete_triggered)
         self.cancel_button.clicked.connect(self.reject)
+        self.save_button.clicked.connect(self.__save_triggered)
 
         self.birthday_edit.dateChanged.connect(self.__birthday_changed)
         self.postal_code_edit.textEdited.connect(self.__deduce_city_from_postal_code)
@@ -163,6 +172,9 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         self.sepa_mandate_date_edit.setDate(default_date)
 
         if self.member is None:
+            self.delete_button.setEnabled(False)
+            self.save_button.setText(self.tr("Create"))
+
             # Set entry date to today
             self.entry_date_edit.setDate(QDateTime.currentDateTime().date())
 
@@ -191,7 +203,6 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         self.street_number_edit.setText(member.street_number)
         self.postal_code_edit.setText(member.postal_code)
         self.city_edit.setText(member.city)
-        self.city_edit.setEnabled(len(member.city) == 0)
 
         if member.phone_number:
             self.phone_number_edit.setText(member.phone_number)
@@ -425,3 +436,243 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             self.city_combo.clear()
             self.city_combo.addItems([x for x in places])
             self.city_combo.setCurrentIndex(0)
+
+    def __delete_triggered(self):
+        if not self.member:
+            return
+
+        button = QMessageBox.question(
+            self,
+            self.tr("Delete member?"),
+            self.tr(
+                "Are you sure you want to delete the member '{first_name} {last_name}'?"
+            ).format(
+                first_name=self.member.first_name, last_name=self.member.last_name
+            ),
+        )
+
+        if button != QMessageBox.StandardButton.Yes:
+            return
+
+        self.parent_mainwindow().member_about_to_be_deleted.emit(self.member)
+
+        self.members().remove(self.member)
+        self.sql_session().delete(self.member)
+
+        self.parent_mainwindow().member_deleted.emit(self.member)
+
+        self.accept()
+
+    def __save_triggered(self):
+        created_member = False
+        if not self.member:
+            self.member = Member()
+            created_member = True
+
+        changed = False
+
+        set_gender = Gender(value=self.gender_combo.currentIndex())
+        if set_gender != self.member.gender:
+            self.member.gender = set_gender
+            changed = True
+
+        set_first_name = self.first_name_edit.text().strip()
+        assert len(set_first_name) > 0
+        if set_first_name != self.member.first_name:
+            self.member.first_name = set_first_name
+            changed = True
+
+        set_last_name = self.last_name_edit.text().strip()
+        assert len(set_last_name) > 0
+        if set_last_name != self.member.last_name:
+            self.member.last_name = set_last_name
+            changed = True
+
+        set_birthday: date = self.birthday_edit.date().toPython()  # type: ignore
+        if set_birthday != self.member.birthday:
+            self.member.birthday = set_birthday
+            changed = True
+
+        set_street = self.street_edit.text().strip()
+        assert len(set_street) > 0
+        if set_street != self.member.street:
+            self.member.street = set_street
+            changed = True
+
+        set_street_number = self.street_number_edit.text().strip()
+        assert len(set_street_number)
+        if set_street_number != self.member.street_number:
+            self.member.street_number = set_street_number
+            changed = True
+
+        set_postal_code = self.postal_code_edit.text().strip()
+        assert len(set_postal_code) > 0
+        if set_postal_code != self.member.postal_code:
+            self.member.postal_code = set_postal_code
+            changed = True
+
+        if self.city_selection_stack.currentWidget() == self.city_edit_page:
+            set_city = self.city_edit.text().strip()
+        else:
+            assert self.city_selection_stack.currentWidget() == self.city_combo_page
+            set_city = self.city_combo.currentText()
+        assert len(set_city) > 0
+        if set_city != self.member.city:
+            self.member.city = set_city
+            changed = True
+
+        set_phone_number = self.phone_number_edit.text().strip()
+        if len(set_phone_number) == 0:
+            set_phone_number = None
+        if set_phone_number != self.member.phone_number:
+            self.member.phone_number = set_phone_number
+            changed = True
+
+        set_mail = self.email_edit.text().strip()
+        if len(set_mail) == 0:
+            set_mail = None
+        if set_mail != self.member.email_address:
+            self.member.email_address = set_mail
+            changed = True
+
+        set_honary = self.honorary_member_checkbox.isChecked()
+        if set_honary != self.member.is_honorary_member:
+            self.member.is_honorary_member = set_honary
+            changed = True
+
+        set_entry: date = self.entry_date_edit.date().toPython()  # type: ignore
+        assert set_entry != default_date
+        if set_entry != self.member.entry_date:
+            self.member.entry_date = set_entry
+            changed = True
+
+        set_exit: Optional[date] = self.exit_date_edit.date().toPython() if self.exited_checkbox.isChecked() else None  # type: ignore
+        assert set_exit != default_date
+        if set_exit != self.member.exit_date:
+            self.member.exit_date = set_exit
+            changed = True
+
+        set_sepa: date = self.sepa_mandate_date_edit.date().toPython() if self.sepa_mandate_checkbox.isChecked() else None  # type: ignore
+        assert set_sepa != default_date
+        if set_sepa != self.member.sepa_mandate_date:
+            self.member.sepa_mandate_date = set_sepa
+            changed = True
+
+        set_iban = self.iban_edit.text().strip().replace(" ", "")
+        if len(set_iban) == 0:
+            set_iban = None
+        if set_iban != self.member.iban:
+            self.member.iban = set_iban
+            changed = True
+
+        set_bic = self.bic_edit.text().strip()
+        if len(set_bic) == 0:
+            set_bic = None
+        if set_bic != self.member.bic:
+            self.member.bic = set_bic
+            changed = True
+
+        set_owner = self.account_owner_edit.text().strip()
+        if len(set_owner) == 0:
+            set_owner = None
+        if set_owner != self.member.account_owner:
+            self.member.account_owner = set_owner
+            changed = True
+
+        existing_fee_overwrite = (
+            self.sql_session()
+            .scalars(select(FeeOverride).where(FeeOverride.member_id == self.member.id))
+            .one_or_none()
+            if not created_member
+            else None
+        )
+
+        fee_override_to_be_added: Optional[FeeOverride] = None
+        if self.monthly_fee_overwrite_checkbox.isChecked():
+            set_overwrite = Decimal(f"{self.monthly_fee_edit.value():.2f}")
+            if existing_fee_overwrite is None:
+                changed = True
+                fee_override_to_be_added = FeeOverride(amount=set_overwrite)
+            elif set_overwrite != existing_fee_overwrite.amount:
+                changed = True
+                existing_fee_overwrite.amount = set_overwrite
+        elif existing_fee_overwrite is not None:
+            self.sql_session().delete(existing_fee_overwrite)
+            changed = True
+
+        one_time_fees_to_be_set: Optional[List[OneTimeFee]] = None
+        one_time_fee_model = self.one_time_fees_table.model()
+        assert isinstance(one_time_fee_model, OneTimeFeeModel)
+        set_one_time_fees = one_time_fee_model.get_fees()
+        if not container_unordered_equals(
+            set_one_time_fees,
+            self.member.one_time_fees,
+            eq_cmp=lambda l, r: l.reason == r.reason and l.amount == r.amount,
+        ):
+            one_time_fees_to_be_set = [
+                OneTimeFee(reason=x.reason, amount=x.amount) for x in set_one_time_fees
+            ]
+            changed = True
+
+        session_model = self.sessions_table.model()
+        assert isinstance(session_model, SessionParticipationModel)
+        set_sessions = session_model.get_participated_sessions()
+        if not container_unordered_equals(
+            set_sessions, self.member.participating_sessions
+        ):
+            self.member.participating_sessions = set_sessions
+            changed = True
+
+        relatives_to_be_set: List[Member] = []
+        relatives = (
+            get_relatives(session=self.sql_session(), member=self.member)
+            if not created_member
+            else []
+        )
+        relatives_model = self.relatives_table.model()
+        assert isinstance(relatives_model, MemberModel)
+        desired_relatives = relatives_model.get_members()
+        if not container_unordered_equals(desired_relatives, relatives):
+            if len(relatives) > 0:
+                clear_relations(session=self.sql_session(), member=self.member)
+            relatives_to_be_set = desired_relatives
+            changed = True
+
+        if created_member:
+            self.members().append(self.member)
+
+            self.sql_session().add(self.member)
+
+        # We can only add these things once we are certain that self.member
+        # is a DB entry and hence has an assigned ID
+        assert self.member.id is not None
+        if fee_override_to_be_added is not None:
+            fee_override_to_be_added.member_id = self.member.id
+
+            print(f"Adding overwrite {fee_override_to_be_added}")
+            self.sql_session().add(fee_override_to_be_added)
+
+        if one_time_fees_to_be_set is not None:
+            # Remove previously set one-time-fees
+            for current in self.member.one_time_fees:
+                self.sql_session().delete(current)
+
+            self.member.one_time_fees.clear()
+
+            # Add new fees
+            for current in one_time_fees_to_be_set:
+                self.member.one_time_fees.append(current)
+                assert current.member == self.member
+
+        set_relatives(
+            session=self.sql_session(),
+            member=self.member,
+            relatives=relatives_to_be_set,
+        )
+
+        if created_member:
+            self.parent_mainwindow().member_created.emit(self.member)
+        elif changed:
+            self.parent_mainwindow().member_changed.emit(self.member)
+
+        self.accept()

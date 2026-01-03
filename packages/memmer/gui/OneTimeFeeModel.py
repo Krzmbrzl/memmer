@@ -20,7 +20,7 @@ from PySide6.QtCore import (
 from memmer.orm import Member
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class Fee:
     reason: str
     amount: Decimal
@@ -204,3 +204,6 @@ class OneTimeFeeModel(QAbstractTableModel):
             pass
 
         return False
+
+    def get_fees(self) -> List[Fee]:
+        return self.fees
