@@ -26,5 +26,7 @@ class Participation(Base):
         ForeignKey(Session.id, onupdate="CASCADE", ondelete="CASCADE"),
         primary_key=True,
     )
-    since: Mapped[datetime.date] = mapped_column(default=datetime.datetime.utcnow)
+    since: Mapped[datetime.date] = mapped_column(
+        default=lambda: datetime.datetime.now(datetime.UTC)
+    )
     until: Mapped[Optional[datetime.date]]

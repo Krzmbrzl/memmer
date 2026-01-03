@@ -41,4 +41,6 @@ class ArchivedOneTimeFee(Base):
     )
     reason: Mapped[str]
     amount: Mapped[Decimal]
-    billed: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.utcnow)
+    billed: Mapped[datetime.datetime] = mapped_column(
+        default=lambda: datetime.datetime.now(datetime.UTC)
+    )

@@ -55,7 +55,9 @@ class Member(Base):
 
     sepa_mandate_date: Mapped[Optional[datetime.date]]
 
-    entry_date: Mapped[datetime.date] = mapped_column(default=datetime.datetime.utcnow)
+    entry_date: Mapped[datetime.date] = mapped_column(
+        default=lambda: datetime.datetime.now(datetime.UTC)
+    )
     exit_date: Mapped[Optional[datetime.date]]
 
     # Honorary members don't have to pay the base fee
