@@ -6,7 +6,7 @@
 from .compiled_ui_files.ui_ConnectWidget import Ui_ConnectWidget
 
 from PySide6.QtWidgets import QMessageBox
-from PySide6.QtCore import Signal, QTimer
+from PySide6.QtCore import Signal, QTimer, QMetaObject, Qt
 
 from memmer.utils import (
     DBBackend,
@@ -228,13 +228,21 @@ class ConnectWidget(MemmerWidget, Ui_ConnectWidget):
             except Exception as error:
                 self.status_changed.emit(self.tr("Connection failed"))
 
-                QMessageBox.critical(
-                    self,
-                    self.tr("Connection failed"),
-                    self.tr(
-                        f"Establishing the connection to the database has failed. Reason given:\n{error}"
-                    ),
-                    buttons=QMessageBox.StandardButton.Ok,
-                )
+                def show_error_msg(err):
+                    QMessageBox.critical(
+                        self,
+                        self.tr("Connection failed"),
+                        self.tr(
+                            f"Establishing the connection to the database has failed. Reason given:\n{err}"
+                        ),
+                        buttons=QMessageBox.StandardButton.Ok,
+                    )
+
+                # Voodoo to get show_error_msg to run in main (GUI) thread
+                # https://stackoverflow.com/a/54029758
+                timer = QTimer(singleShot=True)
+                timer.moveToThread(self.thread())
+                timer.timeout.connect(lambda error=error: show_error_msg(error))
+                QMetaObject.invokeMethod(timer, "start", Qt.QueuedConnection)  # type: ignore
 
         self.async_exec(perform_connection)
