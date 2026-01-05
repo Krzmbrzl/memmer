@@ -112,9 +112,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.__status_update(status=None)
 
-        self.connect_page.connection_parameter = ConnectionParameter.from_config(
-            self.config
-        )
+        if self.config.db_backend is not None and self.config.db_name is not None:
+            # Only set connection parameter if the config contains the required fields
+            # If not, we assume that we start fully with defaults
+            self.connect_page.connection_parameter = ConnectionParameter.from_config(
+                self.config
+            )
 
         self.__switch_to(self.connect_page)
 
