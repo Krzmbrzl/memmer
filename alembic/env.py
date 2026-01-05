@@ -14,7 +14,11 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "packages"))
 from memmer.orm import Base
+from memmer.utils import interactive_connect, load_config, ConnectionParameter
 
 # add your model's MetaData object here
 # for 'autogenerate' support
@@ -40,9 +44,12 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    config = load_config()
+    params = ConnectionParameter.from_config(config)
+    session, tunnel = interactive_connect(params=params)
+
     context.configure(
-        url=url,
+        connection=session.conenction(),
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -50,6 +57,9 @@ def run_migrations_offline() -> None:
 
     with context.begin_transaction():
         context.run_migrations()
+
+    if tunnel is not None:
+        tunnel.close()
 
 
 def run_migrations_online() -> None:
@@ -59,17 +69,17 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    config = load_config()
+    params = ConnectionParameter.from_config(config)
+    session, tunnel = interactive_connect(params=params)
 
-    with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(connection=session.connection(), target_metadata=target_metadata)
 
-        with context.begin_transaction():
-            context.run_migrations()
+    with context.begin_transaction():
+        context.run_migrations()
+
+    if tunnel is not None:
+        tunnel.close()
 
 
 if context.is_offline_mode():
