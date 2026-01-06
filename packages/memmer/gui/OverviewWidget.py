@@ -76,7 +76,9 @@ class OverviewWidget(MemmerWidget, Ui_OverviewWidget):
                 ],
                 parent=self.member_table,
             )
-            session_proxy.setSourceModel(SessionModel(self.sessions(), self.session_table))
+            session_proxy.setSourceModel(
+                SessionModel(self.sessions(), self.session_table)
+            )
 
             self.session_table.setModel(session_proxy)
 
