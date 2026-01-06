@@ -26,6 +26,7 @@ class SSHTunnelParameter:
     port: int = 22
     password: Optional[str] = None
     key: Optional[str] = None
+    use_agent: Optional[bool] = False
     remote_address: str = "127.0.0.1"
     remote_port: int = 80
 
@@ -40,6 +41,7 @@ class SSHTunnelParameter:
         config.ssh_user = params.user
         config.ssh_port = params.port
         config.ssh_key = params.key
+        config.ssh_use_agent = params.use_agent
 
         return config
 
@@ -56,6 +58,8 @@ class SSHTunnelParameter:
             params.port = config.ssh_port
         if config.ssh_key is not None:
             params.key = config.ssh_key
+        if config.ssh_use_agent is not None:
+            params.use_agent = config.ssh_use_agent
         if config.db_port is not None:
             params.remote_port = config.db_port
         # No way to set the remote address for now
@@ -122,6 +126,7 @@ class ConnectionParameter:
 
 
 def establish_ssh_tunnel(params: SSHTunnelParameter) -> SSHTunnelForwarder:
+    # Note: If available, the SSH-agent will be queried for a certificate as well
     tunnel = SSHTunnelForwarder(
         ssh_address_or_host=params.address,
         ssh_port=params.port,

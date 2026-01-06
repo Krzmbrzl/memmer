@@ -26,7 +26,7 @@ class Ui_ConnectWidget(object):
     def setupUi(self, ConnectWidget):
         if not ConnectWidget.objectName():
             ConnectWidget.setObjectName(u"ConnectWidget")
-        ConnectWidget.resize(697, 628)
+        ConnectWidget.resize(697, 660)
         self.verticalLayout = QVBoxLayout(ConnectWidget)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.scrollArea = QScrollArea(ConnectWidget)
@@ -39,7 +39,7 @@ class Ui_ConnectWidget(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 681, 570))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 681, 602))
         self.verticalLayout_2 = QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.horizontalLayout_17 = QHBoxLayout()
@@ -176,23 +176,23 @@ class Ui_ConnectWidget(object):
         self.ssh_password_label = QLabel(self.ssh_group)
         self.ssh_password_label.setObjectName(u"ssh_password_label")
 
-        self.formLayout_8.setWidget(3, QFormLayout.ItemRole.LabelRole, self.ssh_password_label)
+        self.formLayout_8.setWidget(4, QFormLayout.ItemRole.LabelRole, self.ssh_password_label)
 
         self.ssh_password_input = QLineEdit(self.ssh_group)
         self.ssh_password_input.setObjectName(u"ssh_password_input")
         self.ssh_password_input.setEchoMode(QLineEdit.EchoMode.Password)
 
-        self.formLayout_8.setWidget(3, QFormLayout.ItemRole.FieldRole, self.ssh_password_input)
+        self.formLayout_8.setWidget(4, QFormLayout.ItemRole.FieldRole, self.ssh_password_input)
 
         self.ssh_key_label = QLabel(self.ssh_group)
         self.ssh_key_label.setObjectName(u"ssh_key_label")
 
-        self.formLayout_8.setWidget(4, QFormLayout.ItemRole.LabelRole, self.ssh_key_label)
+        self.formLayout_8.setWidget(5, QFormLayout.ItemRole.LabelRole, self.ssh_key_label)
 
         self.ssh_key_input = PathSelectorWidget(self.ssh_group)
         self.ssh_key_input.setObjectName(u"ssh_key_input")
 
-        self.formLayout_8.setWidget(4, QFormLayout.ItemRole.FieldRole, self.ssh_key_input)
+        self.formLayout_8.setWidget(5, QFormLayout.ItemRole.FieldRole, self.ssh_key_input)
 
         self.ssh_host_label = QLabel(self.ssh_group)
         self.ssh_host_label.setObjectName(u"ssh_host_label")
@@ -203,6 +203,24 @@ class Ui_ConnectWidget(object):
         self.ssh_host_input.setObjectName(u"ssh_host_input")
 
         self.formLayout_8.setWidget(0, QFormLayout.ItemRole.FieldRole, self.ssh_host_input)
+
+        self.ssh_authentication_label = QLabel(self.ssh_group)
+        self.ssh_authentication_label.setObjectName(u"ssh_authentication_label")
+
+        self.formLayout_8.setWidget(3, QFormLayout.ItemRole.LabelRole, self.ssh_authentication_label)
+
+        self.ssh_authentication_combo = QComboBox(self.ssh_group)
+        self.ssh_authentication_combo.addItem("")
+        self.ssh_authentication_combo.addItem("")
+        self.ssh_authentication_combo.addItem("")
+        self.ssh_authentication_combo.setObjectName(u"ssh_authentication_combo")
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.ssh_authentication_combo.sizePolicy().hasHeightForWidth())
+        self.ssh_authentication_combo.setSizePolicy(sizePolicy2)
+
+        self.formLayout_8.setWidget(3, QFormLayout.ItemRole.FieldRole, self.ssh_authentication_combo)
 
 
         self.verticalLayout_2.addWidget(self.ssh_group)
@@ -234,6 +252,9 @@ class Ui_ConnectWidget(object):
 
 
         self.retranslateUi(ConnectWidget)
+
+        self.ssh_authentication_combo.setCurrentIndex(0)
+
     # setupUi
 
     def retranslateUi(self, ConnectWidget):
@@ -264,6 +285,11 @@ class Ui_ConnectWidget(object):
         self.ssh_key_label.setText(QCoreApplication.translate("ConnectWidget", u"Private key", None))
         self.ssh_host_label.setText(QCoreApplication.translate("ConnectWidget", u"Host", None))
         self.ssh_host_input.setPlaceholderText(QCoreApplication.translate("ConnectWidget", u"mydomain.com", None))
+        self.ssh_authentication_label.setText(QCoreApplication.translate("ConnectWidget", u"Authentication", None))
+        self.ssh_authentication_combo.setItemText(0, QCoreApplication.translate("ConnectWidget", u"Password", None))
+        self.ssh_authentication_combo.setItemText(1, QCoreApplication.translate("ConnectWidget", u"Certificate", None))
+        self.ssh_authentication_combo.setItemText(2, QCoreApplication.translate("ConnectWidget", u"SSH-Agent", None))
+
         self.connect_button.setText(QCoreApplication.translate("ConnectWidget", u"Connect", None))
     # retranslateUi
 

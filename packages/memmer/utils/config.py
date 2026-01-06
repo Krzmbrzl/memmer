@@ -18,6 +18,7 @@ class ConfigKey(Enum):
     SSH_USER = "connector_ssh_user"
     SSH_PORT = "connector_ssh_port"
     SSH_KEY = "connector_ssh_key"
+    SSH_USE_AGENT = "connector_ssh_use_agent"
 
     TALLY_DIR = "tally_out_dir"
 
@@ -45,6 +46,7 @@ class MemmerConfig:
     ssh_user: Optional[str] = None
     ssh_port: Optional[int] = None
     ssh_key: Optional[str] = None
+    ssh_use_agent: Optional[bool] = None
 
     tally_dir: Optional[str] = None
 

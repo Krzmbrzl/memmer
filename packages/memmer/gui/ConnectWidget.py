@@ -96,17 +96,18 @@ class ConnectWidget(MemmerWidget, Ui_ConnectWidget):
             if self.ssh_port_spinner.value() > 0:
                 params.ssh_tunnel.port = self.ssh_port_spinner.value()
 
-            if self.ssh_password_input.text().strip():
-                params.ssh_tunnel.password = self.ssh_password_input.text().strip()
-
-            if self.ssh_key_input.path:
-                params.ssh_tunnel.key = self.ssh_key_input.path
-
             if self.db_port_spinner.value() > 0:
                 params.ssh_tunnel.remote_port = self.db_port_spinner.value()
 
             if self.db_host_input.text().strip():
                 params.ssh_tunnel.remote_address = self.db_host_input.text().strip()
+
+            if self.ssh_authentication_combo.currentIndex() == 0:
+                params.ssh_tunnel.password = self.ssh_password_input.text()
+            elif self.ssh_authentication_combo.currentIndex() == 1:
+                params.ssh_tunnel.key = self.ssh_key_input.path
+            elif self.ssh_authentication_combo.currentIndex() == 2:
+                params.ssh_tunnel.use_agent = True
 
         return params
 
@@ -151,13 +152,18 @@ class ConnectWidget(MemmerWidget, Ui_ConnectWidget):
 
             if params.ssh_tunnel.password:
                 self.ssh_password_input.setText(params.ssh_tunnel.password)
+                self.ssh_authentication_combo.setCurrentIndex(0)
             else:
                 self.ssh_password_input.clear()
 
             if params.ssh_tunnel.key:
                 self.ssh_key_input.path = params.ssh_tunnel.key
+                self.ssh_authentication_combo.setCurrentIndex(1)
             else:
                 self.ssh_key_input.clear()
+
+            if params.ssh_tunnel.use_agent:
+                self.ssh_authentication_combo.setCurrentIndex(2)
 
             if params.ssh_tunnel.remote_address:
                 self.db_host_input.setText(params.ssh_tunnel.remote_address)
@@ -176,6 +182,20 @@ class ConnectWidget(MemmerWidget, Ui_ConnectWidget):
 
         self.setupUi(self)
 
+        self.ssh_authentication_combo.setItemData(
+            0, self.tr("Use a regular password"), Qt.ItemDataRole.ToolTipRole
+        )
+        self.ssh_authentication_combo.setItemData(
+            1,
+            self.tr("Use a provided SSH certificate/key"),
+            Qt.ItemDataRole.ToolTipRole,
+        )
+        self.ssh_authentication_combo.setItemData(
+            2,
+            self.tr("Use an SSH-agent to obtain a certificate/key"),
+            Qt.ItemDataRole.ToolTipRole,
+        )
+
         self.__connect_signals()
 
         self.__init_state()
@@ -189,6 +209,10 @@ class ConnectWidget(MemmerWidget, Ui_ConnectWidget):
 
         self.db_name_input.textChanged.connect(self.__db_name_changed)
 
+        self.ssh_authentication_combo.currentIndexChanged.connect(
+            self.__ssh_authentication_changed
+        )
+
         self.connect_button.clicked.connect(self.__connect)
 
     def __init_state(self):
@@ -197,6 +221,8 @@ class ConnectWidget(MemmerWidget, Ui_ConnectWidget):
         self.__db_backend_changed(self.db_backend_combo.currentIndex())
 
         self.__db_name_changed(self.db_name_input.text())
+
+        self.__ssh_authentication_changed(self.ssh_authentication_combo.currentIndex())
 
     def __connect_type_changed(self, type_idx: int):
         connect_type = connect_idx_to_type(idx=type_idx)
@@ -214,6 +240,25 @@ class ConnectWidget(MemmerWidget, Ui_ConnectWidget):
 
     def __db_name_changed(self, name: str):
         self.connect_button.setEnabled(len(name.strip()) > 0)
+
+    def __ssh_authentication_changed(self, auth_idx):
+        show_password = False
+        show_cert = False
+
+        if auth_idx == 0:
+            # Password
+            show_password = True
+        elif auth_idx == 1:
+            # Certificate
+            show_cert = True
+        elif auth_idx == 2:
+            # SSH agent
+            pass
+
+        self.ssh_password_label.setVisible(show_password)
+        self.ssh_password_input.setVisible(show_password)
+        self.ssh_key_label.setVisible(show_cert)
+        self.ssh_key_input.setVisible(show_cert)
 
     def __connect(self):
         self.status_changed.emit(self.tr("Connecting…"))
