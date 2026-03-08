@@ -98,9 +98,6 @@ def main():
             if answer.lower() == "y":
                 session.commit()
 
-            if answer.lower() == "y":
-                session.commit()
-
     if tunnel is not None:
         tunnel.close()
 
