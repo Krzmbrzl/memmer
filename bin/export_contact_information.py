@@ -4,6 +4,10 @@ from typing import List, Dict, Sequence, Set
 import argparse
 from datetime import date, datetime
 from dataclasses import dataclass, field
+import sys
+import os
+
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "packages"))
 
 from memmer.utils import (
     interactive_connect,

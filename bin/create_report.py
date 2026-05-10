@@ -6,8 +6,12 @@ import argparse
 import csv
 import datetime
 import xml.etree.cElementTree as ET
+import sys
+import os
 
 from openpyxl import Workbook
+
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "packages"))
 
 from memmer.orm import Member, Gender, Setting
 from memmer.utils import (
