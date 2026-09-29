@@ -6,7 +6,7 @@
 from typing import TYPE_CHECKING, List
 
 from PySide6.QtWidgets import QWidget, QDialog
-from PySide6.QtCore import Signal, QRunnable, Slot, QObject
+from PySide6.QtCore import Signal, QRunnable, Slot, QObject, QTimer
 
 from memmer.orm import Member, Session
 
@@ -61,6 +61,10 @@ class MemmerBase:
             wrapper = RunnableWrapper(runnable)
 
             parent.thread_pool.start(wrapper)
+
+    def run_in_gui_thread(self, fn):
+        """Runs fn in the GUI thread, e.g. to show a message box from async_exec"""
+        QTimer.singleShot(0, self.parent_mainwindow(), fn)
 
     def config(self):
         config = self.parent_mainwindow().config
