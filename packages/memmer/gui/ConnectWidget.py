@@ -36,9 +36,9 @@ def db_backend_idx_to_type(idx: int) -> DBBackend:
 def db_backend_to_idx(backend: DBBackend) -> int:
     if backend == DBBackend.SQLite:
         return 0
-    elif DBBackend.PostgreSQL:
+    elif backend == DBBackend.PostgreSQL:
         return 1
-    elif DBBackend.MySQL:
+    elif backend == DBBackend.MySQL:
         return 2
 
     raise RuntimeError(f"Unknown DB backend '{backend}'")
