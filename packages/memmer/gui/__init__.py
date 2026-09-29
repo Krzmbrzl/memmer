@@ -6,7 +6,7 @@
 from .MemberModel import MemberModel
 from .SessionModel import SessionModel
 from .SessionParticipationModel import SessionParticipationModel
-from .OneTimeFeeModel import OneTimeFeeModel, Fee
+from .OneTimeFeeModel import OneTimeFeeModel, OneTimeFeeAmountDelegate, Fee
 from .GenericSortFilterProxyModel import GenericSortFilterProxyModel
 
 # List helper widgets first as those are referenced from the other ones

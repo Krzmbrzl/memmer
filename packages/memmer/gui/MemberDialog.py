@@ -29,6 +29,7 @@ from memmer.gui import (
     SessionModel,
     SessionParticipationModel,
     OneTimeFeeModel,
+    OneTimeFeeAmountDelegate,
     FormValidator,
     Issue,
     error,
@@ -201,6 +202,10 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         self.one_time_fees_table.horizontalHeader().setSectionResizeMode(
             OneTimeFeeModel.Column.Reason, QHeaderView.ResizeMode.Stretch
         )
+        self.one_time_fees_table.setItemDelegateForColumn(
+            OneTimeFeeModel.Column.Amount,
+            OneTimeFeeAmountDelegate(self.one_time_fees_table),
+        )
 
     def __connect_signals(self):
         self.delete_button.clicked.connect(self.__delete_triggered)
@@ -335,6 +340,40 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             [self.account_owner_edit],
             triggers=[mandate_toggled],
         )
+
+        fees = self.one_time_fees_table.model()
+        fee_signals = [fees.dataChanged, fees.rowsInserted, fees.rowsRemoved]
+        add(
+            self.__check_one_time_fees,
+            [self.one_time_fees_table],
+            reveal_on=fee_signals,
+        )
+
+    def __check_one_time_fees(self) -> Optional[Issue]:
+        model = self.one_time_fees_table.model()
+        assert isinstance(model, OneTimeFeeModel)
+
+        for fee in model.get_fees():
+            if len(fee.reason.strip()) == 0:
+                return error(
+                    self.tr("Please enter a reason for the fee of {amount} €").format(
+                        amount=f"{fee.amount:.2f}"
+                    )
+                )
+        for fee in model.get_fees():
+            if fee.amount == 0:
+                return warning(
+                    self.tr("The fee '{reason}' is 0 € and has no effect").format(
+                        reason=fee.reason
+                    )
+                )
+            if fee.amount < 0:
+                return warning(
+                    self.tr(
+                        "The fee '{reason}' is negative and will be credited"
+                    ).format(reason=fee.reason)
+                )
+        return None
 
     def __check_required(self, edit: QLineEdit, message: str) -> Optional[Issue]:
         return error(message) if len(edit.text().strip()) == 0 else None

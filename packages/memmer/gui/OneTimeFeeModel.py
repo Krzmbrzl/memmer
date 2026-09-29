@@ -6,15 +6,22 @@
 from typing import Optional, List, Any
 from enum import IntEnum
 from dataclasses import dataclass
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QColor
 from PySide6.QtCore import (
     QAbstractTableModel,
+    QAbstractItemModel,
     QModelIndex,
     QPersistentModelIndex,
     Qt,
     QTimer,
+)
+from PySide6.QtWidgets import (
+    QStyledItemDelegate,
+    QDoubleSpinBox,
+    QWidget,
+    QStyleOptionViewItem,
 )
 
 from memmer.orm import Member
@@ -122,8 +129,15 @@ class OneTimeFeeModel(QAbstractTableModel):
                 return font
         else:
             fee = self.fees[row]
+            missing_reason = (
+                col == OneTimeFeeModel.Column.Reason and len(fee.reason.strip()) == 0
+            )
 
-            if role == Qt.ItemDataRole.DisplayRole:
+            if missing_reason and role == Qt.ItemDataRole.BackgroundRole:
+                return QColor(211, 47, 47, 60)
+            elif missing_reason and role == Qt.ItemDataRole.ToolTipRole:
+                return self.tr("Please enter a reason")
+            elif role == Qt.ItemDataRole.DisplayRole:
                 if col == OneTimeFeeModel.Column.Reason:
                     return fee.reason
                 elif col == OneTimeFeeModel.Column.Amount:
@@ -176,12 +190,15 @@ class OneTimeFeeModel(QAbstractTableModel):
                 if col == OneTimeFeeModel.Column.Reason and len(value) > 0:
                     self.add_fee(reason=value, amount=Decimal(0))
                     return True
-                elif col == OneTimeFeeModel.Column.Amount:
-                    self.add_fee(reason=self.tr("Unknown"), amount=Decimal(value))
+                elif col == OneTimeFeeModel.Column.Amount and Decimal(value) != 0:
+                    # The reason has to be entered afterwards
+                    self.add_fee(reason="", amount=Decimal(value))
+                    return True
             else:
                 if col == OneTimeFeeModel.Column.Reason:
                     if len(value) > 0:
                         self.fees[row].reason = value
+                        self.dataChanged.emit(idx, idx)
                     else:
                         # Remove this row
                         def remove_row():
@@ -198,12 +215,46 @@ class OneTimeFeeModel(QAbstractTableModel):
                     return True
                 elif col == OneTimeFeeModel.Column.Amount:
                     self.fees[row].amount = Decimal(value)
+                    self.dataChanged.emit(idx, idx)
                     return True
-        except:
-            # Almost certainly a failure to convert value to Decimal
+        except InvalidOperation:
             pass
 
         return False
 
     def get_fees(self) -> List[Fee]:
         return self.fees
+
+
+class OneTimeFeeAmountDelegate(QStyledItemDelegate):
+    """Edits amounts with a spin box so that only valid amounts can be entered"""
+
+    def createEditor(
+        self,
+        parent: QWidget,
+        option: QStyleOptionViewItem,
+        index: QModelIndex | QPersistentModelIndex,
+    ) -> QWidget:
+        editor = QDoubleSpinBox(parent)
+        editor.setDecimals(2)
+        # Negative amounts are credits
+        editor.setRange(-9999.99, 9999.99)
+        editor.setSuffix(" €")
+        return editor
+
+    def setEditorData(
+        self, editor: QWidget, index: QModelIndex | QPersistentModelIndex
+    ) -> None:
+        assert isinstance(editor, QDoubleSpinBox)
+        value = index.data(Qt.ItemDataRole.EditRole)
+        editor.setValue(float(value) if value else 0.0)
+
+    def setModelData(
+        self,
+        editor: QWidget,
+        model: QAbstractItemModel,
+        index: QModelIndex | QPersistentModelIndex,
+    ) -> None:
+        assert isinstance(editor, QDoubleSpinBox)
+        editor.interpretText()
+        model.setData(index, f"{editor.value():.2f}", Qt.ItemDataRole.EditRole)
