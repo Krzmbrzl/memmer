@@ -11,6 +11,7 @@ from .GenericSortFilterProxyModel import GenericSortFilterProxyModel
 
 # List helper widgets first as those are referenced from the other ones
 from .MemmerWidget import MemmerWidget, MemmerDialog
+from .FormValidator import FormValidator, Issue, Severity, error, warning
 from .FilterWidget import FilterWidget
 from .PathSelectorWidget import PathSelectorWidget
 
