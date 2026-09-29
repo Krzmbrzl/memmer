@@ -13,7 +13,7 @@ import re
 from PySide6.QtCore import QModelIndex, QPersistentModelIndex
 from PySide6.QtWidgets import QHeaderView, QMessageBox
 
-from memmer.gui import MemmerDialog, MemberModel
+from memmer.gui import MemmerDialog, MemberModel, FormValidator, Issue, error, warning
 from memmer.orm import Session, Member
 from memmer.utils import is_active
 
@@ -35,6 +35,37 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
         self.__connect_signals()
 
         self.__init_state()
+
+        # After initialization so that it doesn't count as user input
+        self.__setup_validation()
+
+        if self.session is not None:
+            self.validator.reveal_all()
+
+    def __setup_validation(self):
+        self.validator = FormValidator(self, self.save_button)
+
+        self.validator.add_check(self.__check_name, [self.name_edit])
+        self.validator.add_check(self.__check_fee, [self.fixed_fee_edit])
+
+    def __check_name(self) -> Optional[Issue]:
+        name = self.name_edit.text().strip()
+        if len(name) == 0:
+            return error(self.tr("Please enter a name"))
+
+        for other in self.sessions():
+            if other is not self.session and other.name.casefold() == name.casefold():
+                return error(
+                    self.tr("A session named '{name}' already exists").format(
+                        name=other.name
+                    )
+                )
+        return None
+
+    def __check_fee(self) -> Optional[Issue]:
+        if self.fixed_fee_edit.value() == 0:
+            return warning(self.tr("Participation will be free of charge"))
+        return None
 
     def __create_models(self):
         trainers = self.session.trainers if self.session is not None else []
@@ -130,6 +161,12 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
     def __init_state(self):
         self.__trainer_count_changed()
         self.__session_member_count_changed()
+
+        self.name_edit.setMaxLength(100)
+
+        # Would be saved without a fee
+        self.hourly_fee_button.setEnabled(False)
+        self.hourly_fee_button.setToolTip(self.tr("Not supported yet"))
 
         if self.session is None:
             self.delete_button.setEnabled(False)
@@ -248,6 +285,9 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
         self.accept()
 
     def __save_triggered(self):
+        if not self.validator.validate():
+            return
+
         created_session = False
         if not self.session:
             self.session = Session()
@@ -256,7 +296,6 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
         changed = False
 
         set_name = self.name_edit.text().strip()
-        assert len(set_name) > 0
         if self.session.name != set_name:
             self.session.name = set_name
             changed = True
