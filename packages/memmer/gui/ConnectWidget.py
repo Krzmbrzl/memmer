@@ -5,7 +5,10 @@
 
 from .compiled_ui_files.ui_ConnectWidget import Ui_ConnectWidget
 
-from PySide6.QtWidgets import QMessageBox
+from typing import Optional
+import os
+
+from PySide6.QtWidgets import QMessageBox, QLineEdit
 from PySide6.QtCore import Signal, Qt
 
 from memmer.utils import (
@@ -15,7 +18,7 @@ from memmer.utils import (
     SSHTunnelParameter,
     connect,
 )
-from memmer.gui import MemmerWidget
+from memmer.gui import MemmerWidget, FormValidator, Issue, error, warning
 
 from sqlalchemy.orm import Session
 
@@ -200,14 +203,14 @@ class ConnectWidget(MemmerWidget, Ui_ConnectWidget):
 
         self.__init_state()
 
+        self.__setup_validation()
+
     def __connect_signals(self):
         self.connection_type_combo.currentIndexChanged.connect(
             self.__connect_type_changed
         )
 
         self.db_backend_combo.currentIndexChanged.connect(self.__db_backend_changed)
-
-        self.db_name_input.textChanged.connect(self.__db_name_changed)
 
         self.ssh_authentication_combo.currentIndexChanged.connect(
             self.__ssh_authentication_changed
@@ -220,9 +223,111 @@ class ConnectWidget(MemmerWidget, Ui_ConnectWidget):
 
         self.__db_backend_changed(self.db_backend_combo.currentIndex())
 
-        self.__db_name_changed(self.db_name_input.text())
-
         self.__ssh_authentication_changed(self.ssh_authentication_combo.currentIndex())
+
+        # Problems are reported when trying to connect
+        self.connect_button.setEnabled(True)
+
+    def __setup_validation(self):
+        self.validator = FormValidator(self, self.connect_button)
+        add = self.validator.add_check
+
+        connect_type_changed = self.connection_type_combo.currentIndexChanged
+        auth_changed = self.ssh_authentication_combo.currentIndexChanged
+
+        add(
+            self.__check_db_name,
+            [self.db_name_input],
+            triggers=[connect_type_changed, self.db_backend_combo.currentIndexChanged],
+        )
+        add(
+            lambda: self.__check_ssh_required(
+                self.ssh_host_input, self.tr("Please enter the SSH host")
+            ),
+            [self.ssh_host_input],
+            triggers=[connect_type_changed],
+        )
+        add(
+            lambda: self.__check_ssh_required(
+                self.ssh_user_input, self.tr("Please enter the SSH user")
+            ),
+            [self.ssh_user_input],
+            triggers=[connect_type_changed],
+        )
+        add(
+            self.__check_ssh_password,
+            [self.ssh_password_input],
+            triggers=[connect_type_changed, auth_changed],
+        )
+        add(
+            self.__check_ssh_key,
+            [self.ssh_key_input],
+            triggers=[connect_type_changed, auth_changed],
+        )
+        add(
+            self.__check_ssh_agent,
+            [self.ssh_authentication_combo],
+            triggers=[connect_type_changed],
+        )
+
+    def __uses_ssh(self) -> bool:
+        return (
+            connect_idx_to_type(self.connection_type_combo.currentIndex())
+            == ConnectType.SSH_TUNNEL
+        )
+
+    def __check_db_name(self) -> Optional[Issue]:
+        name = self.db_name_input.text().strip()
+        if len(name) == 0:
+            return error(self.tr("Please enter the database"))
+
+        backend = db_backend_idx_to_type(self.db_backend_combo.currentIndex())
+        if (
+            backend == DBBackend.SQLite
+            and not self.__uses_ssh()
+            and not os.path.isfile(os.path.expanduser(name))
+        ):
+            # SQLite would silently create a new, empty database
+            return error(self.tr("There is no SQLite database at this path"))
+        return None
+
+    def __check_ssh_required(self, edit: QLineEdit, message: str) -> Optional[Issue]:
+        if self.__uses_ssh() and len(edit.text().strip()) == 0:
+            return error(message)
+        return None
+
+    def __check_ssh_password(self) -> Optional[Issue]:
+        if (
+            self.__uses_ssh()
+            and self.ssh_authentication_combo.currentIndex() == 0
+            and len(self.ssh_password_input.text()) == 0
+        ):
+            return error(self.tr("Please enter the SSH password"))
+        return None
+
+    def __check_ssh_key(self) -> Optional[Issue]:
+        if not self.__uses_ssh() or self.ssh_authentication_combo.currentIndex() != 1:
+            return None
+
+        path = os.path.expanduser(self.ssh_key_input.path.strip())
+        if len(path) == 0:
+            return error(self.tr("Please choose the private key file"))
+        if not os.path.isfile(path):
+            return error(self.tr("This file doesn't exist"))
+        if not os.access(path, os.R_OK):
+            return error(self.tr("You don't have permission to read this file"))
+        return None
+
+    def __check_ssh_agent(self) -> Optional[Issue]:
+        if (
+            self.__uses_ssh()
+            and self.ssh_authentication_combo.currentIndex() == 2
+            and not os.environ.get("SSH_AUTH_SOCK")
+        ):
+            return warning(
+                self.tr("No running SSH agent found (SSH_AUTH_SOCK is not set)")
+            )
+        return None
 
     def __connect_type_changed(self, type_idx: int):
         connect_type = connect_idx_to_type(idx=type_idx)
@@ -237,9 +342,6 @@ class ConnectWidget(MemmerWidget, Ui_ConnectWidget):
         self.db_host_input.setVisible(backend != DBBackend.SQLite)
         self.db_port_label.setVisible(backend != DBBackend.SQLite)
         self.db_port_spinner.setVisible(backend != DBBackend.SQLite)
-
-    def __db_name_changed(self, name: str):
-        self.connect_button.setEnabled(len(name.strip()) > 0)
 
     def __ssh_authentication_changed(self, auth_idx):
         show_password = False
@@ -261,6 +363,9 @@ class ConnectWidget(MemmerWidget, Ui_ConnectWidget):
         self.ssh_key_input.setVisible(show_cert)
 
     def __connect(self):
+        if not self.validator.validate():
+            return
+
         self.status_changed.emit(self.tr("Connecting…"))
 
         def perform_connection():
