@@ -1010,6 +1010,8 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             self.members().append(self.member)
 
             self.sql_session().add(self.member)
+            # Assigns the ID
+            self.sql_session().flush()
 
         # We can only add these things once we are certain that self.member
         # is a DB entry and hence has an assigned ID
