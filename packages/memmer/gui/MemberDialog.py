@@ -10,13 +10,15 @@ from datetime import datetime, date
 from decimal import Decimal
 import re
 
-from PySide6.QtWidgets import QHeaderView, QMessageBox
+from PySide6.QtWidgets import QHeaderView, QMessageBox, QLineEdit
+from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtCore import (
     QDate,
     QDateTime,
     Qt,
     QModelIndex,
     QPersistentModelIndex,
+    QRegularExpression,
     Signal,
     QSignalBlocker,
 )
@@ -27,10 +29,25 @@ from memmer.gui import (
     SessionModel,
     SessionParticipationModel,
     OneTimeFeeModel,
+    FormValidator,
+    Issue,
+    error,
+    warning,
 )
 from memmer import AdmissionFeeKey
 from memmer.orm import Member, FixedCost, Gender, OneTimeFee, FeeOverride
-from memmer.utils import nominal_year_diff, container_unordered_equals
+from memmer.utils import (
+    nominal_year_diff,
+    container_unordered_equals,
+    IbanProblemKind,
+    iban_problem,
+    normalize_iban,
+    is_valid_bic,
+    is_valid_email,
+    count_digits,
+    is_plausible_phone_number,
+    is_plausible_street_number,
+)
 from memmer.queries import (
     get_relatives,
     compute_monthly_fee,
@@ -47,8 +64,12 @@ from schwifty.exceptions import SchwiftyException
 
 from pgeocode import Nominatim
 
-
+# Marks dates that haven't been set (yet)
 default_date = QDate(1870, 1, 1)
+
+
+def _regex_validator(pattern: str, parent) -> QRegularExpressionValidator:
+    return QRegularExpressionValidator(QRegularExpression(pattern), parent)
 
 
 class MemberDialog(MemmerDialog, Ui_MemberDialog):
@@ -61,14 +82,64 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         self.setupUi(self)
 
         self.member = member
+        # None if unknown (e.g. not a German postal code)
+        self.__postal_code_known: Optional[bool] = None
 
         self.__create_models()
+
+        self.__restrict_inputs()
 
         self.__connect_signals()
 
         self.__init_state()
 
+        # After initialization so that it doesn't count as user input
+        self.__setup_validation()
+
+        if self.member is not None:
+            # Make problems in existing data visible right away
+            self.validator.reveal_all()
+
         self.__fee_related_data_changed.emit()
+
+    def __restrict_inputs(self):
+        for edit in [
+            self.first_name_edit,
+            self.last_name_edit,
+            self.street_edit,
+            self.city_edit,
+            self.account_owner_edit,
+        ]:
+            edit.setMaxLength(100)
+        self.email_edit.setMaxLength(254)
+
+        self.street_number_edit.setValidator(
+            _regex_validator(r"[0-9A-Za-z /-]{0,15}", self)
+        )
+        self.postal_code_edit.setValidator(
+            _regex_validator(r"[0-9A-Za-z -]{0,10}", self)
+        )
+        self.phone_number_edit.setValidator(
+            _regex_validator(r"[0-9+()/ -]{0,30}", self)
+        )
+        self.iban_edit.setValidator(_regex_validator(r"[A-Za-z0-9 ]{0,42}", self))
+        self.bic_edit.setValidator(_regex_validator(r"[A-Za-z0-9]{0,11}", self))
+
+        self.gender_combo.setPlaceholderText(self.tr("Please select…"))
+
+        for date_edit in [
+            self.birthday_edit,
+            self.entry_date_edit,
+            self.exit_date_edit,
+            self.sepa_mandate_date_edit,
+        ]:
+            # The minimum is displayed as special value
+            date_edit.setMinimumDate(default_date)
+            date_edit.setSpecialValueText(self.tr("Not set"))
+
+        today = QDate.currentDate()
+        self.birthday_edit.setMaximumDate(today)
+        self.sepa_mandate_date_edit.setMaximumDate(today)
 
     def __create_models(self):
         self.sessions_table.setModel(
@@ -164,6 +235,293 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         )
         self.__monthly_fee_changed.connect(self.__update_monthly_fee)
 
+    def __setup_validation(self):
+        self.validator = FormValidator(self, self.save_button)
+        add = self.validator.add_check
+
+        add(self.__check_gender, [self.gender_combo])
+        add(
+            lambda: self.__check_name(
+                self.first_name_edit, self.tr("Please enter the first name")
+            ),
+            [self.first_name_edit],
+        )
+        add(
+            lambda: self.__check_name(
+                self.last_name_edit, self.tr("Please enter the last name")
+            ),
+            [self.last_name_edit],
+        )
+        add(self.__check_birthday, [self.birthday_edit])
+        add(
+            self.__check_duplicate,
+            [self.birthday_edit],
+            triggers=[
+                self.first_name_edit.textChanged,
+                self.last_name_edit.textChanged,
+            ],
+            reveal_on=[
+                self.birthday_edit.dateChanged,
+                self.first_name_edit.editingFinished,
+                self.last_name_edit.editingFinished,
+            ],
+        )
+
+        add(
+            lambda: self.__check_required(
+                self.street_edit, self.tr("Please enter the street")
+            ),
+            [self.street_edit],
+        )
+        add(self.__check_street_number, [self.street_number_edit])
+        # Runs after __deduce_city_from_postal_code as that is connected first
+        add(
+            self.__check_postal_code,
+            [self.postal_code_edit],
+            triggers=[self.postal_code_edit.textEdited],
+        )
+        add(
+            self.__check_city,
+            [self.city_selection_stack],
+            triggers=[
+                self.city_edit.textChanged,
+                self.city_combo.currentTextChanged,
+                self.postal_code_edit.textEdited,
+            ],
+            reveal_on=[
+                self.city_edit.editingFinished,
+                self.city_combo.currentIndexChanged,
+                self.postal_code_edit.editingFinished,
+            ],
+        )
+
+        add(self.__check_phone_number, [self.phone_number_edit])
+        add(self.__check_email, [self.email_edit])
+
+        add(
+            self.__check_entry_date,
+            [self.entry_date_edit],
+            triggers=[self.birthday_edit.dateChanged],
+        )
+        add(
+            self.__check_exit_date,
+            [self.exit_date_edit],
+            triggers=[self.entry_date_edit.dateChanged],
+            reveal_on=[self.exit_date_edit.dateChanged, self.exited_checkbox.toggled],
+        )
+
+        mandate_toggled = self.sepa_mandate_checkbox.toggled
+        add(
+            self.__check_sepa_mandate_date,
+            [self.sepa_mandate_date_edit],
+            triggers=[mandate_toggled],
+        )
+        add(self.__check_iban, [self.iban_edit], triggers=[mandate_toggled])
+        add(
+            self.__check_bic,
+            [self.bic_edit],
+            triggers=[mandate_toggled, self.iban_edit.textChanged],
+            reveal_on=[self.bic_edit.editingFinished, self.iban_edit.editingFinished],
+        )
+        add(
+            lambda: (
+                self.__check_required(
+                    self.account_owner_edit,
+                    self.tr("Please enter the account owner for the SEPA mandate"),
+                )
+                if self.sepa_mandate_checkbox.isChecked()
+                else None
+            ),
+            [self.account_owner_edit],
+            triggers=[mandate_toggled],
+        )
+
+    def __check_required(self, edit: QLineEdit, message: str) -> Optional[Issue]:
+        return error(message) if len(edit.text().strip()) == 0 else None
+
+    def __check_gender(self) -> Optional[Issue]:
+        if self.gender_combo.currentIndex() < 0:
+            return error(self.tr("Please select the gender"))
+        return None
+
+    def __check_name(self, edit: QLineEdit, missing_msg: str) -> Optional[Issue]:
+        if len(edit.text().strip()) == 0:
+            return error(missing_msg)
+        if count_digits(edit.text()) > 0:
+            return warning(self.tr("Names usually don't contain digits"))
+        return None
+
+    def __check_birthday(self) -> Optional[Issue]:
+        birthday = self.birthday_edit.date()
+        if birthday == default_date:
+            return error(self.tr("Please enter the birthday"))
+
+        age = nominal_year_diff(birthday.toPython(), datetime.now().date())  # type: ignore
+        if age > 100:
+            return warning(
+                self.tr("That makes {age} years – please double-check").format(age=age)
+            )
+        return None
+
+    def __check_duplicate(self) -> Optional[Issue]:
+        first_name = self.first_name_edit.text().strip().casefold()
+        last_name = self.last_name_edit.text().strip().casefold()
+        birthday = self.birthday_edit.date().toPython()
+
+        for other in self.members():
+            if (
+                other is not self.member
+                and other.birthday == birthday
+                and other.first_name.casefold() == first_name
+                and other.last_name.casefold() == last_name
+            ):
+                return warning(
+                    self.tr(
+                        "A member with this name and birthday already exists – is this a duplicate?"
+                    )
+                )
+        return None
+
+    def __check_street_number(self) -> Optional[Issue]:
+        text = self.street_number_edit.text().strip()
+        if len(text) == 0:
+            return error(self.tr("Please enter the street number"))
+        if not is_plausible_street_number(text):
+            return warning(
+                self.tr("Unusual street number (expected e.g. 12, 12a or 12-14)")
+            )
+        return None
+
+    def __check_postal_code(self) -> Optional[Issue]:
+        text = self.postal_code_edit.text().strip()
+        if len(text) == 0:
+            return error(self.tr("Please enter the postal code"))
+        if not (len(text) == 5 and text.isdigit()):
+            return warning(self.tr("German postal codes consist of 5 digits"))
+        if self.__postal_code_known is False:
+            return warning(
+                self.tr("Unknown postal code – please double-check and enter the city")
+            )
+        return None
+
+    def __check_city(self) -> Optional[Issue]:
+        if self.city_selection_stack.currentWidget() == self.city_combo_page:
+            city = self.city_combo.currentText()
+        else:
+            city = self.city_edit.text()
+
+        if len(city.strip()) == 0:
+            return error(self.tr("Please enter the city"))
+        return None
+
+    def __check_phone_number(self) -> Optional[Issue]:
+        text = self.phone_number_edit.text().strip()
+        if len(text) > 0 and not is_plausible_phone_number(text):
+            return error(
+                self.tr(
+                    "Not a valid phone number (at least 6 digits, '+' only at the start)"
+                )
+            )
+        return None
+
+    def __check_email(self) -> Optional[Issue]:
+        text = self.email_edit.text().strip()
+        if len(text) > 0 and not is_valid_email(text):
+            return error(
+                self.tr("Not a valid email address (expected e.g. name@example.com)")
+            )
+        return None
+
+    def __check_entry_date(self) -> Optional[Issue]:
+        entry = self.entry_date_edit.date()
+        if entry == default_date:
+            return error(self.tr("Please enter the entry date"))
+
+        birthday = self.birthday_edit.date()
+        if birthday != default_date and entry < birthday:
+            return error(self.tr("The entry date can't be before the birthday"))
+
+        if entry > QDate.currentDate():
+            return warning(self.tr("The entry date lies in the future"))
+        return None
+
+    def __check_exit_date(self) -> Optional[Issue]:
+        if not self.exited_checkbox.isChecked():
+            return None
+
+        exit_date = self.exit_date_edit.date()
+        if exit_date == default_date:
+            return error(self.tr("Please enter the exit date"))
+        if exit_date < self.entry_date_edit.date():
+            return error(self.tr("The exit date can't be before the entry date"))
+        return None
+
+    def __check_sepa_mandate_date(self) -> Optional[Issue]:
+        if (
+            self.sepa_mandate_checkbox.isChecked()
+            and self.sepa_mandate_date_edit.date() == default_date
+        ):
+            return error(self.tr("Please enter the date the SEPA mandate was given"))
+        return None
+
+    def __check_iban(self) -> Optional[Issue]:
+        if not self.sepa_mandate_checkbox.isChecked():
+            return None
+
+        text = self.iban_edit.text()
+        if len(text.strip()) == 0:
+            return error(self.tr("Please enter the IBAN for the SEPA mandate"))
+
+        problem = iban_problem(text)
+        if problem is None:
+            return None
+
+        match problem.kind:
+            case IbanProblemKind.InvalidCharacters:
+                msg = self.tr("An IBAN only consists of letters and digits")
+            case IbanProblemKind.UnknownCountry:
+                msg = self.tr(
+                    "Unknown country code '{country}' – an IBAN starts with a country code such as DE"
+                ).format(country=problem.country)
+            case IbanProblemKind.WrongLength:
+                msg = self.tr(
+                    "IBANs from {country} have {expected} characters, but this one has {actual}"
+                ).format(
+                    country=problem.country,
+                    expected=problem.expected_length,
+                    actual=problem.actual_length,
+                )
+            case IbanProblemKind.InvalidChecksum:
+                msg = self.tr(
+                    "This IBAN is invalid (checksum mismatch) – probably a typo"
+                )
+            case IbanProblemKind.InvalidStructure:
+                msg = self.tr(
+                    "This IBAN doesn't match the format used in {country}"
+                ).format(country=problem.country)
+            case IbanProblemKind.UnknownBank:
+                msg = self.tr("This IBAN refers to an unknown bank")
+            case IbanProblemKind.NotInSepaZone:
+                msg = self.tr(
+                    "{country} is not part of the SEPA zone – direct debit isn't possible"
+                ).format(country=problem.country)
+            case _:
+                msg = self.tr("This IBAN is invalid")
+
+        return error(msg)
+
+    def __check_bic(self) -> Optional[Issue]:
+        if not self.bic_edit.isEnabled():
+            # Deduced from the IBAN (or IBAN invalid, which is reported there)
+            return None
+
+        text = self.bic_edit.text().strip()
+        if len(text) == 0:
+            return error(self.tr("The bank is unknown – please enter the BIC manually"))
+        if not is_valid_bic(text):
+            return error(self.tr("Not a valid BIC (8 or 11 letters and digits)"))
+        return None
+
     def __init_state(self):
         # Set all to known default values
         self.birthday_edit.setDate(default_date)
@@ -231,7 +589,9 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             )
 
             self.iban_edit.setText(member.iban)
-            # Note: BIC and institute are inferred from IBAN
+            # Note: BIC and institute are inferred from IBAN, if possible
+            if len(self.bic_edit.text()) == 0 and member.bic:
+                self.bic_edit.setText(member.bic)
             self.account_owner_edit.setText(member.account_owner)
 
         existing_fee_overwrite = (
@@ -272,9 +632,14 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         self.sepa_mandate_date_edit.setEnabled(given)
         self.iban_edit.setEnabled(given)
         self.account_owner_edit.setEnabled(given)
+        self.__deduce_data_from_iban(self.iban_edit.text())
 
         if given and self.sepa_mandate_date_edit.date() == default_date:
             self.sepa_mandate_date_edit.setDate(QDateTime.currentDateTime().date())
+
+        if given and len(self.account_owner_edit.text().strip()) == 0:
+            name = f"{self.first_name_edit.text().strip()} {self.last_name_edit.text().strip()}"
+            self.account_owner_edit.setText(name.strip())
 
     def __fee_overwrite_toggled(self, overwrite: bool):
         self.monthly_fee_edit.setEnabled(overwrite)
@@ -392,27 +757,35 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
 
     def __deduce_data_from_iban(self, text):
         try:
-            iban = IBAN(text)
-
-            assert iban.bic is not None
-            self.bic_edit.setText(iban.bic)
-
-            if iban.bank_name is not None:
-                self.institute_edit.setText(iban.bank_name)
-            else:
-                self.institute_edit.setText(self.tr("Unknown"))
-
+            iban = IBAN(normalize_iban(text))
         except SchwiftyException:
             # Invalid IBAN
             self.bic_edit.clear()
+            self.bic_edit.setEnabled(False)
             self.institute_edit.clear()
+            return
+
+        # Banks unknown to schwifty require manual BIC entry
+        self.bic_edit.setEnabled(
+            iban.bic is None and self.sepa_mandate_checkbox.isChecked()
+        )
+        if iban.bic is not None:
+            self.bic_edit.setText(str(iban.bic))
+
+        if iban.bank_name is not None:
+            self.institute_edit.setText(iban.bank_name)
+        else:
+            self.institute_edit.setText(self.tr("Unknown"))
 
     def __deduce_city_from_postal_code(self, text: str):
         # TODO: country should be configurable
         zip_code_locator = Nominatim(country="de", unique=False)
 
         code = text.strip()
-        if not code.isdigit():
+        if not (len(code) == 5 and code.isdigit()):
+            # Incomplete or not a German postal code
+            self.__postal_code_known = None
+            self.city_selection_stack.setCurrentWidget(self.city_edit_page)
             self.city_edit.clear()
             self.city_edit.setEnabled(True)
             return
@@ -422,10 +795,11 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         places = zip_code_locator.query_postal_code(code)["place_name"]
         assert len(places) > 0
 
+        self.__postal_code_known = type(places[0]) is str
+
         if len(places) == 1:
             self.city_selection_stack.setCurrentWidget(self.city_edit_page)
-            if type(places[0]) is not str:
-                # Unknown postal code
+            if not self.__postal_code_known:
                 self.city_edit.clear()
                 self.city_edit.setEnabled(True)
             else:
@@ -464,6 +838,9 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         self.accept()
 
     def __save_triggered(self):
+        if not self.validator.validate():
+            return
+
         created_member = False
         if not self.member:
             self.member = Member()
@@ -477,13 +854,11 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             changed = True
 
         set_first_name = self.first_name_edit.text().strip()
-        assert len(set_first_name) > 0
         if set_first_name != self.member.first_name:
             self.member.first_name = set_first_name
             changed = True
 
         set_last_name = self.last_name_edit.text().strip()
-        assert len(set_last_name) > 0
         if set_last_name != self.member.last_name:
             self.member.last_name = set_last_name
             changed = True
@@ -494,19 +869,16 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             changed = True
 
         set_street = self.street_edit.text().strip()
-        assert len(set_street) > 0
         if set_street != self.member.street:
             self.member.street = set_street
             changed = True
 
         set_street_number = self.street_number_edit.text().strip()
-        assert len(set_street_number)
         if set_street_number != self.member.street_number:
             self.member.street_number = set_street_number
             changed = True
 
         set_postal_code = self.postal_code_edit.text().strip()
-        assert len(set_postal_code) > 0
         if set_postal_code != self.member.postal_code:
             self.member.postal_code = set_postal_code
             changed = True
@@ -516,7 +888,6 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         else:
             assert self.city_selection_stack.currentWidget() == self.city_combo_page
             set_city = self.city_combo.currentText()
-        assert len(set_city) > 0
         if set_city != self.member.city:
             self.member.city = set_city
             changed = True
@@ -541,31 +912,28 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             changed = True
 
         set_entry: date = self.entry_date_edit.date().toPython()  # type: ignore
-        assert set_entry != default_date
         if set_entry != self.member.entry_date:
             self.member.entry_date = set_entry
             changed = True
 
         set_exit: Optional[date] = self.exit_date_edit.date().toPython() if self.exited_checkbox.isChecked() else None  # type: ignore
-        assert set_exit != default_date
         if set_exit != self.member.exit_date:
             self.member.exit_date = set_exit
             changed = True
 
         set_sepa: date = self.sepa_mandate_date_edit.date().toPython() if self.sepa_mandate_checkbox.isChecked() else None  # type: ignore
-        assert set_sepa != default_date
         if set_sepa != self.member.sepa_mandate_date:
             self.member.sepa_mandate_date = set_sepa
             changed = True
 
-        set_iban = self.iban_edit.text().strip().replace(" ", "")
+        set_iban = normalize_iban(self.iban_edit.text().strip())
         if len(set_iban) == 0:
             set_iban = None
         if set_iban != self.member.iban:
             self.member.iban = set_iban
             changed = True
 
-        set_bic = self.bic_edit.text().strip()
+        set_bic = self.bic_edit.text().strip().upper()
         if len(set_bic) == 0:
             set_bic = None
         if set_bic != self.member.bic:
