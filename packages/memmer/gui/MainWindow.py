@@ -69,6 +69,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tally_page.main_menu_requested.connect(
             lambda: self.__switch_to(self.main_menu)
         )
+        self.tally_page.status_changed.connect(self.__status_update)
 
         self.overview_page.main_menu_requested.connect(
             lambda: self.__switch_to(self.main_menu)
