@@ -10,11 +10,13 @@ from datetime import datetime, date
 from decimal import Decimal
 import re
 
-from PySide6.QtWidgets import QHeaderView, QMessageBox, QLineEdit
+from PySide6.QtWidgets import QHeaderView, QMessageBox, QLineEdit, QDateEdit
 from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtCore import (
     QDate,
     QDateTime,
+    QEvent,
+    QObject,
     Qt,
     QModelIndex,
     QPersistentModelIndex,
@@ -71,6 +73,23 @@ default_date = QDate(1870, 1, 1)
 
 def _regex_validator(pattern: str, parent) -> QRegularExpressionValidator:
     return QRegularExpressionValidator(QRegularExpression(pattern), parent)
+
+
+class _UnsetDatePopupFix(QObject):
+    """Opens the calendar popup of an unset date at the current month"""
+
+    def __init__(self, date_edit: QDateEdit):
+        super().__init__(date_edit)
+
+        self.date_edit = date_edit
+        date_edit.calendarWidget().installEventFilter(self)
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.Show and self.date_edit.date() == default_date:
+            today = QDate.currentDate()
+            self.date_edit.calendarWidget().setCurrentPage(today.year(), today.month())
+
+        return False
 
 
 class MemberDialog(MemmerDialog, Ui_MemberDialog):
@@ -137,6 +156,7 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             # The minimum is displayed as special value
             date_edit.setMinimumDate(default_date)
             date_edit.setSpecialValueText(self.tr("Not set"))
+            _UnsetDatePopupFix(date_edit)
 
         today = QDate.currentDate()
         self.birthday_edit.setMaximumDate(today)
