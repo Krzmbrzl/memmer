@@ -187,7 +187,7 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             if fee is not None:
                 model = self.one_time_fees_table.model()
                 assert isinstance(model, OneTimeFeeModel)
-                model.add_fee(reason=self.tr("Admissing fee"), amount=fee.cost)
+                model.add_fee(reason=self.tr("Admission fee"), amount=fee.cost)
         else:
             self.load(self.member)
 
@@ -255,7 +255,7 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         assert isinstance(py_birthday, date)
         age = nominal_year_diff(py_birthday, datetime.now().date())
 
-        self.age_label.setText(self.tr(f"({age} years)"))
+        self.age_label.setText(self.tr("({age} years)").format(age=age))
 
         self.__fee_related_data_changed.emit()
 

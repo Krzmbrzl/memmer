@@ -278,8 +278,8 @@ class ConnectWidget(MemmerWidget, Ui_ConnectWidget):
                         self,
                         self.tr("Connection failed"),
                         self.tr(
-                            f"Establishing the connection to the database has failed. Reason given:\n{err}"
-                        ),
+                            "Establishing the connection to the database has failed. Reason given:\n{error}"
+                        ).format(error=err),
                         buttons=QMessageBox.StandardButton.Ok,
                     )
 
