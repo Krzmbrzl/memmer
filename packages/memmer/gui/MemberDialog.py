@@ -255,9 +255,9 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             self.__potential_relative_activated
         )
 
-        self.__fee_related_data_changed.connect(
-            lambda: self.async_exec(self.__recompute_monthly_fee)
-        )
+        # Runs on the GUI thread: it uses the shared SQLAlchemy session, which
+        # is not thread-safe
+        self.__fee_related_data_changed.connect(self.__recompute_monthly_fee)
         self.__monthly_fee_changed.connect(self.__update_monthly_fee)
 
     def __setup_validation(self):
