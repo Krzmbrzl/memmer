@@ -36,17 +36,6 @@ class DatabaseController(QObject):
         self.__db = DatabaseThread()
         self.__deliver.connect(self.__run_on_gui_thread)
 
-    @property
-    def session(self) -> Optional[Session]:
-        """Transitional accessor to the owned session for GUI-thread callers
-        not yet migrated onto :meth:`submit`; new code must not use it."""
-        return self.__db.session
-
-    @property
-    def tunnel(self) -> Any:
-        """Transitional accessor to the owned SSH tunnel, see :attr:`session`."""
-        return self.__db.tunnel
-
     def submit(
         self,
         fn: Callable[[Optional[Session]], Any],

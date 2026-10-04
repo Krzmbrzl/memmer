@@ -8,11 +8,7 @@ from .compiled_ui_files.ui_MainWindow import Ui_MainWindow
 from typing import Optional, Set
 
 from PySide6.QtWidgets import QMainWindow, QMessageBox
-from PySide6.QtCore import QThreadPool, Signal
-
-from sqlalchemy import orm
-
-from sshtunnel import SSHTunnelForwarder
+from PySide6.QtCore import Signal
 
 from memmer.orm import Member, Session
 from memmer.utils import (
@@ -40,15 +36,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super().__init__(parent)
         self.setupUi(self)
 
-        self.ssh_tunnel: Optional[SSHTunnelForwarder] = None
-        self.session: Optional[orm.Session] = None
         self.config: MemmerConfig = load_config()
-        self.thread_pool = QThreadPool(self)
         # Owns the DB session on a dedicated thread; all DB access is serialized
-        # through it. self.session stays as a transitional accessor for callers
-        # not yet migrated onto the controller.
+        # through it.
         self.db_controller = DatabaseController(self)
         self.data_manager = None
+        self.__connected = False
         self.__opened_widgets: Set[MemmerWidget] = set()
 
         self.__connect_signals()
@@ -149,11 +142,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.statusbar.showMessage(self.tr("Ready"))
 
     def __connection_established(self):
-        # The session was created on the DB thread by the controller. Adopt
-        # transitional references for callers not yet migrated off self.session.
-        self.session = self.db_controller.session
-        self.ssh_tunnel = self.db_controller.tunnel
-
+        # The session was created and is owned by the controller's DB thread.
+        self.__connected = True
         self.data_manager = DataManager(controller=self.db_controller)
 
         ConnectionParameter.to_config(
@@ -167,7 +157,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.menu_new.setEnabled(True)
 
     def __disconnect(self):
-        if self.session is None:
+        if not self.__connected:
             self.__finish_disconnect()
             return
 
@@ -212,8 +202,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         )
 
     def __finish_disconnect(self, committed: bool = False):
-        self.session = None
-        self.ssh_tunnel = None
+        self.__connected = False
         self.data_manager = None
 
         if committed:

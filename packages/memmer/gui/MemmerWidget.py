@@ -6,11 +6,9 @@
 from typing import TYPE_CHECKING, List
 
 from PySide6.QtWidgets import QWidget, QDialog
-from PySide6.QtCore import Signal, QRunnable, Slot, QObject, QTimer
+from PySide6.QtCore import Signal, Slot, QObject
 
 from memmer.orm import Member, Session
-
-from sqlalchemy import orm
 
 if TYPE_CHECKING:
     # This creates cyclic imports, so we only want to do this to bring in the
@@ -36,13 +34,6 @@ class MemmerBase:
     def qt_parent(self) -> QObject:
         raise RuntimeError("Should have been overridden")
 
-    def sql_session(self) -> orm.Session:
-        parent = self.parent_mainwindow()
-
-        assert parent.session is not None
-
-        return parent.session
-
     def db(self):
         """The DatabaseController through which all DB access is serialized."""
         controller = self.parent_mainwindow().db_controller
@@ -50,29 +41,6 @@ class MemmerBase:
         assert controller is not None
 
         return controller
-
-    def async_exec(self, runnable):
-        parent = self.parent_mainwindow()
-
-        if isinstance(runnable, QRunnable):
-            parent.thread_pool.start(runnable)
-        else:
-
-            class RunnableWrapper(QRunnable):
-                def __init__(self, runnable):
-                    super().__init__()
-                    self.runnable = runnable
-
-                def run(self):
-                    self.runnable()
-
-            wrapper = RunnableWrapper(runnable)
-
-            parent.thread_pool.start(wrapper)
-
-    def run_in_gui_thread(self, fn):
-        """Runs fn in the GUI thread, e.g. to show a message box from async_exec"""
-        QTimer.singleShot(0, self.parent_mainwindow(), fn)
 
     def config(self):
         config = self.parent_mainwindow().config
