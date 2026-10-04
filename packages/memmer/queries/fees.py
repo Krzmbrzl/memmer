@@ -142,14 +142,21 @@ def compute_monthly_fee(
         else:
             fee += get_fixed_cost(session=session, key=BasicFeeAdultsKey)
 
+    # Fetch all of the member's participations up front, keyed by session, so
+    # the loop below doesn't issue one SELECT per participating session.
+    participations = {
+        p.session_id: p
+        for p in session.scalars(
+            select(morm.Participation).where(
+                morm.Participation.member_id == member.id
+            )
+        ).all()
+    }
+
     # Then add the training fees for the actively participating sessions
     session_fees: List[Decimal] = []
     for current_session in member.participating_sessions:
-        participation = session.scalar(
-            select(morm.Participation)
-            .where(morm.Participation.member_id == member.id)
-            .where(morm.Participation.session_id == current_session.id)
-        )
+        participation = participations.get(current_session.id)
 
         if participation is None or (
             participation.since <= target_date

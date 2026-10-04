@@ -35,26 +35,24 @@ def get_relatives(session: Session, member: Member) -> List[Member]:
         )
     ).all()
 
-    relatedMembers: List[Member] = []
-
+    # Collect the id of the "other" member in each relation, deduplicated but
+    # keeping the order in which the relations were returned. Comparing by id
+    # (not identity): `member` may be a detached instance from a different
+    # session than the ones queried here.
+    related_ids: List[int] = []
     for currentRelation in relations:
-        first = session.scalars(
-            select(Member).where(Member.id == currentRelation.first_id)
-        ).first()
-        second = session.scalars(
-            select(Member).where(Member.id == currentRelation.second_id)
-        ).first()
+        for other_id in (currentRelation.first_id, currentRelation.second_id):
+            if other_id != member.id and other_id not in related_ids:
+                related_ids.append(other_id)
 
-        assert first != None
-        assert second != None
-
-        # Compare by id, not identity: `member` may be a detached instance from
-        # a different session than the ones queried here, so `==` (identity)
-        # would fail to recognise the member itself and leak it into the result.
-        if member.id != first.id and not first in relatedMembers:
-            relatedMembers.append(first)
-        if member.id != second.id and not second in relatedMembers:
-            relatedMembers.append(second)
+    # Resolve all of them in a single query instead of two SELECTs per relation.
+    by_id = {
+        m.id: m
+        for m in session.scalars(
+            select(Member).where(Member.id.in_(related_ids))
+        ).all()
+    }
+    relatedMembers: List[Member] = [by_id[i] for i in related_ids if i in by_id]
 
     # Also consider dummy relatives added directly to Member instances
     if hasattr(member, "relatives"):
