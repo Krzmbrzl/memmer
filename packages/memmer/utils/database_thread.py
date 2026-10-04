@@ -37,6 +37,20 @@ class DatabaseThread:
         )
         self.__thread.start()
 
+    @property
+    def session(self) -> Optional[Session]:
+        """The owned session, or ``None`` before :meth:`establish`.
+
+        Transitional accessor for GUI-thread callers that have not yet been
+        moved onto :meth:`submit`; new code must never touch the session off
+        the DB thread."""
+        return self.__session
+
+    @property
+    def tunnel(self) -> Any:
+        """The owned SSH tunnel, if any. Transitional, see :attr:`session`."""
+        return self.__tunnel
+
     def submit(self, fn: Callable[[Optional[Session]], Any]) -> "Future":
         """Schedules ``fn(session)`` to run on the DB thread.
 

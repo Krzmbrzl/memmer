@@ -36,6 +36,17 @@ class DatabaseController(QObject):
         self.__db = DatabaseThread()
         self.__deliver.connect(self.__run_on_gui_thread)
 
+    @property
+    def session(self) -> Optional[Session]:
+        """Transitional accessor to the owned session for GUI-thread callers
+        not yet migrated onto :meth:`submit`; new code must not use it."""
+        return self.__db.session
+
+    @property
+    def tunnel(self) -> Any:
+        """Transitional accessor to the owned SSH tunnel, see :attr:`session`."""
+        return self.__db.tunnel
+
     def submit(
         self,
         fn: Callable[[Optional[Session]], Any],
@@ -72,14 +83,22 @@ class DatabaseController(QObject):
         on_success: Optional[Callable[[Any], None]] = None,
         on_error: Optional[Callable[[Exception], None]] = None,
     ) -> "Future":
-        return self.submit(lambda session: session.commit(), on_success, on_error)
+        def task(session: Optional[Session]) -> None:
+            assert session is not None
+            session.commit()
+
+        return self.submit(task, on_success, on_error)
 
     def rollback(
         self,
         on_success: Optional[Callable[[Any], None]] = None,
         on_error: Optional[Callable[[Exception], None]] = None,
     ) -> "Future":
-        return self.submit(lambda session: session.rollback(), on_success, on_error)
+        def task(session: Optional[Session]) -> None:
+            assert session is not None
+            session.rollback()
+
+        return self.submit(task, on_success, on_error)
 
     def shutdown(self) -> None:
         self.__db.shutdown(wait=False)

@@ -20,10 +20,6 @@ from memmer.utils import (
 )
 from memmer.gui import MemmerWidget, FormValidator, Issue, error, warning
 
-from sqlalchemy.orm import Session
-
-from sshtunnel import SSHTunnelForwarder
-
 
 def db_backend_idx_to_type(idx: int) -> DBBackend:
     if idx == 0:
@@ -66,7 +62,7 @@ def connect_type_to_index(connect_type: ConnectType) -> int:
 
 
 class ConnectWidget(MemmerWidget, Ui_ConnectWidget):
-    connected = Signal(Session, SSHTunnelForwarder)
+    connected = Signal()
 
     @property
     def connection_parameter(self) -> ConnectionParameter:
@@ -368,26 +364,25 @@ class ConnectWidget(MemmerWidget, Ui_ConnectWidget):
 
         self.status_changed.emit(self.tr("Connecting…"))
 
-        def perform_connection():
-            try:
-                session, ssh_tunnel = connect(
-                    params=self.connection_parameter, enable_sql_echo=False
-                )
+        # Read the parameters on the GUI thread; the connection itself is
+        # established on the DB thread by the controller.
+        params = self.connection_parameter
 
-                self.connected.emit(session, ssh_tunnel)
-            except Exception as error:
-                self.status_changed.emit(self.tr("Connection failed"))
+        def connector():
+            return connect(params=params, enable_sql_echo=False)
 
-                def show_error_msg(err=error):
-                    QMessageBox.critical(
-                        self,
-                        self.tr("Connection failed"),
-                        self.tr(
-                            "Establishing the connection to the database has failed. Reason given:\n{error}"
-                        ).format(error=err),
-                        buttons=QMessageBox.StandardButton.Ok,
-                    )
+        def on_success(_):
+            self.connected.emit()
 
-                self.run_in_gui_thread(show_error_msg)
+        def on_error(err):
+            self.status_changed.emit(self.tr("Connection failed"))
+            QMessageBox.critical(
+                self,
+                self.tr("Connection failed"),
+                self.tr(
+                    "Establishing the connection to the database has failed. Reason given:\n{error}"
+                ).format(error=err),
+                buttons=QMessageBox.StandardButton.Ok,
+            )
 
-        self.async_exec(perform_connection)
+        self.db().establish(connector, on_success=on_success, on_error=on_error)

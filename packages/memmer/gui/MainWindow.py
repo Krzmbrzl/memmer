@@ -23,7 +23,7 @@ from memmer.utils import (
     ConnectionParameter,
     DataManager,
 )
-from memmer.gui import MemmerWidget, MemberDialog, SessionDialog
+from memmer.gui import MemmerWidget, MemberDialog, SessionDialog, DatabaseController
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -44,6 +44,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.session: Optional[orm.Session] = None
         self.config: MemmerConfig = load_config()
         self.thread_pool = QThreadPool(self)
+        # Owns the DB session on a dedicated thread; all DB access is serialized
+        # through it. self.session stays as a transitional accessor for callers
+        # not yet migrated onto the controller.
+        self.db_controller = DatabaseController(self)
         self.data_manager = None
         self.__opened_widgets: Set[MemmerWidget] = set()
 
@@ -140,19 +144,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             self.statusbar.showMessage(self.tr("Ready"))
 
-    def __connection_established(
-        self, session: orm.Session, tunnel: Optional[SSHTunnelForwarder]
-    ):
-        if self.session:
-            self.session.rollback()
-            self.session.close()
+    def __connection_established(self):
+        # The session was created on the DB thread by the controller. Adopt
+        # transitional references for callers not yet migrated off self.session.
+        self.session = self.db_controller.session
+        self.ssh_tunnel = self.db_controller.tunnel
 
-        if self.ssh_tunnel:
-            self.ssh_tunnel.stop()
-
-        self.session = session
-        self.ssh_tunnel = tunnel
-
+        assert self.session is not None
         self.data_manager = DataManager(session=self.session)
 
         ConnectionParameter.to_config(

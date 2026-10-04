@@ -43,6 +43,14 @@ class MemmerBase:
 
         return parent.session
 
+    def db(self):
+        """The DatabaseController through which all DB access is serialized."""
+        controller = self.parent_mainwindow().db_controller
+
+        assert controller is not None
+
+        return controller
+
     def async_exec(self, runnable):
         parent = self.parent_mainwindow()
 
