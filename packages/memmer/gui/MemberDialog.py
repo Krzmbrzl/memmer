@@ -133,14 +133,21 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
 
         self.__connect_signals()
 
-        self.__init_state()
+        # Populating the widgets fires __fee_related_data_changed many times
+        # (every setDate/setChecked plus load()'s explicit emit). Block the
+        # dialog's own signals so the expensive fee recompute runs just once,
+        # after everything is in place, instead of piling redundant tasks onto
+        # the DB thread. The signal belongs to self, so blocking self covers
+        # both the widget-handler emits and the explicit ones.
+        with QSignalBlocker(self):
+            self.__init_state()
 
-        # After initialization so that it doesn't count as user input
-        self.__setup_validation()
+            # After initialization so that it doesn't count as user input
+            self.__setup_validation()
 
-        if self.member is not None:
-            # Make problems in existing data visible right away
-            self.validator.reveal_all()
+            if self.member is not None:
+                # Make problems in existing data visible right away
+                self.validator.reveal_all()
 
         self.__fee_related_data_changed.emit()
 
