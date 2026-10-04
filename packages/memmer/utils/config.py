@@ -84,6 +84,26 @@ class MemmerConfig:
 default_config_path: Path = Path.joinpath(Path.home(), ".memmer_config.json")
 
 
+def migrate_config(config: MemmerConfig, config_json: dict) -> MemmerConfig:
+    """Converts a config loaded from a legacy file to the current format.
+
+    Only parameters that can be mapped unambiguously are carried over; the rest
+    retain their defaults and are (re-)written in the current format on save."""
+    # Legacy configs predate the dedicated SSH host field and stored the SSH
+    # server address in the DB host field, implicitly reaching the database at
+    # 127.0.0.1 on the remote end.
+    legacy_ssh_host = (
+        config.connect_type == ConnectType.SSH_TUNNEL
+        and ConfigKey.SSH_HOST.value not in config_json
+        and config.db_host is not None
+    )
+    if legacy_ssh_host:
+        config.ssh_host = config.db_host
+        config.db_host = "127.0.0.1"
+
+    return config
+
+
 def load_config(config_path: Path = default_config_path) -> MemmerConfig:
     if not Path.is_file(config_path):
         return MemmerConfig()
@@ -118,7 +138,7 @@ def load_config(config_path: Path = default_config_path) -> MemmerConfig:
         else:
             config[key] = None
 
-    return config
+    return migrate_config(config, config_json)
 
 
 def save_config(config: MemmerConfig, config_path: Path = default_config_path):
