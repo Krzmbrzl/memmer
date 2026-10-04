@@ -150,8 +150,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.session = self.db_controller.session
         self.ssh_tunnel = self.db_controller.tunnel
 
-        assert self.session is not None
-        self.data_manager = DataManager(session=self.session)
+        self.data_manager = DataManager(controller=self.db_controller)
 
         ConnectionParameter.to_config(
             self.connect_page.connection_parameter, self.config

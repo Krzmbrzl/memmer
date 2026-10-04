@@ -3,86 +3,64 @@
 # LICENSE file at the root of the source tree or at
 # <https://github.com/Krzmbrzl/memmer/blob/main/LICENSE>.
 
-from typing import List
+from typing import List, Optional, Tuple
 
-from concurrent.futures import ThreadPoolExecutor
-
-from memmer import (
-    AdmissionFeeKey,
-    BasicFeeAdultsKey,
-    BasicFeeYouthsKey,
-    BasicFeeTrainersKey,
-)
-from memmer.orm import Member, Session, FixedCost, FeeOverride
+from memmer.orm import Member, Session
 
 from sqlalchemy import select
-from sqlalchemy import orm
 from sqlalchemy.orm import subqueryload
 
 
 class DataManager:
-    def __init__(self, session: orm.Session):
-        self.sql_session = session
+    """Holds detached snapshots of all members and sessions.
 
-        self.__members: List[Member] = []
-        self.__sessions: List[Session] = []
+    Everything is loaded in a single task on the DB thread, with the
+    relationships the GUI reads eager-loaded, and then expunged. The GUI thus
+    only ever touches detached ORM instances and can never trigger a lazy load
+    (and therefore a query) on its own thread.
 
-        self.executor = ThreadPoolExecutor(max_workers=1)
+    ``controller`` is anything exposing ``submit(fn) -> Future`` that runs
+    ``fn(session)`` on the DB thread (the DatabaseController)."""
 
-        self.member_fetcher = self.executor.submit(self.__fetch_members)
-        self.session_fetcher = self.executor.submit(self.__fetch_sessions)
-        self.executor.submit(self.__fetch_session_participations)
-        self.executor.submit(self.__fetch_one_time_fees)
-        self.executor.submit(self.__fetch_session_trainers)
-        self.executor.submit(self.__fetch_fixed_costs)
+    def __init__(self, controller):
+        self.__members: Optional[List[Member]] = None
+        self.__sessions: Optional[List[Session]] = None
+
+        # Kicks off the load on the DB thread right away; the result is awaited
+        # lazily on first access.
+        self.__future = controller.submit(DataManager.__load)
 
     @property
     def members(self) -> List[Member]:
-        self.member_fetcher.result()
-
+        self.__ensure_loaded()
+        assert self.__members is not None
         return self.__members
 
     @property
     def sessions(self) -> List[Session]:
-        self.session_fetcher.result()
-
+        self.__ensure_loaded()
+        assert self.__sessions is not None
         return self.__sessions
 
-    def __fetch_members(self):
-        self.__members = list(self.sql_session.scalars(select(Member)).all())
+    def __ensure_loaded(self) -> None:
+        if self.__members is None:
+            self.__members, self.__sessions = self.__future.result()
 
-    def __fetch_sessions(self):
-        self.__sessions = list(self.sql_session.scalars(select(Session)).all())
-
-    def __fetch_one_time_fees(self):
-        self.sql_session.scalars(
-            select(Member).options(subqueryload(Member.one_time_fees))
+    @staticmethod
+    def __load(session) -> Tuple[List[Member], List[Session]]:
+        members = session.scalars(
+            select(Member)
+            .options(subqueryload(Member.one_time_fees))
+            .options(subqueryload(Member.participating_sessions))
+            .options(subqueryload(Member.trained_sessions))
+        ).all()
+        sessions = session.scalars(
+            select(Session)
+            .options(subqueryload(Session.members))
+            .options(subqueryload(Session.trainers))
         ).all()
 
-    def __fetch_session_participations(self):
-        self.sql_session.scalars(
-            select(Member).options(subqueryload(Member.participating_sessions))
-        ).all()
-        self.sql_session.scalars(
-            select(Session).options(subqueryload(Session.members))
-        ).all()
+        # Detach everything so the GUI holds snapshots, not live objects.
+        session.expunge_all()
 
-    def __fetch_session_trainers(self):
-        self.sql_session.scalars(
-            select(Member).options(subqueryload(Member.trained_sessions))
-        ).all()
-        self.sql_session.scalars(
-            select(Session).options(subqueryload(Session.trainers))
-        ).all()
-
-    def __fetch_fixed_costs(self):
-        for key in [
-            AdmissionFeeKey,
-            BasicFeeAdultsKey,
-            BasicFeeYouthsKey,
-            BasicFeeTrainersKey,
-        ]:
-            self.sql_session.scalars(
-                select(FixedCost).where(FixedCost.name == key)
-            ).one()
-
+        return (list(members), list(sessions))
