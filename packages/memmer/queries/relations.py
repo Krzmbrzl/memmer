@@ -48,9 +48,12 @@ def get_relatives(session: Session, member: Member) -> List[Member]:
         assert first != None
         assert second != None
 
-        if member != first and not first in relatedMembers:
+        # Compare by id, not identity: `member` may be a detached instance from
+        # a different session than the ones queried here, so `==` (identity)
+        # would fail to recognise the member itself and leak it into the result.
+        if member.id != first.id and not first in relatedMembers:
             relatedMembers.append(first)
-        if member != second and not second in relatedMembers:
+        if member.id != second.id and not second in relatedMembers:
             relatedMembers.append(second)
 
     # Also consider dummy relatives added directly to Member instances
