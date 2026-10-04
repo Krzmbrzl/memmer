@@ -1082,6 +1082,11 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             text = text.strip()
             return text if len(text) > 0 else None
 
+        # Without a mandate the account details must not be persisted: the
+        # fields are only disabled (not cleared) when the mandate is removed, so
+        # reading them unconditionally would keep stale bank data on the member.
+        mandate_given = self.sepa_mandate_checkbox.isChecked()
+
         scalars = {
             "gender": Gender(value=self.gender_combo.currentIndex()),
             "first_name": self.first_name_edit.text().strip(),
@@ -1101,13 +1106,21 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
                 else None
             ),
             "sepa_mandate_date": (
-                self.sepa_mandate_date_edit.date().toPython()
-                if self.sepa_mandate_checkbox.isChecked()
+                self.sepa_mandate_date_edit.date().toPython() if mandate_given else None
+            ),
+            "iban": (
+                or_none(normalize_iban(self.iban_edit.text()))
+                if mandate_given
                 else None
             ),
-            "iban": or_none(normalize_iban(self.iban_edit.text())),
-            "bic": (self.bic_edit.text().strip().upper() or None),
-            "account_owner": or_none(self.account_owner_edit.text()),
+            "bic": (
+                (self.bic_edit.text().strip().upper() or None)
+                if mandate_given
+                else None
+            ),
+            "account_owner": (
+                or_none(self.account_owner_edit.text()) if mandate_given else None
+            ),
         }
 
         fee_override = (
