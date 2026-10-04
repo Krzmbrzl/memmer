@@ -90,3 +90,35 @@ class SessionModel(QAbstractTableModel):
             return None
 
         return self.sessions[row]
+
+    def row_for(self, session: Session) -> Optional[int]:
+        """The row showing ``session``, or None if it isn't shown"""
+        for row, current in enumerate(self.sessions):
+            if current.id == session.id:
+                return row
+        return None
+
+    def session_updated(self, session: Session) -> None:
+        """Repaints the row of a session whose data changed in place"""
+        row = self.row_for(session)
+        if row is None:
+            return
+        self.dataChanged.emit(
+            self.index(row, 0), self.index(row, self.columnCount() - 1)
+        )
+
+    def refresh_participant_counts(self) -> None:
+        """Repaints the participant column, e.g. after a member changed"""
+        if len(self.sessions) == 0:
+            return
+        self.dataChanged.emit(
+            self.index(0, SessionModel.Column.Participants),
+            self.index(len(self.sessions) - 1, SessionModel.Column.Participants),
+        )
+
+    def reload(self) -> None:
+        """Resets the rows from the (already updated) backing list.
+
+        Used after a session was added to or removed from the shared list."""
+        self.beginResetModel()
+        self.endResetModel()

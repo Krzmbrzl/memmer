@@ -32,6 +32,10 @@ class OverviewWidget(MemmerWidget, Ui_OverviewWidget):
 
         self.setupUi(self)
 
+        # The overview's source models, kept so the data signals can update them
+        self.__member_model: Optional[MemberModel] = None
+        self.__session_model: Optional[SessionModel] = None
+
         self.__connect_signals()
 
         self.__init_state()
@@ -56,9 +60,8 @@ class OverviewWidget(MemmerWidget, Ui_OverviewWidget):
                 ],
                 parent=self.member_table,
             )
-            member_proxy.setSourceModel(
-                MemberModel(self.members(), parent=self.member_table)
-            )
+            self.__member_model = MemberModel(self.members(), parent=self.member_table)
+            member_proxy.setSourceModel(self.__member_model)
 
             self.member_table.setModel(member_proxy)
 
@@ -80,9 +83,8 @@ class OverviewWidget(MemmerWidget, Ui_OverviewWidget):
                 ],
                 parent=self.member_table,
             )
-            session_proxy.setSourceModel(
-                SessionModel(self.sessions(), self.session_table)
-            )
+            self.__session_model = SessionModel(self.sessions(), self.session_table)
+            session_proxy.setSourceModel(self.__session_model)
 
             self.session_table.setModel(session_proxy)
 
@@ -98,6 +100,52 @@ class OverviewWidget(MemmerWidget, Ui_OverviewWidget):
             )
 
             self.session_filter.attach(session_proxy)
+
+            self.__connect_data_signals()
+
+    def __connect_data_signals(self):
+        """Keeps the tables in sync with member/session create/edit/delete.
+
+        The dialogs update the shared snapshot lists and emit these signals; the
+        overview only has to refresh the affected rows."""
+        window = self.parent_mainwindow()
+
+        window.member_created.connect(self.__member_created)
+        window.member_changed.connect(self.__member_changed)
+        window.member_deleted.connect(self.__member_deleted)
+
+        window.session_created.connect(self.__session_created)
+        window.session_changed.connect(self.__session_changed)
+        window.session_deleted.connect(self.__session_deleted)
+
+    def __member_created(self, _member: Member):
+        assert self.__member_model is not None and self.__session_model is not None
+        self.__member_model.reload()
+        # A new member may already participate in sessions
+        self.__session_model.refresh_participant_counts()
+
+    def __member_changed(self, member: Member):
+        assert self.__member_model is not None and self.__session_model is not None
+        self.__member_model.member_updated(member)
+        # Sessions, activity or participation may have changed
+        self.__session_model.refresh_participant_counts()
+
+    def __member_deleted(self, _member: Member):
+        assert self.__member_model is not None and self.__session_model is not None
+        self.__member_model.reload()
+        self.__session_model.refresh_participant_counts()
+
+    def __session_created(self, _session: Session):
+        assert self.__session_model is not None
+        self.__session_model.reload()
+
+    def __session_changed(self, session: Session):
+        assert self.__session_model is not None
+        self.__session_model.session_updated(session)
+
+    def __session_deleted(self, _session: Session):
+        assert self.__session_model is not None
+        self.__session_model.reload()
 
     def __member_activated(self, index: QModelIndex | QPersistentModelIndex):
         model = index.model()

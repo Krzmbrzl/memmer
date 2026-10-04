@@ -140,6 +140,32 @@ class MemberModel(QAbstractTableModel):
     def get_members(self) -> List[Member]:
         return [self.members[x] for x in self.active]
 
+    def row_for(self, member: Member) -> Optional[int]:
+        """The display row showing ``member``, or None if it isn't shown"""
+        for row, src in enumerate(self.active):
+            if self.members[src].id == member.id:
+                return row
+        return None
+
+    def member_updated(self, member: Member) -> None:
+        """Repaints the row of a member whose data changed in place"""
+        row = self.row_for(member)
+        if row is None:
+            return
+        self.dataChanged.emit(
+            self.index(row, 0), self.index(row, self.columnCount() - 1)
+        )
+
+    def reload(self) -> None:
+        """Rebuilds the rows from the (already updated) backing list.
+
+        For models that show the whole list, such as the overview. Used after a
+        member was added to or removed from the shared list, where the positional
+        active indices can't be patched incrementally."""
+        self.beginResetModel()
+        self.active = list(range(len(self.members)))
+        self.endResetModel()
+
     def make_active(
         self, member: Optional[Member] = None, member_id: Optional[int] = None
     ):
