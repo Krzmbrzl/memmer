@@ -60,9 +60,10 @@ class SSHTunnelParameter:
             params.key = config.ssh_key
         if config.ssh_use_agent is not None:
             params.use_agent = config.ssh_use_agent
+        if config.db_host is not None:
+            params.remote_address = config.db_host
         if config.db_port is not None:
             params.remote_port = config.db_port
-        # No way to set the remote address for now
 
         return params
 
