@@ -315,6 +315,10 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
         def on_deleted(_):
             if session in self.sessions():
                 self.sessions().remove(session)
+            # Detach the members from the deleted session's snapshot so their
+            # participating_sessions stay consistent (back_populates).
+            session.members = []
+            session.trainers = []
             self.parent_mainwindow().session_deleted.emit(session)
             self.accept()
 

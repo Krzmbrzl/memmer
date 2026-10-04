@@ -1044,6 +1044,11 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         def on_deleted(_):
             if member in self.members():
                 self.members().remove(member)
+            # Drop the member from the sessions' in-memory snapshots so their
+            # participant counts no longer include it (back_populates updates
+            # Session.members).
+            member.participating_sessions = []
+            member.trained_sessions = []
             self.parent_mainwindow().member_deleted.emit(member)
             self.accept()
 
