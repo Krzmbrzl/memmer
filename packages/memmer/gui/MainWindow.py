@@ -74,6 +74,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             lambda: self.__switch_to(self.main_menu)
         )
         self.tally_page.status_changed.connect(self.__status_update)
+        # Block starting edits while a tally is being created.
+        self.tally_page.busy_changed.connect(
+            lambda busy: self.menu_new.setEnabled(not busy)
+        )
 
         self.overview_page.main_menu_requested.connect(
             lambda: self.__switch_to(self.main_menu)

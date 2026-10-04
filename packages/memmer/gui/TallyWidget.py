@@ -12,6 +12,7 @@ from PySide6.QtWidgets import QMessageBox
 
 from memmer.gui import MemmerWidget, FormValidator, Issue, error
 from memmer.queries import create_tally
+from memmer.utils import has_uncommitted_changes
 
 import datetime
 import os
@@ -25,8 +26,17 @@ def _to_qdate(date: datetime.date) -> QDate:
     return QDate(date.year, date.month, date.day)
 
 
+class _PendingChangesError(RuntimeError):
+    """Raised when a tally is attempted while the session has uncommitted
+    changes, which must be committed first so the tally's own changes are the
+    only thing a failure could roll back."""
+
+
 class TallyWidget(MemmerWidget, Ui_TallyWidget):
     main_menu_requested = Signal()
+    # Emitted while a tally is being created so the main window can block
+    # editing (no other change may be staged during the atomic tally task).
+    busy_changed = Signal(bool)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -145,30 +155,86 @@ class TallyWidget(MemmerWidget, Ui_TallyWidget):
         output_dir = self.out_dir_input.path.strip()
         self.config().tally_dir = output_dir
 
-        def create_impl():
+        self.__run_tally(output_dir, collection_date)
+
+    def __set_busy(self, busy: bool):
+        self.create_button.setEnabled(not busy)
+        self.back_button.setEnabled(not busy)
+        self.busy_changed.emit(busy)
+
+    def __run_tally(self, output_dir: str, collection_date: datetime.date):
+        self.__set_busy(True)
+        self.status_changed.emit(self.tr("Creating tally…"))
+
+        def tally_task(session):
+            assert session is not None
+            # The tally archives one-time fees; require a clean session so that
+            # a rollback on failure can only ever discard the tally's own
+            # changes, never unrelated unsaved edits.
+            if has_uncommitted_changes(session):
+                raise _PendingChangesError()
             try:
                 create_tally(
-                    self.sql_session(),
-                    output_dir=output_dir,
-                    collection_date=collection_date,
+                    session, output_dir=output_dir, collection_date=collection_date
                 )
-            except Exception as e:
-                self.status_changed.emit(self.tr("Creating the tally failed"))
+                # Commit so the written file and the fee archiving are durable
+                # together.
+                session.commit()
+            except Exception:
+                session.rollback()
+                raise
 
-                def show_error(err=e):
-                    QMessageBox.critical(
-                        self,
-                        self.tr("Creating the tally failed"),
-                        self.tr(
-                            "The tally could not be created. Reason given:\n{error}"
-                        ).format(error=err),
-                    )
-
-                self.run_in_gui_thread(show_error)
-                return
-
+        def on_success(_):
+            self.__set_busy(False)
             self.status_changed.emit(self.tr("Tally created"))
 
-        self.async_exec(create_impl)
+        def on_error(error):
+            self.__set_busy(False)
+            if isinstance(error, _PendingChangesError):
+                self.status_changed.emit(self.tr("Commit required"))
+                answer = QMessageBox.question(
+                    self,
+                    self.tr("Unsaved changes"),
+                    self.tr(
+                        "There are unsaved changes. They must be committed before a "
+                        "tally can be created. Commit them now and create the tally?"
+                    ),
+                    buttons=QMessageBox.StandardButton.Yes
+                    | QMessageBox.StandardButton.No,
+                )
+                if answer == QMessageBox.StandardButton.Yes:
+                    self.__commit_then_tally(output_dir, collection_date)
+                else:
+                    self.status_changed.emit(self.tr("Tally cancelled"))
+                return
 
-        self.status_changed.emit(self.tr("Creating tally…"))
+            self.status_changed.emit(self.tr("Creating the tally failed"))
+            QMessageBox.critical(
+                self,
+                self.tr("Creating the tally failed"),
+                self.tr(
+                    "The tally could not be created. Reason given:\n{error}"
+                ).format(error=error),
+            )
+
+        self.db().submit(tally_task, on_success=on_success, on_error=on_error)
+
+    def __commit_then_tally(self, output_dir: str, collection_date: datetime.date):
+        self.__set_busy(True)
+        self.status_changed.emit(self.tr("Committing changes…"))
+
+        def on_error(error):
+            self.__set_busy(False)
+            self.status_changed.emit(self.tr("Commit failed"))
+            QMessageBox.critical(
+                self,
+                self.tr("Commit failed"),
+                self.tr(
+                    "The changes could not be committed. Reason given:\n{error}"
+                ).format(error=error),
+            )
+
+        self.db().commit(
+            on_success=lambda _: self.__run_tally(output_dir, collection_date),
+            on_error=on_error,
+        )
