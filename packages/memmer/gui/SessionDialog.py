@@ -279,6 +279,13 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
             _member_model(self.remaining_member_table).make_inactive(member)
             _member_model(self.session_member_table).make_active(member)
 
+    def __show_db_error(self, error: Exception):
+        QMessageBox.critical(
+            self,
+            self.tr("Database error"),
+            self.tr("The operation failed. Reason given:\n{error}").format(error=error),
+        )
+
     def __delete_triggered(self):
         if not self.session:
             return
@@ -294,64 +301,117 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
         if button != QMessageBox.StandardButton.Yes:
             return
 
-        self.parent_mainwindow().session_about_to_be_deleted.emit(self.session)
+        session = self.session
+        self.parent_mainwindow().session_about_to_be_deleted.emit(session)
 
-        self.sessions().remove(self.session)
-        self.sql_session().delete(self.session)
+        session_id = session.id
 
-        self.parent_mainwindow().session_deleted.emit(self.session)
+        def delete_task(sql_session):
+            assert sql_session is not None
+            stored = sql_session.get(Session, session_id)
+            if stored is not None:
+                sql_session.delete(stored)
 
-        self.accept()
+        def on_deleted(_):
+            if session in self.sessions():
+                self.sessions().remove(session)
+            self.parent_mainwindow().session_deleted.emit(session)
+            self.accept()
+
+        self.db().submit(
+            delete_task, on_success=on_deleted, on_error=self.__show_db_error
+        )
 
     def __save_triggered(self):
         if not self.validator.validate():
             return
 
-        created_session = False
-        if not self.session:
-            self.session = Session()
-            created_session = True
-
-        changed = False
+        created_session = self.session is None
+        session_id = self.session.id if self.session is not None else None
 
         set_name = self.name_edit.text().strip()
-        if self.session.name != set_name:
-            self.session.name = set_name
-            changed = True
-
-        if self.fixed_fee_button.isChecked():
-            if self.session.membership_fee is None:
-                # TODO: Delete hourly fee
-                pass
-
-            set_fee = Decimal(f"{self.fixed_fee_edit.value():.2f}")
-            if self.session.membership_fee != set_fee:
-                self.session.membership_fee = set_fee
-                changed = True
-        else:
-            assert self.hourly_fee_button.isChecked()
-            # TODO
+        fixed_fee = self.fixed_fee_button.isChecked()
+        set_fee = Decimal(f"{self.fixed_fee_edit.value():.2f}") if fixed_fee else None
 
         trainer_model = self.trainer_table.model()
         assert isinstance(trainer_model, MemberModel)
         set_trainers = trainer_model.get_members()
-        if set(set_trainers) != set(self.session.trainers):
-            self.session.trainers = set_trainers
-            changed = True
+        trainer_ids = [m.id for m in set_trainers]
 
         session_member_model = self.session_member_table.model()
         assert isinstance(session_member_model, MemberModel)
         set_participants = session_member_model.get_members()
-        if set(set_participants) != set(self.session.members):
-            self.session.members = set_participants
-            changed = True
+        participant_ids = [m.id for m in set_participants]
 
-        if created_session:
-            self.sessions().append(self.session)
+        current = self.session
+        if created_session or current is None:
+            name_changed = fee_changed = trainers_changed = participants_changed = True
+        else:
+            name_changed = current.name != set_name
+            fee_changed = fixed_fee and current.membership_fee != set_fee
+            trainers_changed = {m.id for m in current.trainers} != set(trainer_ids)
+            participants_changed = {m.id for m in current.members} != set(
+                participant_ids
+            )
 
-            self.sql_session().add(self.session)
-            self.parent_mainwindow().session_created.emit(self.session)
-        elif changed:
-            self.parent_mainwindow().session_changed.emit(self.session)
+        changed = (
+            created_session
+            or name_changed
+            or fee_changed
+            or trainers_changed
+            or participants_changed
+        )
 
-        self.accept()
+        def save_task(sql_session):
+            assert sql_session is not None
+            if session_id is None:
+                session = Session()
+                sql_session.add(session)
+            else:
+                session = sql_session.get(Session, session_id)
+                assert session is not None
+
+            session.name = set_name
+            if set_fee is not None:
+                session.membership_fee = set_fee
+
+            sql_session.flush()
+
+            if trainers_changed:
+                session.trainers = [sql_session.get(Member, mid) for mid in trainer_ids]
+            if participants_changed:
+                session.members = [
+                    sql_session.get(Member, mid) for mid in participant_ids
+                ]
+
+            sql_session.flush()
+            return session.id
+
+        def on_saved(new_id: int):
+            # Update the detached snapshot in place, reusing the shared Member
+            # instances so identity stays consistent across snapshots.
+            if created_session:
+                snapshot = Session()
+                snapshot.id = new_id
+                snapshot.name = set_name
+                if set_fee is not None:
+                    snapshot.membership_fee = set_fee
+                snapshot.trainers = set_trainers
+                snapshot.members = set_participants
+                self.sessions().append(snapshot)
+                self.session = snapshot
+                self.parent_mainwindow().session_created.emit(snapshot)
+            else:
+                assert current is not None
+                current.name = set_name
+                if set_fee is not None:
+                    current.membership_fee = set_fee
+                if trainers_changed:
+                    current.trainers = set_trainers
+                if participants_changed:
+                    current.members = set_participants
+                if changed:
+                    self.parent_mainwindow().session_changed.emit(current)
+            self.accept()
+
+        self.db().submit(save_task, on_success=on_saved, on_error=self.__show_db_error)
