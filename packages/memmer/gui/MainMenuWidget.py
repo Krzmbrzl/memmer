@@ -6,6 +6,7 @@
 from .compiled_ui_files.ui_MainMenuWidget import Ui_MainMenuWidget
 
 from PySide6.QtCore import Signal
+from PySide6.QtWidgets import QMessageBox
 
 from memmer.gui import MemmerWidget
 
@@ -38,7 +39,21 @@ class MainMenuWidget(MemmerWidget, Ui_MainMenuWidget):
 
     def __commit_changes(self):
         self.status_changed.emit(self.tr("Committing changes…"))
+        self.commit_button.setEnabled(False)
 
-        self.sql_session().commit()
+        def on_success(_):
+            self.commit_button.setEnabled(True)
+            self.status_changed.emit(self.tr("Changes committed"))
 
-        self.status_changed.emit(self.tr("Changes committed"))
+        def on_error(error):
+            self.commit_button.setEnabled(True)
+            self.status_changed.emit(self.tr("Commit failed"))
+            QMessageBox.critical(
+                self,
+                self.tr("Commit failed"),
+                self.tr(
+                    "The changes could not be committed. Reason given:\n{error}"
+                ).format(error=error),
+            )
+
+        self.db().commit(on_success=on_success, on_error=on_error)

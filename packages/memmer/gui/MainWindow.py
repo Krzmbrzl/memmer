@@ -163,9 +163,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.menu_new.setEnabled(True)
 
     def __disconnect(self):
-        if self.session:
-            if has_uncommitted_changes(self.session):
-                # There are uncommitted changes
+        if self.session is None:
+            self.__finish_disconnect()
+            return
+
+        def check(session):
+            return session is not None and has_uncommitted_changes(session)
+
+        def decide(has_changes: bool):
+            commit = False
+            if has_changes:
                 answer = QMessageBox.question(
                     self,
                     self.tr("Uncommitted changes"),
@@ -173,22 +180,40 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     buttons=QMessageBox.StandardButton.Yes
                     | QMessageBox.StandardButton.No,
                 )
+                commit = answer == QMessageBox.StandardButton.Yes
 
-                if answer == QMessageBox.StandardButton.Yes:
-                    self.__status_update(self.tr("Committing changes…"))
+            if commit:
+                self.__status_update(self.tr("Committing changes…"))
 
-                    self.session.commit()
+            # teardown commits or rolls back, then closes the session and the
+            # tunnel, all on the DB thread.
+            self.db_controller.teardown(
+                commit,
+                on_success=lambda _: self.__finish_disconnect(committed=commit),
+                on_error=self.__disconnect_failed,
+            )
 
-                    self.__status_update(self.tr("Changes committed"))
-                else:
-                    self.session.rollback()
+        self.db_controller.submit(
+            check, on_success=decide, on_error=self.__disconnect_failed
+        )
 
-            self.session.close()
-            self.session = None
+    def __disconnect_failed(self, error: Exception):
+        self.__status_update(self.tr("Disconnecting failed"))
+        QMessageBox.critical(
+            self,
+            self.tr("Disconnecting failed"),
+            self.tr("The database operation failed. Reason given:\n{error}").format(
+                error=error
+            ),
+        )
 
-        if self.ssh_tunnel:
-            self.ssh_tunnel.stop()
-            self.ssh_tunnel = None
+    def __finish_disconnect(self, committed: bool = False):
+        self.session = None
+        self.ssh_tunnel = None
+        self.data_manager = None
+
+        if committed:
+            self.__status_update(self.tr("Changes committed"))
 
         save_config(self.config)
 
