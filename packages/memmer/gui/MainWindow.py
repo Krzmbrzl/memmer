@@ -5,9 +5,9 @@
 
 from .compiled_ui_files.ui_MainWindow import Ui_MainWindow
 
-from typing import Optional, Set
+from typing import Callable, Optional, Set
 
-from PySide6.QtWidgets import QMainWindow, QMessageBox
+from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
 from PySide6.QtCore import Signal
 
 from memmer.orm import Member, Session
@@ -42,6 +42,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.db_controller = DatabaseController(self)
         self.data_manager = None
         self.__connected = False
+        self.__shutting_down = False
         self.__opened_widgets: Set[MemmerWidget] = set()
 
         self.__connect_signals()
@@ -156,9 +157,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.menu_new.setEnabled(True)
 
-    def __disconnect(self):
+    def __disconnect(self, on_done: Optional[Callable[[], None]] = None):
         if not self.__connected:
             self.__finish_disconnect()
+            if on_done is not None:
+                on_done()
             return
 
         def check(session):
@@ -179,11 +182,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if commit:
                 self.__status_update(self.tr("Committing changes…"))
 
+            def finished(_):
+                self.__finish_disconnect(committed=commit)
+                if on_done is not None:
+                    on_done()
+
             # teardown commits or rolls back, then closes the session and the
             # tunnel, all on the DB thread.
             self.db_controller.teardown(
                 commit,
-                on_success=lambda _: self.__finish_disconnect(committed=commit),
+                on_success=finished,
                 on_error=self.__disconnect_failed,
             )
 
@@ -192,6 +200,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         )
 
     def __disconnect_failed(self, error: Exception):
+        # Allow another close attempt if the shutdown-triggered disconnect failed.
+        self.__shutting_down = False
         self.__status_update(self.tr("Disconnecting failed"))
         QMessageBox.critical(
             self,
@@ -217,6 +227,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.menu_new.setEnabled(False)
 
     def closeEvent(self, event):
-        self.__disconnect()
+        # Disconnecting (and the optional commit) runs asynchronously on the DB
+        # thread and may show a modal dialog. Closing the window right away would
+        # drop that pending work and, because the modal dialog re-enters the
+        # event loop, leave "quit on last window closed" unable to fire — so the
+        # process would keep running with no window. Keep the window open until
+        # the shutdown finished, then quit explicitly.
+        if self.__shutting_down:
+            super().closeEvent(event)
+            return
 
-        super().closeEvent(event)
+        self.__shutting_down = True
+        event.ignore()
+        self.__disconnect(on_done=self.__quit)
+
+    def __quit(self):
+        self.db_controller.shutdown()
+        QApplication.quit()
