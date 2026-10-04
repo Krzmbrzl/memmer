@@ -84,6 +84,8 @@ class SessionParticipationModel(SessionModel):
             True if value == Qt.CheckState.Checked.value else False
         )
 
+        self.dataChanged.emit(idx, idx, [Qt.ItemDataRole.CheckStateRole])
+
         return True
 
     def get_participated_sessions(self) -> List[Session]:

@@ -297,6 +297,11 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             self.__fee_overwrite_toggled
         )
 
+        # Toggling a session participation changes the base fee
+        self.sessions_table.model().dataChanged.connect(
+            lambda *_: self.__fee_related_data_changed.emit()
+        )
+
         self.relatives_table.activated.connect(self.__relative_activated)
         self.likely_relatives_table.activated.connect(self.__likely_relative_activated)
         self.potential_relatives_table.activated.connect(
