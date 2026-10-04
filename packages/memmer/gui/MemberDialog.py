@@ -814,6 +814,13 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             [s.id for s in self.member.trained_sessions] if self.member else []
         )
 
+        # The dummy below stays transient (no id) so its own fee is computed
+        # purely from the current, unsaved input instead of the stored state.
+        # The discount tie-break, however, must rank this member as its
+        # persisted self, so pass the real id separately (None for a member
+        # that hasn't been saved yet).
+        member_id = self.member.id if self.member else None
+
         relatives_model = self.relatives_table.model()
         assert isinstance(relatives_model, MemberModel)
         # `relatives` is a plain attribute (not an ORM relationship), so the
@@ -844,7 +851,10 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
                 target_date=target_date,
             )
             discount = compute_discount(
-                session=session, member=dummy, target_date=target_date
+                session=session,
+                member=dummy,
+                target_date=target_date,
+                member_id=member_id,
             )
             return (fee, discount)
 

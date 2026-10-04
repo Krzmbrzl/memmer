@@ -34,6 +34,7 @@ from memmer.queries import (
     get_fixed_cost,
     compute_monthly_fee,
     compute_total_fee,
+    compute_discount,
 )
 from memmer import (
     AdmissionFeeKey,
@@ -263,6 +264,51 @@ class TestOperations(unittest.TestCase):
             self.assertEqual(
                 family_total,
                 2 * (adult_base_fee + 16) + 2 * Decimal("0.5") * (youth_base_fee + 16),
+            )
+
+    def make_transient(self, session, member):
+        """A transient stand-in for a persisted member, mimicking the unsaved
+        copy the GUI previews: same relevant inputs, but no id of its own."""
+        dummy = Member()
+        dummy.birthday = member.birthday
+        dummy.entry_date = member.entry_date
+        dummy.is_honorary_member = member.is_honorary_member
+        dummy.participating_sessions = list(member.participating_sessions)
+        dummy.trained_sessions = list(member.trained_sessions)
+        dummy.relatives = get_relatives(session, member)
+        self.assertIsNone(dummy.id)
+        return dummy
+
+    def test_discount_with_transient_member(self):
+        # The GUI previews a member's fee via a transient (unsaved) Member whose
+        # own id is None, passing the real id separately for the tie-break. Sally
+        # and Sam are siblings with equal (base youth) fees, so they tie for the
+        # most expensive; exactly one has to pay fully.
+        with self.Session() as session:
+            sally, sam, _, _, _ = get_users(session)
+
+            sally_discount = compute_discount(
+                session, self.make_transient(session, sally), datetime.date.today(), sally.id
+            )
+            sam_discount = compute_discount(
+                session, self.make_transient(session, sam), datetime.date.today(), sam.id
+            )
+
+            # The preview must match the persisted computation: exactly one pays
+            # fully and both views agree on which one.
+            self.assertEqual({sally_discount, sam_discount}, {Decimal(1), Decimal("0.5")})
+            paid_full = sally if sally_discount == Decimal(1) else sam
+            self.assertEqual(
+                compute_monthly_fee(session, paid_full),
+                get_fixed_cost(session, BasicFeeYouthsKey),
+            )
+
+            # A brand-new member (no id yet) yields to the persisted sibling.
+            new_member = self.make_transient(session, sally)
+            new_member.relatives = [sally]
+            self.assertEqual(
+                compute_discount(session, new_member, datetime.date.today()),
+                Decimal("0.5"),
             )
 
     def test_total_fee_calculation(self):

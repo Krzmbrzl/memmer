@@ -3,7 +3,7 @@
 # LICENSE file at the root of the source tree or at
 # <https://github.com/Krzmbrzl/memmer/blob/main/LICENSE>.
 
-from typing import List
+from typing import List, Optional
 
 from decimal import Decimal
 from datetime import date, datetime
@@ -27,9 +27,18 @@ def delete_all(collection, indices):
 
 
 def compute_discount(
-    session: Session, member: morm.Member, target_date: date
+    session: Session,
+    member: morm.Member,
+    target_date: date,
+    member_id: Optional[int] = None,
 ) -> Decimal:
-    """Computes a discount factor that has to be applied to the given member's fee"""
+    """Computes a discount factor that has to be applied to the given member's fee.
+
+    ``member`` may be a transient stand-in for a persisted member (e.g. the
+    unsaved member the GUI previews), whose own ``id`` isn't populated. Pass
+    ``member_id`` so the tie-break ranks it as its persisted self; it defaults
+    to ``member.id`` for ordinary, persisted members.
+    """
     relatives = get_relatives(session=session, member=member)
 
     relatives = [x for x in relatives if is_active(x, target_date)]
@@ -59,6 +68,19 @@ def compute_discount(
     member_index = len(relatives) - 1
     assert relatives[member_index] == member
 
+    effective_member_id = member.id if member_id is None else member_id
+
+    def tie_break_id(index):
+        # Used only to deterministically pick a single member when several tie
+        # on fee. The member under evaluation is ranked by its real id (which
+        # for a transient preview member is supplied via ``member_id``). A
+        # missing id (a never-saved member) sorts after any persisted one, so
+        # None is never compared with an int.
+        current_id = (
+            effective_member_id if index == member_index else relatives[index].id
+        )
+        return (current_id is None, current_id if current_id is not None else 0)
+
     if len(adult_indices) >= 2 and len(child_indices) >= 2:
         # Family discount
         sorted_adults = sorted(adult_indices, key=lambda x: fees[x], reverse=True)
@@ -67,7 +89,7 @@ def compute_discount(
 
         overall = child_indices + sorted_adults
         overall = sorted(
-            overall, key=lambda x: (fees[x], relatives[x].id), reverse=True
+            overall, key=lambda x: (fees[x], *tie_break_id(x)), reverse=True
         )
 
         if member_index in overall:
@@ -94,7 +116,7 @@ def compute_discount(
             # There are multiple children paying the highest monthly fee
             # Only one of them has to pay fully
             filtered = [x for x in child_indices if fees[x] == child_fees[0]]
-            highest_paying = sorted(filtered, key=lambda x: relatives[x].id)[0]
+            highest_paying = sorted(filtered, key=tie_break_id)[0]
 
             if member_index != highest_paying:
                 return Decimal("0.5")
