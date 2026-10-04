@@ -179,6 +179,21 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         self.birthday_edit.setMaximumDate(today)
         self.sepa_mandate_date_edit.setMaximumDate(today)
 
+    def __relatives_of(self, member: Member) -> List[Member]:
+        """The member's relatives, as the shared detached snapshot instances.
+
+        The relation lookup runs on the DB thread and returns ids, which are
+        then resolved against self.members() so every Member the dialog handles
+        is the same detached instance (keeps identity checks consistent)."""
+
+        def fetch(session):
+            assert session is not None
+            return [r.id for r in get_relatives(session, member)]
+
+        ids = self.db().run_sync(fetch)
+        by_id = {m.id: m for m in self.members()}
+        return [by_id[i] for i in ids if i in by_id]
+
     def __create_models(self):
         self.sessions_table.setModel(
             SessionParticipationModel(
@@ -189,9 +204,7 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             SessionModel.Column.Name, QHeaderView.ResizeMode.Stretch
         )
 
-        relatives = (
-            get_relatives(self.sql_session(), self.member) if self.member else []
-        )
+        relatives = self.__relatives_of(self.member) if self.member else []
         self.relatives_table.setModel(
             MemberModel(
                 members=self.members(), active=relatives, parent=self.relatives_table
@@ -620,15 +633,17 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             self.entry_date_edit.setDate(QDateTime.currentDateTime().date())
 
             # Handle admission fee (if any)
-            fee = (
-                self.sql_session()
-                .scalars(select(FixedCost).where(FixedCost.name == AdmissionFeeKey))
-                .one_or_none()
-            )
-            if fee is not None:
+            def fetch_admission_fee(session):
+                fee = session.scalars(
+                    select(FixedCost).where(FixedCost.name == AdmissionFeeKey)
+                ).one_or_none()
+                return fee.cost if fee is not None else None
+
+            admission_fee = self.db().run_sync(fetch_admission_fee)
+            if admission_fee is not None:
                 model = self.one_time_fees_table.model()
                 assert isinstance(model, OneTimeFeeModel)
-                model.add_fee(reason=self.tr("Admission fee"), amount=fee.cost)
+                model.add_fee(reason=self.tr("Admission fee"), amount=admission_fee)
         else:
             self.load(self.member)
 
@@ -677,14 +692,16 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
                 self.bic_edit.setText(member.bic)
             self.account_owner_edit.setText(member.account_owner)
 
-        existing_fee_overwrite = (
-            self.sql_session()
-            .scalars(select(FeeOverride).where(FeeOverride.member_id == member.id))
-            .one_or_none()
-        )
-        if existing_fee_overwrite is not None:
+        def fetch_fee_override(session):
+            override = session.scalars(
+                select(FeeOverride).where(FeeOverride.member_id == member.id)
+            ).one_or_none()
+            return override.amount if override is not None else None
+
+        existing_override_amount = self.db().run_sync(fetch_fee_override)
+        if existing_override_amount is not None:
             self.monthly_fee_overwrite_checkbox.setChecked(True)
-            self.monthly_fee_edit.setValue(float(existing_fee_overwrite.amount))
+            self.monthly_fee_edit.setValue(float(existing_override_amount))
         else:
             self.monthly_fee_overwrite_checkbox.setChecked(False)
 
@@ -840,14 +857,23 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
                 and member.street_number == street_number
             )
 
-        likely_ids = set()
-        for candidate in candidates:
-            if is_likely(candidate):
-                likely_ids.add(candidate.id)
-                # Relatives of a likely relative are likely relatives, too
-                for relative in get_relatives(self.sql_session(), candidate):
-                    if relative in candidates:
-                        likely_ids.add(relative.id)
+        candidate_ids = {c.id for c in candidates}
+        base_likely = [c for c in candidates if is_likely(c)]
+
+        # Relatives of a likely relative are likely relatives, too. Resolve all
+        # the relations in a single DB-thread task (returns ids only).
+        def relatives_of_likely(session):
+            extra = set()
+            for candidate in base_likely:
+                extra.update(r.id for r in get_relatives(session, candidate))
+            return extra
+
+        likely_ids = {c.id for c in base_likely}
+        likely_ids.update(
+            rid
+            for rid in self.db().run_sync(relatives_of_likely)
+            if rid in candidate_ids
+        )
 
         for candidate in candidates:
             if candidate.id in likely_ids:

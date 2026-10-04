@@ -100,6 +100,16 @@ class DatabaseController(QObject):
 
         return self.submit(task, on_success, on_error)
 
+    def run_sync(self, fn: Callable[[Optional[Session]], Any]) -> Any:
+        """Runs ``fn(session)`` on the DB thread and blocks until it returns.
+
+        For small reads issued while building the UI; it serializes access
+        correctly (the DB thread owns the session) but blocks the caller, so it
+        must not be used for slow operations on the GUI thread. ``fn`` must
+        return detached values (plain data or expunged instances), never live
+        ORM objects."""
+        return self.__db.submit(fn).result()
+
     def shutdown(self) -> None:
         self.__db.shutdown(wait=False)
 
