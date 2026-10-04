@@ -741,9 +741,13 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
     def __exited_state_changed(self, enabled: bool):
         self.exit_date_edit.setEnabled(enabled)
 
-        if enabled and self.exit_date_edit.date() == default_date:
-            # Init to today
-            self.exit_date_edit.setDate(QDateTime.currentDateTime().date())
+        if enabled:
+            if self.exit_date_edit.date() == default_date:
+                # Init to today
+                self.exit_date_edit.setDate(QDateTime.currentDateTime().date())
+        else:
+            # Reset back to "not set"
+            self.exit_date_edit.setDate(default_date)
 
         self.__fee_related_data_changed.emit()
 
@@ -753,8 +757,12 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         self.account_owner_edit.setEnabled(given)
         self.__deduce_data_from_iban(self.iban_edit.text())
 
-        if given and self.sepa_mandate_date_edit.date() == default_date:
-            self.sepa_mandate_date_edit.setDate(QDateTime.currentDateTime().date())
+        if given:
+            if self.sepa_mandate_date_edit.date() == default_date:
+                self.sepa_mandate_date_edit.setDate(QDateTime.currentDateTime().date())
+        else:
+            # Reset back to "not set"
+            self.sepa_mandate_date_edit.setDate(default_date)
 
         if given and len(self.account_owner_edit.text().strip()) == 0:
             name = f"{self.first_name_edit.text().strip()} {self.last_name_edit.text().strip()}"
