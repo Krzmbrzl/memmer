@@ -798,6 +798,14 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             for s in participation_model.get_participated_sessions()
         ]
 
+        # Trainer status isn't editable here; it comes from the stored member.
+        # The fee only depends on whether any session is trained, but capture the
+        # ids (not the shared snapshots) and rebuild transient Sessions below, so
+        # attaching them can't back-populate any shared Session.trainers.
+        trained_session_ids = (
+            [s.id for s in self.member.trained_sessions] if self.member else []
+        )
+
         relatives_model = self.relatives_table.model()
         assert isinstance(relatives_model, MemberModel)
         # `relatives` is a plain attribute (not an ORM relationship), so the
@@ -818,6 +826,7 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             dummy.participating_sessions = [
                 Session(id=sid, membership_fee=fee) for sid, fee in session_specs
             ]
+            dummy.trained_sessions = [Session(id=sid) for sid in trained_session_ids]
             dummy.relatives = relatives  # type: ignore
 
             fee = compute_monthly_fee(
