@@ -278,6 +278,8 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             self.__potential_relative_activated
         )
 
+        self.tabWidget.currentChanged.connect(self.__tab_changed)
+
         # Runs on the GUI thread: it uses the shared SQLAlchemy session, which
         # is not thread-safe
         self.__fee_related_data_changed.connect(self.__recompute_monthly_fee)
@@ -800,6 +802,61 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         to_model.make_active(member_id=member_id)
 
         self.__fee_related_data_changed.emit()
+
+    def __tab_changed(self, index: int):
+        if self.tabWidget.widget(index) is self.relatives_tab:
+            self.__update_likely_relatives()
+
+    def __current_city(self) -> str:
+        if self.city_selection_stack.currentWidget() == self.city_edit_page:
+            return self.city_edit.text().strip()
+        return self.city_combo.currentText().strip()
+
+    def __update_likely_relatives(self):
+        """Splits the non-relatives into 'likely' and 'potential' ones.
+
+        A member is considered a likely relative if they share this member's
+        bank account (IBAN) or full address, together with that member's own
+        relatives."""
+        likely_model = _member_model(self.likely_relatives_table)
+        potential_model = _member_model(self.potential_relatives_table)
+
+        # Reconsider everyone that isn't an actual relative
+        candidates = likely_model.get_members() + potential_model.get_members()
+
+        city = self.__current_city()
+        street = self.street_edit.text().strip()
+        street_number = self.street_number_edit.text().strip()
+        iban = normalize_iban(self.iban_edit.text())
+
+        def is_likely(member: Member) -> bool:
+            if iban and member.iban == iban:
+                return True
+            return bool(
+                city
+                and street
+                and street_number
+                and member.city == city
+                and member.street == street
+                and member.street_number == street_number
+            )
+
+        likely_ids = set()
+        for candidate in candidates:
+            if is_likely(candidate):
+                likely_ids.add(candidate.id)
+                # Relatives of a likely relative are likely relatives, too
+                for relative in get_relatives(self.sql_session(), candidate):
+                    if relative in candidates:
+                        likely_ids.add(relative.id)
+
+        for candidate in candidates:
+            if candidate.id in likely_ids:
+                potential_model.make_inactive(member=candidate)
+                likely_model.make_active(member=candidate)
+            else:
+                likely_model.make_inactive(member=candidate)
+                potential_model.make_active(member=candidate)
 
     def __format_iban(self, text: str):
         text = text.upper()
