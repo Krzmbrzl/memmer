@@ -32,6 +32,7 @@ from memmer.gui import (
     SessionParticipationModel,
     OneTimeFeeModel,
     OneTimeFeeAmountDelegate,
+    GenericSortFilterProxyModel,
     FormValidator,
     Issue,
     error,
@@ -73,6 +74,23 @@ default_date = QDate(1870, 1, 1)
 
 def _regex_validator(pattern: str, parent) -> QRegularExpressionValidator:
     return QRegularExpressionValidator(QRegularExpression(pattern), parent)
+
+
+def _member_sort_orders():
+    return [
+        (MemberModel.Column.LastName, Qt.SortOrder.AscendingOrder),
+        (MemberModel.Column.FirstName, Qt.SortOrder.AscendingOrder),
+        (MemberModel.Column.City, Qt.SortOrder.AscendingOrder),
+    ]
+
+
+def _member_model(table) -> MemberModel:
+    """Returns a table's MemberModel, unwrapping a sort/filter proxy if present"""
+    model = table.model()
+    if isinstance(model, GenericSortFilterProxyModel):
+        model = model.sourceModel()
+    assert isinstance(model, MemberModel)
+    return model
 
 
 class _UnsetDatePopupFix(QObject):
@@ -202,13 +220,18 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             # Don't offer oneself as relative
             relatives.append(self.member)
 
-        self.potential_relatives_table.setModel(
+        potential_proxy = GenericSortFilterProxyModel(
+            sort_orders=_member_sort_orders(), parent=self.potential_relatives_table
+        )
+        potential_proxy.setSourceModel(
             MemberModel(
                 members=self.members(),
                 inactive=relatives,
                 parent=self.potential_relatives_table,
             )
         )
+        self.potential_relatives_table.setModel(potential_proxy)
+        self.potential_relatives_search.attach(potential_proxy)
         self.potential_relatives_table.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.Stretch
         )
@@ -747,11 +770,8 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
     def __relative_activated(self, idx: QModelIndex | QPersistentModelIndex):
         member_id = idx.data(MemberModel.MemberIdRole)
 
-        from_model = self.relatives_table.model()
-        to_model = self.likely_relatives_table.model()
-
-        assert isinstance(from_model, MemberModel)
-        assert isinstance(to_model, MemberModel)
+        from_model = _member_model(self.relatives_table)
+        to_model = _member_model(self.likely_relatives_table)
 
         from_model.make_inactive(member_id=member_id)
         to_model.make_active(member_id=member_id)
@@ -761,11 +781,8 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
     def __likely_relative_activated(self, idx: QModelIndex | QPersistentModelIndex):
         member_id = idx.data(MemberModel.MemberIdRole)
 
-        from_model = self.likely_relatives_table.model()
-        to_model = self.relatives_table.model()
-
-        assert isinstance(from_model, MemberModel)
-        assert isinstance(to_model, MemberModel)
+        from_model = _member_model(self.likely_relatives_table)
+        to_model = _member_model(self.relatives_table)
 
         from_model.make_inactive(member_id=member_id)
         to_model.make_active(member_id=member_id)
@@ -773,13 +790,11 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         self.__fee_related_data_changed.emit()
 
     def __potential_relative_activated(self, idx: QModelIndex | QPersistentModelIndex):
+        # idx belongs to the filter proxy; the id role is forwarded to the source
         member_id = idx.data(MemberModel.MemberIdRole)
 
-        from_model = self.potential_relatives_table.model()
-        to_model = self.relatives_table.model()
-
-        assert isinstance(from_model, MemberModel)
-        assert isinstance(to_model, MemberModel)
+        from_model = _member_model(self.potential_relatives_table)
+        to_model = _member_model(self.relatives_table)
 
         from_model.make_inactive(member_id=member_id)
         to_model.make_active(member_id=member_id)

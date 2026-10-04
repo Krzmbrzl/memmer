@@ -72,6 +72,8 @@ class OverviewWidget(MemmerWidget, Ui_OverviewWidget):
                 MemberModel.Column.LastName, Qt.SortOrder.AscendingOrder
             )
 
+            self.member_filter.attach(member_proxy)
+
             session_proxy = GenericSortFilterProxyModel(
                 sort_orders=[
                     (SessionModel.Column.Name, Qt.SortOrder.AscendingOrder),
@@ -95,10 +97,14 @@ class OverviewWidget(MemmerWidget, Ui_OverviewWidget):
                 SessionModel.Column.Name, Qt.SortOrder.AscendingOrder
             )
 
+            self.session_filter.attach(session_proxy)
+
     def __member_activated(self, index: QModelIndex | QPersistentModelIndex):
         model = index.model()
-        assert isinstance(model, MemberModel)
-        member: Optional[Member] = model.member_for(index)
+        assert isinstance(model, GenericSortFilterProxyModel)
+        source = model.sourceModel()
+        assert isinstance(source, MemberModel)
+        member: Optional[Member] = source.member_for(model.mapToSource(index))
 
         if member is not None:
             dialog = MemberDialog(member=member, parent=self)
@@ -107,9 +113,11 @@ class OverviewWidget(MemmerWidget, Ui_OverviewWidget):
 
     def __session_activated(self, index: QModelIndex | QPersistentModelIndex):
         model = index.model()
-        assert isinstance(model, SessionModel)
+        assert isinstance(model, GenericSortFilterProxyModel)
+        source = model.sourceModel()
+        assert isinstance(source, SessionModel)
 
-        session: Optional[Session] = model.session_for(index)
+        session: Optional[Session] = source.session_for(model.mapToSource(index))
 
         if session is not None:
             dialog = SessionDialog(session=session, parent=self)

@@ -10,16 +10,49 @@ from typing import Optional
 from decimal import Decimal
 import re
 
-from PySide6.QtCore import QModelIndex, QPersistentModelIndex
+from PySide6.QtCore import QModelIndex, QPersistentModelIndex, Qt
 from PySide6.QtWidgets import QHeaderView, QMessageBox
 
-from memmer.gui import MemmerDialog, MemberModel, FormValidator, Issue, error, warning
+from memmer.gui import (
+    MemmerDialog,
+    MemberModel,
+    GenericSortFilterProxyModel,
+    FormValidator,
+    Issue,
+    error,
+    warning,
+)
 from memmer.orm import Session, Member
 from memmer.utils import is_active
 
 
 def is_inactive(member: Member) -> bool:
     return not is_active(member=member)
+
+
+def _member_sort_orders():
+    return [
+        (MemberModel.Column.LastName, Qt.SortOrder.AscendingOrder),
+        (MemberModel.Column.FirstName, Qt.SortOrder.AscendingOrder),
+        (MemberModel.Column.City, Qt.SortOrder.AscendingOrder),
+    ]
+
+
+def _member_model(table) -> MemberModel:
+    """Returns a table's MemberModel, unwrapping a sort/filter proxy if present"""
+    model = table.model()
+    if isinstance(model, GenericSortFilterProxyModel):
+        model = model.sourceModel()
+    assert isinstance(model, MemberModel)
+    return model
+
+
+def _member_at(table, idx: QModelIndex | QPersistentModelIndex) -> Optional[Member]:
+    """Resolves the member at a view index, mapping through a proxy if present"""
+    model = table.model()
+    if isinstance(model, GenericSortFilterProxyModel):
+        idx = model.mapToSource(idx)
+    return _member_model(table).member_for(idx)
 
 
 class SessionDialog(MemmerDialog, Ui_SessionDialog):
@@ -83,7 +116,10 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
         self.trainer_table.horizontalHeader().setSectionResizeMode(
             MemberModel.Column.Age, QHeaderView.ResizeMode.ResizeToContents
         )
-        self.potential_trainers_table.setModel(
+        potential_trainers_proxy = GenericSortFilterProxyModel(
+            sort_orders=_member_sort_orders(), parent=self.potential_trainers_table
+        )
+        potential_trainers_proxy.setSourceModel(
             MemberModel(
                 members=self.members(),
                 inactive=trainers,
@@ -91,6 +127,8 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
                 parent=self.potential_trainers_table,
             )
         )
+        self.potential_trainers_table.setModel(potential_trainers_proxy)
+        self.potential_traininers_filter.attach(potential_trainers_proxy)
         self.potential_trainers_table.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.Stretch
         )
@@ -113,7 +151,10 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
         self.session_member_table.horizontalHeader().setSectionResizeMode(
             MemberModel.Column.Age, QHeaderView.ResizeMode.ResizeToContents
         )
-        self.remaining_member_table.setModel(
+        remaining_member_proxy = GenericSortFilterProxyModel(
+            sort_orders=_member_sort_orders(), parent=self.remaining_member_table
+        )
+        remaining_member_proxy.setSourceModel(
             MemberModel(
                 members=self.members(),
                 inactive=participants,
@@ -121,6 +162,8 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
                 parent=self.remaining_member_table,
             )
         )
+        self.remaining_member_table.setModel(remaining_member_proxy)
+        self.remaining_member_filter.attach(remaining_member_proxy)
         self.remaining_member_table.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.Stretch
         )
@@ -209,56 +252,32 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
         self.session_member_group.setTitle(title)
 
     def __trainer_activated(self, idx: QModelIndex | QPersistentModelIndex):
-        from_model = self.trainer_table.model()
-        to_model = self.potential_trainers_table.model()
-
-        assert isinstance(from_model, MemberModel)
-        assert isinstance(to_model, MemberModel)
-
-        member = from_model.member_for(idx)
+        member = _member_at(self.trainer_table, idx)
 
         if member:
-            from_model.make_inactive(member)
-            to_model.make_active(member)
+            _member_model(self.trainer_table).make_inactive(member)
+            _member_model(self.potential_trainers_table).make_active(member)
 
     def __potential_trainer_activated(self, idx: QModelIndex | QPersistentModelIndex):
-        from_model = self.potential_trainers_table.model()
-        to_model = self.trainer_table.model()
-
-        assert isinstance(from_model, MemberModel)
-        assert isinstance(to_model, MemberModel)
-
-        member = from_model.member_for(idx)
+        member = _member_at(self.potential_trainers_table, idx)
 
         if member:
-            from_model.make_inactive(member)
-            to_model.make_active(member)
+            _member_model(self.potential_trainers_table).make_inactive(member)
+            _member_model(self.trainer_table).make_active(member)
 
     def __session_member_activated(self, idx: QModelIndex | QPersistentModelIndex):
-        from_model = self.session_member_table.model()
-        to_model = self.remaining_member_table.model()
-
-        assert isinstance(from_model, MemberModel)
-        assert isinstance(to_model, MemberModel)
-
-        member = from_model.member_for(idx)
+        member = _member_at(self.session_member_table, idx)
 
         if member:
-            from_model.make_inactive(member)
-            to_model.make_active(member)
+            _member_model(self.session_member_table).make_inactive(member)
+            _member_model(self.remaining_member_table).make_active(member)
 
     def __remaining_member_activated(self, idx: QModelIndex | QPersistentModelIndex):
-        from_model = self.remaining_member_table.model()
-        to_model = self.session_member_table.model()
-
-        assert isinstance(from_model, MemberModel)
-        assert isinstance(to_model, MemberModel)
-
-        member = from_model.member_for(idx)
+        member = _member_at(self.remaining_member_table, idx)
 
         if member:
-            from_model.make_inactive(member)
-            to_model.make_active(member)
+            _member_model(self.remaining_member_table).make_inactive(member)
+            _member_model(self.session_member_table).make_active(member)
 
     def __delete_triggered(self):
         if not self.session:

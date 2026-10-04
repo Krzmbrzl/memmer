@@ -1,17 +1,32 @@
-from typing import List, Tuple
+from typing import Sequence, Tuple
 
 from PySide6.QtCore import QSortFilterProxyModel, QModelIndex, QPersistentModelIndex, Qt
 
 
 class GenericSortFilterProxyModel(QSortFilterProxyModel):
-    def __init__(self, sort_orders: List[Tuple[int, Qt.SortOrder]], parent):
+    def __init__(self, sort_orders: Sequence[Tuple[int, Qt.SortOrder]], parent):
         super().__init__(parent)
         self.sort_orders = sort_orders
+        self.filter_string: str = ""
+
+    def set_filter_string(self, text: str) -> None:
+        self.filter_string = text.strip().casefold()
+        self.invalidateFilter()
 
     def filterAcceptsRow(
-        self, source_row: int, source_idx: QModelIndex | QPersistentModelIndex
+        self, source_row: int, source_parent: QModelIndex | QPersistentModelIndex
     ) -> bool:
-        return True
+        if not self.filter_string:
+            return True
+
+        # Accept the row if the filter is a substring of any column's display data
+        model = self.sourceModel()
+        for col in range(model.columnCount(source_parent)):
+            data = model.index(source_row, col, source_parent).data()
+            if data is not None and self.filter_string in str(data).casefold():
+                return True
+
+        return False
 
     def lessThan(
         self,
