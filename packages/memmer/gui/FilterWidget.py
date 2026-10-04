@@ -20,8 +20,8 @@ class FilterWidget(QWidget, Ui_FilterWidget):
 
         # Filter live as the user types; the button re-applies the current text
         self.lineEdit.textChanged.connect(self.filter_changed)
-        self.pushButton_3.clicked.connect(
-            lambda: self.filter_changed.emit(self.lineEdit.text())
+        self.clear_button.clicked.connect(
+            lambda: self.lineEdit.clear()
         )
 
     def attach(self, proxy: GenericSortFilterProxyModel) -> None:

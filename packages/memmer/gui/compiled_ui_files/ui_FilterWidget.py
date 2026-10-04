@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'FilterWidget.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.1
+## Created by: Qt User Interface Compiler version 6.11.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -39,10 +39,10 @@ class Ui_FilterWidget(object):
 
         self.horizontalLayout.addWidget(self.lineEdit)
 
-        self.pushButton_3 = QPushButton(FilterWidget)
-        self.pushButton_3.setObjectName(u"pushButton_3")
+        self.clear_button = QPushButton(FilterWidget)
+        self.clear_button.setObjectName(u"clear_button")
 
-        self.horizontalLayout.addWidget(self.pushButton_3)
+        self.horizontalLayout.addWidget(self.clear_button)
 
 
         self.retranslateUi(FilterWidget)
@@ -53,6 +53,6 @@ class Ui_FilterWidget(object):
         self.label_2.setText(QCoreApplication.translate("FilterWidget", u"Filter", None))
         self.lineEdit.setInputMask("")
         self.lineEdit.setPlaceholderText(QCoreApplication.translate("FilterWidget", u"filter expression", None))
-        self.pushButton_3.setText(QCoreApplication.translate("FilterWidget", u"Apply", None))
+        self.clear_button.setText(QCoreApplication.translate("FilterWidget", u"Clear", None))
     # retranslateUi
 
