@@ -56,7 +56,9 @@ class OverviewWidget(MemmerWidget, Ui_OverviewWidget):
                 ],
                 parent=self.member_table,
             )
-            member_proxy.setSourceModel(MemberModel(self.members(), self.member_table))
+            member_proxy.setSourceModel(
+                MemberModel(self.members(), parent=self.member_table)
+            )
 
             self.member_table.setModel(member_proxy)
 
