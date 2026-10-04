@@ -102,11 +102,14 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
 
     def __create_models(self):
         trainers = self.session.trainers if self.session is not None else []
+        # No inactive_predicate here: the already-associated trainers must stay
+        # visible (and thus be preserved on save) even if some have become
+        # inactive. The predicate only hides inactive members from the
+        # candidate list below, so they can't be newly added.
         self.trainer_table.setModel(
             MemberModel(
                 members=self.members(),
                 active=trainers,
-                inactive_predicate=is_inactive,
                 parent=self.trainer_table,
             )
         )
@@ -137,11 +140,14 @@ class SessionDialog(MemmerDialog, Ui_SessionDialog):
         )
 
         participants = self.session.members if self.session is not None else []
+        # No inactive_predicate here: the already-associated participants must
+        # stay visible (and thus be preserved on save) even if some have become
+        # inactive. The predicate only hides inactive members from the
+        # candidate list below, so they can't be newly added.
         self.session_member_table.setModel(
             MemberModel(
                 members=self.members(),
                 active=participants,
-                inactive_predicate=is_inactive,
                 parent=self.session_member_table,
             )
         )
