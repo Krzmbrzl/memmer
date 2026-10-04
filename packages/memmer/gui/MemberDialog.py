@@ -57,7 +57,6 @@ from memmer.queries import (
     compute_monthly_fee,
     compute_discount,
     get_relatives,
-    clear_relations,
     set_relatives,
 )
 
@@ -1122,7 +1121,6 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             self.member.participating_sessions = set_sessions
             changed = True
 
-        relatives_to_be_set: List[Member] = []
         relatives = (
             get_relatives(session=self.sql_session(), member=self.member)
             if not created_member
@@ -1131,10 +1129,8 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         relatives_model = self.relatives_table.model()
         assert isinstance(relatives_model, MemberModel)
         desired_relatives = relatives_model.get_members()
-        if not container_unordered_equals(desired_relatives, relatives):
-            if len(relatives) > 0:
-                clear_relations(session=self.sql_session(), member=self.member)
-            relatives_to_be_set = desired_relatives
+        relatives_changed = not container_unordered_equals(desired_relatives, relatives)
+        if relatives_changed:
             changed = True
 
         if created_member:
@@ -1165,11 +1161,12 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
                 self.member.one_time_fees.append(current)
                 assert current.member == self.member
 
-        set_relatives(
-            session=self.sql_session(),
-            member=self.member,
-            relatives=relatives_to_be_set,
-        )
+        if relatives_changed:
+            set_relatives(
+                session=self.sql_session(),
+                member=self.member,
+                relatives=desired_relatives,
+            )
 
         if created_member:
             self.parent_mainwindow().member_created.emit(self.member)
