@@ -39,7 +39,7 @@ from memmer.gui import (
     warning,
 )
 from memmer import AdmissionFeeKey
-from memmer.orm import Member, FixedCost, Gender, OneTimeFee, FeeOverride
+from memmer.orm import Member, Session, FixedCost, Gender, OneTimeFee, FeeOverride
 from memmer.utils import (
     nominal_year_diff,
     container_unordered_equals,
@@ -121,6 +121,11 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         self.member = member
         # None if unknown (e.g. not a German postal code)
         self.__postal_code_known: Optional[bool] = None
+
+        # Snapshots of the stored relations/fee override at load time, so that
+        # the save handler can tell on the GUI thread whether they changed.
+        self.__initial_relative_ids: set[int] = set()
+        self.__initial_fee_override: Optional[Decimal] = None
 
         self.__create_models()
 
@@ -205,6 +210,7 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         )
 
         relatives = self.__relatives_of(self.member) if self.member else []
+        self.__initial_relative_ids = {m.id for m in relatives}
         self.relatives_table.setModel(
             MemberModel(
                 members=self.members(), active=relatives, parent=self.relatives_table
@@ -292,8 +298,8 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
 
         self.tabWidget.currentChanged.connect(self.__tab_changed)
 
-        # Runs on the GUI thread: it uses the shared SQLAlchemy session, which
-        # is not thread-safe
+        # The recompute runs its query on the DB thread and reports the result
+        # back via __monthly_fee_changed on the GUI thread.
         self.__fee_related_data_changed.connect(self.__recompute_monthly_fee)
         self.__monthly_fee_changed.connect(self.__update_monthly_fee)
 
@@ -699,6 +705,7 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             return override.amount if override is not None else None
 
         existing_override_amount = self.db().run_sync(fetch_fee_override)
+        self.__initial_fee_override = existing_override_amount
         if existing_override_amount is not None:
             self.monthly_fee_overwrite_checkbox.setChecked(True)
             self.monthly_fee_edit.setValue(float(existing_override_amount))
@@ -757,33 +764,65 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             self.monthly_fee_edit.setValue(float(fee))
 
     def __recompute_monthly_fee(self):
-        # Create dummy member object with the current data
-        dummy = Member()
-        dummy.birthday = self.birthday_edit.date().toPython()  # type: ignore
-        dummy.entry_date = self.entry_date_edit.date().toPython()  # type: ignore
-        if self.exited_checkbox.isChecked():
-            dummy.exit_date = self.exit_date_edit.date().toPython()  # type: ignore
-        dummy.is_honorary_member = self.honorary_member_checkbox.isChecked()
+        # Gather the current input on the GUI thread; the fee itself is computed
+        # on the DB thread (it queries fixed costs, participations and relations).
+        birthday = self.birthday_edit.date().toPython()
+        entry_date = self.entry_date_edit.date().toPython()
+        exit_date = (
+            self.exit_date_edit.date().toPython()
+            if self.exited_checkbox.isChecked()
+            else None
+        )
+        is_honorary = self.honorary_member_checkbox.isChecked()
 
         participation_model = self.sessions_table.model()
         assert isinstance(participation_model, SessionParticipationModel)
-        dummy.participating_sessions = participation_model.get_participated_sessions()
+        # Only the id and fee are read by the computation. Capture those rather
+        # than the snapshot Session objects, so attaching them to the transient
+        # dummy can't back-populate (and thereby pollute) any shared/attached
+        # Session.members collection.
+        session_specs = [
+            (s.id, s.membership_fee)
+            for s in participation_model.get_participated_sessions()
+        ]
 
         relatives_model = self.relatives_table.model()
         assert isinstance(relatives_model, MemberModel)
-        dummy.relatives = relatives_model.get_members()  # type: ignore
+        # `relatives` is a plain attribute (not an ORM relationship), so the
+        # detached snapshot members can be used directly without back-population.
+        relatives = relatives_model.get_members()
 
-        fee = compute_monthly_fee(
-            session=self.sql_session(),
-            member=dummy,
-            apply_discounts=False,
-            target_date=datetime.now().date(),
-        )
-        discount = compute_discount(
-            session=self.sql_session(), member=dummy, target_date=datetime.now().date()
-        )
+        target_date = datetime.now().date()
 
-        self.__monthly_fee_changed.emit(fee, discount)
+        def compute(session):
+            assert session is not None
+            # A transient member carrying the current, unsaved input.
+            dummy = Member()
+            dummy.birthday = birthday  # type: ignore
+            dummy.entry_date = entry_date  # type: ignore
+            if exit_date is not None:
+                dummy.exit_date = exit_date  # type: ignore
+            dummy.is_honorary_member = is_honorary
+            dummy.participating_sessions = [
+                Session(id=sid, membership_fee=fee) for sid, fee in session_specs
+            ]
+            dummy.relatives = relatives  # type: ignore
+
+            fee = compute_monthly_fee(
+                session=session,
+                member=dummy,
+                apply_discounts=False,
+                target_date=target_date,
+            )
+            discount = compute_discount(
+                session=session, member=dummy, target_date=target_date
+            )
+            return (fee, discount)
+
+        self.db().submit(
+            compute,
+            on_success=lambda result: self.__monthly_fee_changed.emit(*result),
+        )
 
     def __relative_activated(self, idx: QModelIndex | QPersistentModelIndex):
         member_id = idx.data(MemberModel.MemberIdRole)
@@ -967,6 +1006,13 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
             self.city_combo.addItems([x for x in places])
             self.city_combo.setCurrentIndex(0)
 
+    def __show_db_error(self, error: Exception):
+        QMessageBox.critical(
+            self,
+            self.tr("Database error"),
+            self.tr("The operation failed. Reason given:\n{error}").format(error=error),
+        )
+
     def __delete_triggered(self):
         if not self.member:
             return
@@ -984,219 +1030,208 @@ class MemberDialog(MemmerDialog, Ui_MemberDialog):
         if button != QMessageBox.StandardButton.Yes:
             return
 
-        self.parent_mainwindow().member_about_to_be_deleted.emit(self.member)
+        member = self.member
+        self.parent_mainwindow().member_about_to_be_deleted.emit(member)
 
-        self.members().remove(self.member)
-        self.sql_session().delete(self.member)
+        member_id = member.id
 
-        self.parent_mainwindow().member_deleted.emit(self.member)
+        def delete_task(session):
+            assert session is not None
+            stored = session.get(Member, member_id)
+            if stored is not None:
+                session.delete(stored)
 
-        self.accept()
+        def on_deleted(_):
+            if member in self.members():
+                self.members().remove(member)
+            self.parent_mainwindow().member_deleted.emit(member)
+            self.accept()
+
+        self.db().submit(
+            delete_task, on_success=on_deleted, on_error=self.__show_db_error
+        )
 
     def __save_triggered(self):
         if not self.validator.validate():
             return
 
-        created_member = False
-        if not self.member:
-            self.member = Member()
-            created_member = True
+        created_member = self.member is None
+        member_id = self.member.id if self.member is not None else None
 
-        changed = False
-
-        set_gender = Gender(value=self.gender_combo.currentIndex())
-        if set_gender != self.member.gender:
-            self.member.gender = set_gender
-            changed = True
-
-        set_first_name = self.first_name_edit.text().strip()
-        if set_first_name != self.member.first_name:
-            self.member.first_name = set_first_name
-            changed = True
-
-        set_last_name = self.last_name_edit.text().strip()
-        if set_last_name != self.member.last_name:
-            self.member.last_name = set_last_name
-            changed = True
-
-        set_birthday: date = self.birthday_edit.date().toPython()  # type: ignore
-        if set_birthday != self.member.birthday:
-            self.member.birthday = set_birthday
-            changed = True
-
-        set_street = self.street_edit.text().strip()
-        if set_street != self.member.street:
-            self.member.street = set_street
-            changed = True
-
-        set_street_number = self.street_number_edit.text().strip()
-        if set_street_number != self.member.street_number:
-            self.member.street_number = set_street_number
-            changed = True
-
-        set_postal_code = self.postal_code_edit.text().strip()
-        if set_postal_code != self.member.postal_code:
-            self.member.postal_code = set_postal_code
-            changed = True
-
+        # Gather all input on the GUI thread; the actual DB work happens in a
+        # single task on the DB thread.
         if self.city_selection_stack.currentWidget() == self.city_edit_page:
             set_city = self.city_edit.text().strip()
         else:
             assert self.city_selection_stack.currentWidget() == self.city_combo_page
             set_city = self.city_combo.currentText()
-        if set_city != self.member.city:
-            self.member.city = set_city
-            changed = True
 
-        set_phone_number = self.phone_number_edit.text().strip()
-        if len(set_phone_number) == 0:
-            set_phone_number = None
-        if set_phone_number != self.member.phone_number:
-            self.member.phone_number = set_phone_number
-            changed = True
+        def or_none(text: str) -> Optional[str]:
+            text = text.strip()
+            return text if len(text) > 0 else None
 
-        set_mail = self.email_edit.text().strip()
-        if len(set_mail) == 0:
-            set_mail = None
-        if set_mail != self.member.email_address:
-            self.member.email_address = set_mail
-            changed = True
+        scalars = {
+            "gender": Gender(value=self.gender_combo.currentIndex()),
+            "first_name": self.first_name_edit.text().strip(),
+            "last_name": self.last_name_edit.text().strip(),
+            "birthday": self.birthday_edit.date().toPython(),
+            "street": self.street_edit.text().strip(),
+            "street_number": self.street_number_edit.text().strip(),
+            "postal_code": self.postal_code_edit.text().strip(),
+            "city": set_city,
+            "phone_number": or_none(self.phone_number_edit.text()),
+            "email_address": or_none(self.email_edit.text()),
+            "is_honorary_member": self.honorary_member_checkbox.isChecked(),
+            "entry_date": self.entry_date_edit.date().toPython(),
+            "exit_date": (
+                self.exit_date_edit.date().toPython()
+                if self.exited_checkbox.isChecked()
+                else None
+            ),
+            "sepa_mandate_date": (
+                self.sepa_mandate_date_edit.date().toPython()
+                if self.sepa_mandate_checkbox.isChecked()
+                else None
+            ),
+            "iban": or_none(normalize_iban(self.iban_edit.text())),
+            "bic": (self.bic_edit.text().strip().upper() or None),
+            "account_owner": or_none(self.account_owner_edit.text()),
+        }
 
-        set_honary = self.honorary_member_checkbox.isChecked()
-        if set_honary != self.member.is_honorary_member:
-            self.member.is_honorary_member = set_honary
-            changed = True
-
-        set_entry: date = self.entry_date_edit.date().toPython()  # type: ignore
-        if set_entry != self.member.entry_date:
-            self.member.entry_date = set_entry
-            changed = True
-
-        set_exit: Optional[date] = self.exit_date_edit.date().toPython() if self.exited_checkbox.isChecked() else None  # type: ignore
-        if set_exit != self.member.exit_date:
-            self.member.exit_date = set_exit
-            changed = True
-
-        set_sepa: date = self.sepa_mandate_date_edit.date().toPython() if self.sepa_mandate_checkbox.isChecked() else None  # type: ignore
-        if set_sepa != self.member.sepa_mandate_date:
-            self.member.sepa_mandate_date = set_sepa
-            changed = True
-
-        set_iban = normalize_iban(self.iban_edit.text().strip())
-        if len(set_iban) == 0:
-            set_iban = None
-        if set_iban != self.member.iban:
-            self.member.iban = set_iban
-            changed = True
-
-        set_bic = self.bic_edit.text().strip().upper()
-        if len(set_bic) == 0:
-            set_bic = None
-        if set_bic != self.member.bic:
-            self.member.bic = set_bic
-            changed = True
-
-        set_owner = self.account_owner_edit.text().strip()
-        if len(set_owner) == 0:
-            set_owner = None
-        if set_owner != self.member.account_owner:
-            self.member.account_owner = set_owner
-            changed = True
-
-        existing_fee_overwrite = (
-            self.sql_session()
-            .scalars(select(FeeOverride).where(FeeOverride.member_id == self.member.id))
-            .one_or_none()
-            if not created_member
+        fee_override = (
+            Decimal(f"{self.monthly_fee_edit.value():.2f}")
+            if self.monthly_fee_overwrite_checkbox.isChecked()
             else None
         )
 
-        fee_override_to_be_added: Optional[FeeOverride] = None
-        if self.monthly_fee_overwrite_checkbox.isChecked():
-            set_overwrite = Decimal(f"{self.monthly_fee_edit.value():.2f}")
-            if existing_fee_overwrite is None:
-                changed = True
-                fee_override_to_be_added = FeeOverride(amount=set_overwrite)
-            elif set_overwrite != existing_fee_overwrite.amount:
-                changed = True
-                existing_fee_overwrite.amount = set_overwrite
-        elif existing_fee_overwrite is not None:
-            self.sql_session().delete(existing_fee_overwrite)
-            changed = True
-
-        one_time_fees_to_be_set: Optional[List[OneTimeFee]] = None
         one_time_fee_model = self.one_time_fees_table.model()
         assert isinstance(one_time_fee_model, OneTimeFeeModel)
-        set_one_time_fees = one_time_fee_model.get_fees()
-        if not container_unordered_equals(
-            set_one_time_fees,
-            self.member.one_time_fees,
-            eq_cmp=lambda l, r: l.reason == r.reason and l.amount == r.amount,
-        ):
-            one_time_fees_to_be_set = [
-                OneTimeFee(reason=x.reason, amount=x.amount) for x in set_one_time_fees
-            ]
-            changed = True
+        one_time_fees = [(f.reason, f.amount) for f in one_time_fee_model.get_fees()]
 
         session_model = self.sessions_table.model()
         assert isinstance(session_model, SessionParticipationModel)
+        # Keep the snapshot Session objects (for the in-memory snapshot update)
+        # and their ids (for the DB task).
         set_sessions = session_model.get_participated_sessions()
-        if not container_unordered_equals(
-            set_sessions, self.member.participating_sessions
-        ):
-            self.member.participating_sessions = set_sessions
-            changed = True
+        participating_ids = [s.id for s in set_sessions]
 
-        relatives = (
-            get_relatives(session=self.sql_session(), member=self.member)
-            if not created_member
-            else []
-        )
         relatives_model = self.relatives_table.model()
         assert isinstance(relatives_model, MemberModel)
-        desired_relatives = relatives_model.get_members()
-        relatives_changed = not container_unordered_equals(desired_relatives, relatives)
-        if relatives_changed:
-            changed = True
+        relative_ids = [m.id for m in relatives_model.get_members()]
 
-        if created_member:
-            self.members().append(self.member)
-
-            self.sql_session().add(self.member)
-            # Assigns the ID
-            self.sql_session().flush()
-
-        # We can only add these things once we are certain that self.member
-        # is a DB entry and hence has an assigned ID
-        assert self.member.id is not None
-        if fee_override_to_be_added is not None:
-            fee_override_to_be_added.member_id = self.member.id
-
-            print(f"Adding overwrite {fee_override_to_be_added}")
-            self.sql_session().add(fee_override_to_be_added)
-
-        if one_time_fees_to_be_set is not None:
-            # Remove previously set one-time-fees
-            for current in self.member.one_time_fees:
-                self.sql_session().delete(current)
-
-            self.member.one_time_fees.clear()
-
-            # Add new fees
-            for current in one_time_fees_to_be_set:
-                self.member.one_time_fees.append(current)
-                assert current.member == self.member
-
-        if relatives_changed:
-            set_relatives(
-                session=self.sql_session(),
-                member=self.member,
-                relatives=desired_relatives,
+        # Work out what changed (compared against the loaded snapshot) so that
+        # unchanged associations aren't rewritten and the right signal fires.
+        current = self.member
+        relatives_changed = set(relative_ids) != self.__initial_relative_ids
+        fee_override_changed = fee_override != self.__initial_fee_override
+        if created_member or current is None:
+            scalars_changed = True
+            participations_changed = True
+            one_time_fees_changed = True
+        else:
+            scalars_changed = any(
+                getattr(current, field) != value for field, value in scalars.items()
+            )
+            participations_changed = {
+                s.id for s in current.participating_sessions
+            } != set(participating_ids)
+            one_time_fees_changed = not container_unordered_equals(
+                one_time_fees,
+                [(f.reason, f.amount) for f in current.one_time_fees],
             )
 
-        if created_member:
-            self.parent_mainwindow().member_created.emit(self.member)
-        elif changed:
-            self.parent_mainwindow().member_changed.emit(self.member)
+        changed = (
+            created_member
+            or scalars_changed
+            or fee_override_changed
+            or relatives_changed
+            or participations_changed
+            or one_time_fees_changed
+        )
 
-        self.accept()
+        def save_task(session):
+            assert session is not None
+            if member_id is None:
+                member = Member()
+                session.add(member)
+            else:
+                member = session.get(Member, member_id)
+                assert member is not None
+
+            for field, value in scalars.items():
+                setattr(member, field, value)
+
+            # Flush so a new member gets its id before we attach related rows.
+            session.flush()
+
+            if participations_changed:
+                member.participating_sessions = [
+                    session.get(Session, sid) for sid in participating_ids
+                ]
+
+            if one_time_fees_changed:
+                for existing in list(member.one_time_fees):
+                    session.delete(existing)
+                member.one_time_fees.clear()
+                for reason, amount in one_time_fees:
+                    member.one_time_fees.append(
+                        OneTimeFee(reason=reason, amount=amount)
+                    )
+
+            if fee_override_changed:
+                existing_override = session.scalars(
+                    select(FeeOverride).where(FeeOverride.member_id == member.id)
+                ).one_or_none()
+                if fee_override is not None:
+                    if existing_override is None:
+                        session.add(
+                            FeeOverride(member_id=member.id, amount=fee_override)
+                        )
+                    else:
+                        existing_override.amount = fee_override
+                elif existing_override is not None:
+                    session.delete(existing_override)
+
+            if relatives_changed:
+                set_relatives(
+                    session=session,
+                    member=member,
+                    relatives=[session.get(Member, rid) for rid in relative_ids],
+                )
+
+            session.flush()
+            return member.id
+
+        def on_saved(member_id: int):
+            # Update the detached snapshot in place, reusing the shared Session
+            # instances so identity stays consistent across the member and
+            # session snapshots (the models resolve relationships via index()).
+            if created_member:
+                snapshot = Member()
+                snapshot.id = member_id
+                for field, value in scalars.items():
+                    setattr(snapshot, field, value)
+                snapshot.participating_sessions = set_sessions
+                snapshot.one_time_fees = [
+                    OneTimeFee(reason=reason, amount=amount)
+                    for reason, amount in one_time_fees
+                ]
+                self.members().append(snapshot)
+                self.member = snapshot
+                self.parent_mainwindow().member_created.emit(snapshot)
+            else:
+                assert current is not None
+                for field, value in scalars.items():
+                    setattr(current, field, value)
+                if participations_changed:
+                    current.participating_sessions = set_sessions
+                if one_time_fees_changed:
+                    current.one_time_fees = [
+                        OneTimeFee(reason=reason, amount=amount)
+                        for reason, amount in one_time_fees
+                    ]
+                if changed:
+                    self.parent_mainwindow().member_changed.emit(current)
+            self.accept()
+
+        self.db().submit(save_task, on_success=on_saved, on_error=self.__show_db_error)
