@@ -66,11 +66,23 @@ class OneTimeFeeModel(QAbstractTableModel):
             self.endInsertRows()
 
     def add_fee(self, reason: str, amount: Decimal):
-        self.beginInsertRows(QModelIndex(), len(self.fees), len(self.fees))
+        # Appending turns the trailing placeholder row into a real fee and pushes
+        # a fresh placeholder below it. Tell Qt the new row is that placeholder
+        # (one past the former one) so an editor's current index isn't shifted.
+        former_placeholder = len(self.fees)
+        new_placeholder = former_placeholder + 1
+
+        self.beginInsertRows(QModelIndex(), new_placeholder, new_placeholder)
 
         self.fees.append(Fee(reason=reason, amount=amount))
 
         self.endInsertRows()
+
+        # The former placeholder row now displays the appended fee.
+        self.dataChanged.emit(
+            self.index(former_placeholder, 0),
+            self.index(former_placeholder, self.columnCount() - 1),
+        )
 
     def rowCount(
         self, parent: QModelIndex | QPersistentModelIndex = QModelIndex()
