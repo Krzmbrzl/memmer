@@ -61,7 +61,6 @@ class TallyResultDialog(MemmerDialog):
         open_button.clicked.connect(self.__open_file)
 
         keep_button = QPushButton(self.tr("Keep"), self)
-        keep_button.setDefault(True)
         keep_button.clicked.connect(lambda: self.__decide("keep"))
 
         discard_button = QPushButton(self.tr("Discard"), self)
@@ -72,6 +71,15 @@ class TallyResultDialog(MemmerDialog):
         button_box.addButton(discard_button, QDialogButtonBox.ButtonRole.DestructiveRole)
         button_box.addButton(keep_button, QDialogButtonBox.ButtonRole.AcceptRole)
         layout.addWidget(button_box)
+
+        # Make the harmless "open file" the default, so an accidental Enter
+        # just views the file rather than keeping or discarding the tally.
+        # Set it after assembling the box, which otherwise defaults the accept
+        # button.
+        keep_button.setDefault(False)
+        keep_button.setAutoDefault(False)
+        open_button.setDefault(True)
+        open_button.setFocus()
 
     def __open_file(self) -> None:
         QDesktopServices.openUrl(QUrl.fromLocalFile(self.__output_path))
