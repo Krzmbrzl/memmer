@@ -18,6 +18,7 @@ from .PathSelectorWidget import PathSelectorWidget
 
 from .MemberDialog import MemberDialog
 from .SessionDialog import SessionDialog
+from .TallyResultDialog import TallyResultDialog
 from .ConnectWidget import ConnectWidget
 from .MainMenuWidget import MainMenuWidget
 from .MainWindow import MainWindow

@@ -10,8 +10,8 @@ from typing import Optional
 from PySide6.QtCore import Signal, QDate
 from PySide6.QtWidgets import QMessageBox
 
-from memmer.gui import MemmerWidget, FormValidator, Issue, error
-from memmer.queries import create_tally
+from memmer.gui import MemmerWidget, FormValidator, Issue, error, TallyResultDialog
+from memmer.queries import create_tally, TallyResult
 from memmer.utils import has_uncommitted_changes
 
 import datetime
@@ -169,24 +169,30 @@ class TallyWidget(MemmerWidget, Ui_TallyWidget):
         def tally_task(session):
             assert session is not None
             # The tally archives one-time fees; require a clean session so that
-            # a rollback on failure can only ever discard the tally's own
-            # changes, never unrelated unsaved edits.
+            # a rollback (on failure or on an explicit discard) can only ever
+            # undo the tally's own changes, never unrelated unsaved edits.
             if has_uncommitted_changes(session):
                 raise _PendingChangesError()
             try:
-                create_tally(
+                # Deliberately not committed here: the user reviews the result
+                # first and then decides to keep (commit) or discard (rollback).
+                return create_tally(
                     session, output_dir=output_dir, collection_date=collection_date
                 )
-                # Commit so the written file and the fee archiving are durable
-                # together.
-                session.commit()
             except Exception:
                 session.rollback()
                 raise
 
-        def on_success(_):
-            self.__set_busy(False)
-            self.status_changed.emit(self.tr("Tally created"))
+        def on_success(result: TallyResult):
+            # Stay busy while the user decides; the session still holds the
+            # uncommitted tally changes.
+            dialog = TallyResultDialog(result, parent=self)
+            dialog.exec()
+
+            if dialog.decision == "keep":
+                self.__keep_tally()
+            else:
+                self.__discard_tally(result.output_path)
 
         def on_error(error):
             self.__set_busy(False)
@@ -218,6 +224,52 @@ class TallyWidget(MemmerWidget, Ui_TallyWidget):
             )
 
         self.db().submit(tally_task, on_success=on_success, on_error=on_error)
+
+    def __keep_tally(self):
+        self.status_changed.emit(self.tr("Saving tally…"))
+
+        def on_success(_):
+            self.__set_busy(False)
+            self.status_changed.emit(self.tr("Tally created"))
+
+        def on_error(error):
+            self.__set_busy(False)
+            self.status_changed.emit(self.tr("Saving the tally failed"))
+            QMessageBox.critical(
+                self,
+                self.tr("Saving the tally failed"),
+                self.tr(
+                    "The tally could not be saved. Reason given:\n{error}"
+                ).format(error=error),
+            )
+
+        self.db().commit(on_success=on_success, on_error=on_error)
+
+    def __discard_tally(self, output_path: str):
+        self.status_changed.emit(self.tr("Discarding tally…"))
+
+        def on_success(_):
+            # The rollback restored the archived one-time fees; drop the now
+            # orphaned file too so a re-run starts from a clean slate.
+            try:
+                os.remove(output_path)
+            except OSError:
+                pass
+            self.__set_busy(False)
+            self.status_changed.emit(self.tr("Tally discarded"))
+
+        def on_error(error):
+            self.__set_busy(False)
+            self.status_changed.emit(self.tr("Discarding the tally failed"))
+            QMessageBox.critical(
+                self,
+                self.tr("Discarding the tally failed"),
+                self.tr(
+                    "The tally could not be discarded. Reason given:\n{error}"
+                ).format(error=error),
+            )
+
+        self.db().rollback(on_success=on_success, on_error=on_error)
 
     def __commit_then_tally(self, output_dir: str, collection_date: datetime.date):
         self.__set_busy(True)
