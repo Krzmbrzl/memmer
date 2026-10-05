@@ -40,7 +40,8 @@ from memmer.generated.pain import (
 )
 from memmer.generated.pain import __NAMESPACE__
 from memmer.orm import Member, Setting, Tally
-from .fees import compute_total_fee
+from .fees import compute_total_fee, collect_fee_breakdown
+from .fee_summary import format_fee_summary
 from .maintenance import archive_onetimecosts
 
 from sqlalchemy.orm import Session, joinedload
@@ -162,6 +163,9 @@ def assemble_monthly_fee_assets(
     collection_date: date,
     clear_onetimecosts: bool = True,
     progress_callback: Optional[Callable[[int, int], None]] = None,
+    summary_translator_factory: Optional[
+        Callable[[str], Callable[[str], str]]
+    ] = None,
 ) -> List[Asset]:
     # TODO: Restrict to those members that actually have to pay anything
     # i.e. active ones and ones with open onetime fees
@@ -184,22 +188,49 @@ def assemble_monthly_fee_assets(
         select(Setting.value).where(Setting.name == Setting.TALLY_PURPOSE)
     ).one()
 
+    # When a translator factory is given, each member's remittance text is a
+    # computed fee breakdown in the configured member-facing language; otherwise
+    # the single static purpose is reused for everyone.
+    translate: Optional[Callable[[str], str]] = None
+    if summary_translator_factory is not None:
+        language = (
+            session.scalars(
+                select(Setting.value).where(
+                    Setting.name == Setting.MEMBER_FACING_LANGUAGE
+                )
+            ).one_or_none()
+            or "de"
+        )
+        translate = summary_translator_factory(language)
+
     assets: List[Asset] = []
 
     total_members = len(members)
     for processed, current_member in enumerate(members, start=1):
-        fee = compute_total_fee(
-            session=session, member=current_member, target_date=collection_date
-        )
+        if translate is not None:
+            breakdown = collect_fee_breakdown(
+                session=session, member=current_member, target_date=collection_date
+            )
+            fee = breakdown.total
+        else:
+            breakdown = None
+            fee = compute_total_fee(
+                session=session, member=current_member, target_date=collection_date
+            )
 
         if fee > 0:
             if clear_onetimecosts:
                 archive_onetimecosts(session=session, member=current_member)
 
+            if translate is not None and breakdown is not None:
+                member_purpose = format_fee_summary(breakdown, translate) or purpose
+            else:
+                member_purpose = purpose
+
             assets.append(
                 Asset(
                     debitor=current_member,
-                    purpose=purpose,
+                    purpose=member_purpose,
                     amount=fee,
                     e2e_id=e2e_id_template,
                 )
@@ -314,6 +345,9 @@ def create_tally(
     collection_date: date,
     assets: Optional[List[Asset]] = None,
     progress_callback: Optional[Callable[[int, int], None]] = None,
+    summary_translator_factory: Optional[
+        Callable[[str], Callable[[str], str]]
+    ] = None,
 ) -> TallyResult:
     creditor_name = (
         session.scalars(
@@ -356,6 +390,7 @@ def create_tally(
             collection_date=collection_date,
             clear_onetimecosts=True,
             progress_callback=progress_callback,
+            summary_translator_factory=summary_translator_factory,
         )
 
     message = create_sepa_payment_initiation_message_object(

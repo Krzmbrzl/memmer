@@ -17,6 +17,9 @@ class Setting(Base):
 
     TALLY_E2E_ID_TEMPLATE = "tally_end_to_end_template"
     TALLY_PURPOSE = "tally_purpose"
+    # Language (locale code, e.g. "de") for text generated to be shown to
+    # members, independent of the GUI language.
+    MEMBER_FACING_LANGUAGE = "member_facing_language"
     TALLY_CREDITOR_NAME = "tally_creditor_name"
     TALLY_CREDITOR_IBAN = "tally_creditor_iban"
     TALLY_CREDITOR_BIC = "tally_creditor_bic"

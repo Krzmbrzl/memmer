@@ -16,6 +16,7 @@ from .fees import (
     FeeBreakdown,
 )
 from .maintenance import clear_outdated_entries, archive_onetimecosts
+from .fee_summary import format_fee_summary
 from .tally import (
     create_sepa_payment_initiation_message_object,
     serialize_sepa_message,

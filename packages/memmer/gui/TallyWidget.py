@@ -12,6 +12,7 @@ from PySide6.QtWidgets import QMessageBox
 
 from memmer.gui import MemmerWidget, FormValidator, Issue, error, TallyResultDialog
 from memmer.queries import create_tally, TallyResult
+from memmer.member_text import MemberTranslator
 from memmer.utils import has_uncommitted_changes
 
 import datetime
@@ -237,6 +238,11 @@ class TallyWidget(MemmerWidget, Ui_TallyWidget):
                     output_dir=output_dir,
                     collection_date=collection_date,
                     progress_callback=report_progress,
+                    # Built on the DB thread, where it is also used, so the
+                    # QTranslator never crosses threads.
+                    summary_translator_factory=lambda language: MemberTranslator(
+                        language
+                    ).translate,
                 )
             except Exception:
                 session.rollback()

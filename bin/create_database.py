@@ -44,6 +44,7 @@ def main():
                     name=Setting.TALLY_E2E_ID_TEMPLATE, value="Member-ID: {mem_id:06d}"
                 ),
                 Setting(name=Setting.TALLY_PURPOSE, value="Membership fee"),
+                Setting(name=Setting.MEMBER_FACING_LANGUAGE, value="de"),
                 Setting(name=Setting.TALLY_CREDITOR_NAME, value="Memmer Club"),
                 Setting(
                     name=Setting.TALLY_CREDITOR_IBAN, value="DE02700100800030876808"
