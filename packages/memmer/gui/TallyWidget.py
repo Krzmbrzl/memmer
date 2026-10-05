@@ -7,7 +7,7 @@ from .compiled_ui_files.ui_TallyWidget import Ui_TallyWidget
 
 from typing import Optional
 
-from PySide6.QtCore import Signal, QDate
+from PySide6.QtCore import Signal, Slot, QDate
 from PySide6.QtWidgets import QMessageBox
 
 from memmer.gui import MemmerWidget, FormValidator, Issue, error, TallyResultDialog
@@ -16,6 +16,7 @@ from memmer.utils import has_uncommitted_changes
 
 import datetime
 import os
+import time
 
 
 def _min_collection_date() -> datetime.date:
@@ -37,6 +38,9 @@ class TallyWidget(MemmerWidget, Ui_TallyWidget):
     # Emitted while a tally is being created so the main window can block
     # editing (no other change may be staged during the atomic tally task).
     busy_changed = Signal(bool)
+    # Emitted from the DB thread as the tally is assembled: (processed, total)
+    # members. Queued to the GUI thread, where it drives the progress bar.
+    progress_updated = Signal(int, int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -88,6 +92,7 @@ class TallyWidget(MemmerWidget, Ui_TallyWidget):
         self.year_spinner.valueChanged.connect(self.__update_collection_date)
         self.month_combo.currentIndexChanged.connect(self.__update_collection_date)
         self.create_button.clicked.connect(self.__create_tally)
+        self.progress_updated.connect(self.__on_progress)
 
     def __init_state(self):
         day_threshold = 20
@@ -162,9 +167,60 @@ class TallyWidget(MemmerWidget, Ui_TallyWidget):
         self.back_button.setEnabled(not busy)
         self.busy_changed.emit(busy)
 
+    def __start_progress(self):
+        self.__progress_start = time.monotonic()
+        # Busy (indeterminate) until the first member is reported, so the user
+        # sees something is happening even during the initial member query.
+        self.progress_bar.setRange(0, 0)
+        self.progress_bar.setVisible(True)
+        self.progress_label.setText(self.tr("Preparing…"))
+        self.progress_label.setVisible(True)
+
+    def __stop_progress(self):
+        self.progress_bar.setVisible(False)
+        self.progress_label.setVisible(False)
+
+    @Slot(int, int)
+    def __on_progress(self, current: int, total: int):
+        if self.progress_bar.maximum() != total:
+            self.progress_bar.setMaximum(total)
+        self.progress_bar.setValue(current)
+
+        elapsed = time.monotonic() - self.__progress_start
+        if current > 0 and elapsed > 0:
+            rate = current / elapsed
+            remaining = int((total - current) / rate) if rate > 0 else 0
+            self.progress_label.setText(
+                self.tr(
+                    "{current} / {total} members · ~{seconds}s left ({rate}/s)"
+                ).format(
+                    current=current,
+                    total=total,
+                    seconds=remaining,
+                    rate="{:.0f}".format(rate),
+                )
+            )
+        else:
+            self.progress_label.setText(
+                self.tr("{current} / {total} members").format(
+                    current=current, total=total
+                )
+            )
+
     def __run_tally(self, output_dir: str, collection_date: datetime.date):
         self.__set_busy(True)
+        self.__start_progress()
         self.status_changed.emit(self.tr("Creating tally…"))
+
+        # Reported from the DB thread; throttle to ~10 updates/s (but always
+        # emit the final tick) so a large club doesn't flood the signal queue.
+        last_emit = [0.0]
+
+        def report_progress(current: int, total: int):
+            now = time.monotonic()
+            if current == total or now - last_emit[0] >= 0.1:
+                last_emit[0] = now
+                self.progress_updated.emit(current, total)
 
         def tally_task(session):
             assert session is not None
@@ -177,13 +233,17 @@ class TallyWidget(MemmerWidget, Ui_TallyWidget):
                 # Deliberately not committed here: the user reviews the result
                 # first and then decides to keep (commit) or discard (rollback).
                 return create_tally(
-                    session, output_dir=output_dir, collection_date=collection_date
+                    session,
+                    output_dir=output_dir,
+                    collection_date=collection_date,
+                    progress_callback=report_progress,
                 )
             except Exception:
                 session.rollback()
                 raise
 
         def on_success(result: TallyResult):
+            self.__stop_progress()
             # Stay busy while the user decides; the session still holds the
             # uncommitted tally changes.
             dialog = TallyResultDialog(result, parent=self)
@@ -195,6 +255,7 @@ class TallyWidget(MemmerWidget, Ui_TallyWidget):
                 self.__discard_tally(result.output_path)
 
         def on_error(error):
+            self.__stop_progress()
             self.__set_busy(False)
             if isinstance(error, _PendingChangesError):
                 self.status_changed.emit(self.tr("Commit required"))

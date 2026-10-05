@@ -16,9 +16,9 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QComboBox, QDateEdit, QFormLayout,
-    QGroupBox, QHBoxLayout, QLabel, QPushButton,
-    QSizePolicy, QSpacerItem, QSpinBox, QVBoxLayout,
-    QWidget)
+    QGroupBox, QHBoxLayout, QLabel, QProgressBar,
+    QPushButton, QSizePolicy, QSpacerItem, QSpinBox,
+    QVBoxLayout, QWidget)
 
 from ..PathSelectorWidget import PathSelectorWidget
 
@@ -95,6 +95,19 @@ class Ui_TallyWidget(object):
 
         self.verticalLayout.addItem(self.verticalSpacer)
 
+        self.progress_bar = QProgressBar(TallyWidget)
+        self.progress_bar.setObjectName(u"progress_bar")
+        self.progress_bar.setVisible(False)
+        self.progress_bar.setValue(0)
+
+        self.verticalLayout.addWidget(self.progress_bar)
+
+        self.progress_label = QLabel(TallyWidget)
+        self.progress_label.setObjectName(u"progress_label")
+        self.progress_label.setVisible(False)
+
+        self.verticalLayout.addWidget(self.progress_label)
+
         self.horizontalLayout_8 = QHBoxLayout()
         self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
         self.back_button = QPushButton(TallyWidget)
@@ -138,6 +151,7 @@ class Ui_TallyWidget(object):
 
         self.collection_date_label.setText(QCoreApplication.translate("TallyWidget", u"Collection date", None))
         self.out_dir_label.setText(QCoreApplication.translate("TallyWidget", u"Output directory", None))
+        self.progress_label.setText("")
         self.back_button.setText(QCoreApplication.translate("TallyWidget", u"Back", None))
         self.create_button.setText(QCoreApplication.translate("TallyWidget", u"Create", None))
     # retranslateUi
