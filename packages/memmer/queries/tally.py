@@ -3,7 +3,7 @@
 # LICENSE file at the root of the source tree or at
 # <https://github.com/Krzmbrzl/memmer/blob/main/LICENSE>.
 
-from typing import Tuple, List, Optional
+from typing import Callable, Tuple, List, Optional
 
 from dataclasses import dataclass
 from datetime import datetime, date
@@ -67,6 +67,15 @@ class Asset:
     purpose: str
     amount: Decimal
     e2e_id: str
+
+
+@dataclass
+class TallyResult:
+    """Describes a tally that was just created (but not yet committed)."""
+
+    output_path: str
+    total_amount: Decimal
+    transaction_count: int
 
 
 def sanitize(string: str) -> str:
@@ -149,19 +158,24 @@ def to_sepa_transactions(
 
 
 def assemble_monthly_fee_assets(
-    session: Session, collection_date: date, clear_onetimecosts: bool = True
+    session: Session,
+    collection_date: date,
+    clear_onetimecosts: bool = True,
+    progress_callback: Optional[Callable[[int, int], None]] = None,
 ) -> List[Asset]:
     # TODO: Restrict to those members that actually have to pay anything
     # i.e. active ones and ones with open onetime fees
-    members = session.scalars(
-        select(Member)
-        .where(Member.sepa_mandate_date != None)
-        .order_by(Member.id.asc())
-        # Eager load these associations as they are needed anyway
-        .options(joinedload(Member.participating_sessions))
-        .options(joinedload(Member.trained_sessions))
-        .options(joinedload(Member.one_time_fees))
-    ).unique()
+    members = list(
+        session.scalars(
+            select(Member)
+            .where(Member.sepa_mandate_date != None)
+            .order_by(Member.id.asc())
+            # Eager load these associations as they are needed anyway
+            .options(joinedload(Member.participating_sessions))
+            .options(joinedload(Member.trained_sessions))
+            .options(joinedload(Member.one_time_fees))
+        ).unique()
+    )
 
     e2e_id_template = session.scalars(
         select(Setting.value).where(Setting.name == Setting.TALLY_E2E_ID_TEMPLATE)
@@ -172,7 +186,8 @@ def assemble_monthly_fee_assets(
 
     assets: List[Asset] = []
 
-    for current_member in members:
+    total_members = len(members)
+    for processed, current_member in enumerate(members, start=1):
         fee = compute_total_fee(
             session=session, member=current_member, target_date=collection_date
         )
@@ -189,6 +204,9 @@ def assemble_monthly_fee_assets(
                     e2e_id=e2e_id_template,
                 )
             )
+
+        if progress_callback is not None:
+            progress_callback(processed, total_members)
 
     return assets
 
@@ -295,7 +313,8 @@ def create_tally(
     output_dir: str,
     collection_date: date,
     assets: Optional[List[Asset]] = None,
-):
+    progress_callback: Optional[Callable[[int, int], None]] = None,
+) -> TallyResult:
     creditor_name = (
         session.scalars(
             select(Setting).where(Setting.name == Setting.TALLY_CREDITOR_NAME)
@@ -333,7 +352,10 @@ def create_tally(
     if assets is None:
         # Assume that we want to create a regular monthly tally
         assets = assemble_monthly_fee_assets(
-            session=session, collection_date=collection_date, clear_onetimecosts=True
+            session=session,
+            collection_date=collection_date,
+            clear_onetimecosts=True,
+            progress_callback=progress_callback,
         )
 
     message = create_sepa_payment_initiation_message_object(
@@ -351,13 +373,22 @@ def create_tally(
 
     serialized_message = serialize_sepa_message(message)
 
-    with open(os.path.join(output_dir, message_id + ".xml"), "w") as out_file:
+    output_path = os.path.join(output_dir, message_id + ".xml")
+    with open(output_path, "w") as out_file:
         out_file.write(serialized_message)
 
+    group_header = message.cstmr_drct_dbt_initn.grp_hdr
+    total_amount = Decimal(group_header.ctrl_sum)  # type: ignore
     tally = Tally(
         creation_time=now,
         collection_date=collection_date,
-        total_amount=Decimal(message.cstmr_drct_dbt_initn.grp_hdr.ctrl_sum),  # type: ignore
+        total_amount=total_amount,
         contents=serialized_message,
     )
     session.add(tally)
+
+    return TallyResult(
+        output_path=output_path,
+        total_amount=total_amount,
+        transaction_count=int(group_header.nb_of_txs),  # type: ignore
+    )

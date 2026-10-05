@@ -15,4 +15,5 @@ from .tally import (
     CreditorInfo,
     create_tally,
     Asset,
+    TallyResult,
 )
