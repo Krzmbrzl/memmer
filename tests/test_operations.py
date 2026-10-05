@@ -35,6 +35,7 @@ from memmer.queries import (
     compute_monthly_fee,
     compute_total_fee,
     compute_discount,
+    collect_fee_breakdown,
 )
 from memmer import (
     AdmissionFeeKey,
@@ -335,6 +336,63 @@ class TestOperations(unittest.TestCase):
                 compute_total_fee(session, sam), (youth_base_fee + 16) / 2 + 10
             )
             self.assertEqual(compute_total_fee(session, sally), youth_base_fee + 20)
+
+    def test_fee_breakdown(self):
+        # Dirk has no relatives, so no sibling/family discount interferes and the
+        # breakdown is deterministic.
+        with self.Session() as session:
+            _, _, _, dirk, _ = get_users(session)
+            shortSession, mediumSession, longSession = get_sessions(session)
+
+            adult_base_fee = get_fixed_cost(session, BasicFeeAdultsKey)
+
+            # Base fee only: a base component plus a (neutral) discount marker.
+            breakdown = collect_fee_breakdown(session, dirk)
+            self.assertEqual([c.kind for c in breakdown.components], ["base", "discount"])
+            base = breakdown.components[0]
+            self.assertEqual(base.label, BasicFeeAdultsKey)
+            self.assertEqual(base.amount, adult_base_fee)
+            self.assertEqual(breakdown.components[1].ratio, Decimal(1))
+            self.assertEqual(breakdown.total, compute_total_fee(session, dirk))
+
+            # Most expensive session 100%, second 75%, third free; plus a one-time fee.
+            dirk.participating_sessions.append(longSession)
+            dirk.participating_sessions.append(mediumSession)
+            dirk.participating_sessions.append(shortSession)
+            dirk.one_time_fees = [OneTimeFee(reason="Admission", amount=15)]
+
+            breakdown = collect_fee_breakdown(session, dirk)
+            self.assertEqual(
+                [c.kind for c in breakdown.components],
+                ["base", "session", "session", "discount", "onetime"],
+            )
+            full, partial = [c for c in breakdown.components if c.kind == "session"]
+            self.assertEqual(full.label, longSession.name)
+            self.assertEqual(full.ratio, Decimal(1))
+            self.assertEqual(full.amount, longSession.membership_fee)
+            self.assertEqual(partial.label, mediumSession.name)
+            self.assertEqual(partial.ratio, Decimal("0.75"))
+            self.assertEqual(
+                partial.amount, Decimal("0.75") * mediumSession.membership_fee
+            )
+            onetime = next(c for c in breakdown.components if c.kind == "onetime")
+            self.assertEqual(onetime.label, "Admission")
+            self.assertEqual(onetime.amount, Decimal(15))
+
+            # The breakdown's total is the authoritative figure and never
+            # double-counts the discounted monthly components.
+            self.assertEqual(breakdown.total, compute_total_fee(session, dirk))
+
+            # An override short-circuits to a single override component (one-time
+            # fees still apply on top).
+            session.add(FeeOverride(member_id=dirk.id, amount=Decimal(99)))
+            session.flush()
+            breakdown = collect_fee_breakdown(session, dirk)
+            self.assertEqual(
+                [c.kind for c in breakdown.components], ["override", "onetime"]
+            )
+            self.assertEqual(breakdown.components[0].amount, Decimal(99))
+            self.assertEqual(breakdown.total, Decimal(99) + 15)
 
     def test_participation_dates(self):
         with self.Session() as session:
