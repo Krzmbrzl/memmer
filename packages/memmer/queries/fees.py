@@ -191,7 +191,7 @@ def compute_monthly_fee(
     if len(session_fees) >= 1:
         fee += session_fees[0]
     if len(session_fees) >= 2:
-        fee += Decimal(0.75) * session_fees[1]
+        fee += Decimal("0.75") * session_fees[1]
 
     if apply_discounts:
         discount = compute_discount(
