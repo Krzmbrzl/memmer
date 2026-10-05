@@ -45,7 +45,7 @@ from .fee_summary import format_fee_summary
 from .maintenance import archive_onetimecosts
 
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import select
+from sqlalchemy import select, or_
 
 from xsdata.models.datatype import XmlDateTime, XmlDate
 from xsdata.formats.dataclass.serializers import XmlSerializer
@@ -167,12 +167,20 @@ def assemble_monthly_fee_assets(
         Callable[[str], Callable[[str], str]]
     ] = None,
 ) -> List[Asset]:
-    # TODO: Restrict to those members that actually have to pay anything
-    # i.e. active ones and ones with open onetime fees
+    # Skip members who have already exited by the collection date right away so
+    # they never enter the fee loop — unless they still owe one-time fees, which
+    # are billed regardless of membership status.
     members = list(
         session.scalars(
             select(Member)
             .where(Member.sepa_mandate_date != None)
+            .where(
+                or_(
+                    Member.exit_date == None,
+                    Member.exit_date > collection_date,
+                    Member.one_time_fees.any(),
+                )
+            )
             .order_by(Member.id.asc())
             # Eager load these associations as they are needed anyway
             .options(joinedload(Member.participating_sessions))
