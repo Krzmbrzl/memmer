@@ -12,7 +12,7 @@ from memmer.queries import FeeComponent, FeeBreakdown, format_fee_summary
 
 
 def to_german(source: str) -> str:
-    return {"Base fee": "Grundbeitr."}.get(source, source)
+    return {"Base fee": "Grundbeitrag"}.get(source, source)
 
 
 def base(amount):
@@ -46,7 +46,7 @@ class TestFeeSummary(unittest.TestCase):
         )
         self.assertEqual(
             format_fee_summary(breakdown, to_german),
-            "4€ (Grundbeitr.) + 16€ (Hip Hop I) + 75% * 22€ (Latein) + 15€ (Aufnahmegebühr)",
+            "4€ (Grundbeitrag) + 16€ (Hip Hop I) + 75% * 22€ (Latein) + 15€ (Aufnahmegebühr)",
         )
 
     def test_discount_wraps_monthly_part_only(self):
@@ -55,7 +55,7 @@ class TestFeeSummary(unittest.TestCase):
         )
         self.assertEqual(
             format_fee_summary(breakdown, to_german),
-            "50% * (4€ (Grundbeitr.) + 16€ (Kurs)) + 10€ (X)",
+            "50% * (4€ (Grundbeitrag) + 16€ (Kurs)) + 10€ (X)",
         )
 
     def test_override(self):
@@ -80,7 +80,7 @@ class TestFeeSummary(unittest.TestCase):
                 onetime(15, "Aufnahme"),
             ]
         )
-        full = "4€ (Grundbeitr.) + 16€ (HipHop) + 15€ (Aufnahme)"
+        full = "4€ (Grundbeitrag) + 16€ (HipHop) + 15€ (Aufnahme)"
         self.assertEqual(format_fee_summary(breakdown, to_german), full)
 
         # Just too long for the full form: the base explanation goes first.

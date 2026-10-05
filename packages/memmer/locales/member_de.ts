@@ -5,7 +5,7 @@
     <name>MemberText</name>
     <message>
         <source>Base fee</source>
-        <translation>Grundbeitr.</translation>
+        <translation>Grundbeitrag</translation>
     </message>
 </context>
 </TS>

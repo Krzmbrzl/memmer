@@ -4,7 +4,7 @@
 # <https://github.com/Krzmbrzl/memmer/blob/main/LICENSE>.
 
 """Renders a member's fee breakdown into a short, human-readable summary such
-as ``4€ (Grundbeitr.) + 16€ (Hip Hop I) + 75% * 22€ (Latein) + 15€
+as ``4€ (Grundbeitrag) + 16€ (Hip Hop I) + 75% * 22€ (Latein) + 15€
 (Aufnahmegebühr)`` for the SEPA remittance line.
 
 This module is deliberately free of any Qt/translation dependency: the only
