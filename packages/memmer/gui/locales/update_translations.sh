@@ -18,7 +18,7 @@ GUI_DIR=$( dirname -- "$SCRIPT_DIR" )
 
 # Languages the GUI is translated into. English is the source language and
 # needs no .ts file. Add a code here to start a new translation.
-LANGUAGES=(de nb_NO ta)
+LANGUAGES=(de ta)
 
 # The compiled UI files are generated from the .ui files and would duplicate
 # their strings, so only the hand-written sources and the .ui files are scanned.
