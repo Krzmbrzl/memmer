@@ -24,3 +24,4 @@ from .MainMenuWidget import MainMenuWidget
 from .MainWindow import MainWindow
 from .OverviewWidget import OverviewWidget
 from .TallyWidget import TallyWidget
+from .MemberListWidget import MemberListWidget

@@ -39,6 +39,7 @@
       <widget class="MainMenuWidget" name="main_menu"/>
       <widget class="OverviewWidget" name="overview_page"/>
       <widget class="TallyWidget" name="tally_page"/>
+      <widget class="MemberListWidget" name="member_list_page"/>
      </widget>
     </item>
    </layout>
@@ -102,6 +103,12 @@
    <class>TallyWidget</class>
    <extends>QWidget</extends>
    <header>TallyWidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>MemberListWidget</class>
+   <extends>QWidget</extends>
+   <header>MemberListWidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

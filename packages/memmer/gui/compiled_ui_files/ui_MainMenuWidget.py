@@ -51,16 +51,21 @@ class Ui_MainMenuWidget(object):
         self.disconnect_button = QPushButton(MainMenuWidget)
         self.disconnect_button.setObjectName(u"disconnect_button")
 
-        self.gridLayout.addWidget(self.disconnect_button, 5, 1, 1, 1)
+        self.gridLayout.addWidget(self.disconnect_button, 6, 1, 1, 1)
 
         self.tally_button = QPushButton(MainMenuWidget)
         self.tally_button.setObjectName(u"tally_button")
 
         self.gridLayout.addWidget(self.tally_button, 2, 1, 1, 1)
 
+        self.member_list_button = QPushButton(MainMenuWidget)
+        self.member_list_button.setObjectName(u"member_list_button")
+
+        self.gridLayout.addWidget(self.member_list_button, 3, 1, 1, 1)
+
         self.verticalSpacer_2 = QSpacerItem(20, 250, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout.addItem(self.verticalSpacer_2, 3, 1, 1, 1)
+        self.gridLayout.addItem(self.verticalSpacer_2, 4, 1, 1, 1)
 
         self.horizontalSpacer = QSpacerItem(136, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -69,7 +74,7 @@ class Ui_MainMenuWidget(object):
         self.commit_button = QPushButton(MainMenuWidget)
         self.commit_button.setObjectName(u"commit_button")
 
-        self.gridLayout.addWidget(self.commit_button, 4, 1, 1, 1)
+        self.gridLayout.addWidget(self.commit_button, 5, 1, 1, 1)
 
         self.gridLayout.setColumnStretch(0, 1)
         self.gridLayout.setColumnStretch(1, 1)
@@ -84,6 +89,7 @@ class Ui_MainMenuWidget(object):
         self.title_label.setText(QCoreApplication.translate("MainMenuWidget", u"Main menu", None))
         self.disconnect_button.setText(QCoreApplication.translate("MainMenuWidget", u"Disconnect", None))
         self.tally_button.setText(QCoreApplication.translate("MainMenuWidget", u"Create tally", None))
+        self.member_list_button.setText(QCoreApplication.translate("MainMenuWidget", u"Member lists", None))
         self.commit_button.setText(QCoreApplication.translate("MainMenuWidget", u"Commit changes", None))
     # retranslateUi
 

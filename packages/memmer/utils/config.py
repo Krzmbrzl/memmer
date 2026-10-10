@@ -21,6 +21,7 @@ class ConfigKey(Enum):
     SSH_USE_AGENT = "connector_ssh_use_agent"
 
     TALLY_DIR = "tally_out_dir"
+    MEMBER_LIST_DIR = "member_list_out_dir"
 
 
 class ConnectType(Enum):
@@ -49,6 +50,7 @@ class MemmerConfig:
     ssh_use_agent: Optional[bool] = None
 
     tally_dir: Optional[str] = None
+    member_list_dir: Optional[str] = None
 
     def __getitem__(self, key: ConfigKey):
         assert str(key.name.lower()) in dir(self)

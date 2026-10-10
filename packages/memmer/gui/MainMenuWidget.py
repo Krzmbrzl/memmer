@@ -15,6 +15,7 @@ class MainMenuWidget(MemmerWidget, Ui_MainMenuWidget):
     disconnect_requested = Signal()
     overview_page_requested = Signal()
     tally_page_requested = Signal()
+    member_list_page_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -33,6 +34,8 @@ class MainMenuWidget(MemmerWidget, Ui_MainMenuWidget):
         self.overview_button.clicked.connect(self.overview_page_requested.emit)
 
         self.tally_button.clicked.connect(self.tally_page_requested.emit)
+
+        self.member_list_button.clicked.connect(self.member_list_page_requested.emit)
 
     def __init_state(self):
         pass

@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QMenu, QMenuBar,
 
 from ..ConnectWidget import ConnectWidget
 from ..MainMenuWidget import MainMenuWidget
+from ..MemberListWidget import MemberListWidget
 from ..OverviewWidget import OverviewWidget
 from ..TallyWidget import TallyWidget
 
@@ -54,6 +55,9 @@ class Ui_MainWindow(object):
         self.tally_page = TallyWidget()
         self.tally_page.setObjectName(u"tally_page")
         self.page_stack.addWidget(self.tally_page)
+        self.member_list_page = MemberListWidget()
+        self.member_list_page.setObjectName(u"member_list_page")
+        self.page_stack.addWidget(self.member_list_page)
 
         self.verticalLayout.addWidget(self.page_stack)
 

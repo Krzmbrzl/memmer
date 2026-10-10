@@ -63,6 +63,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.main_menu.tally_page_requested.connect(
             lambda: self.__switch_to(self.tally_page)
         )
+        self.main_menu.member_list_page_requested.connect(
+            lambda: self.__switch_to(self.member_list_page)
+        )
 
         self.tally_page.main_menu_requested.connect(
             lambda: self.__switch_to(self.main_menu)
@@ -70,6 +73,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tally_page.status_changed.connect(self.__status_update)
         # Block starting edits while a tally is being created.
         self.tally_page.busy_changed.connect(
+            lambda busy: self.menu_new.setEnabled(not busy)
+        )
+
+        self.member_list_page.main_menu_requested.connect(
+            lambda: self.__switch_to(self.main_menu)
+        )
+        self.member_list_page.status_changed.connect(self.__status_update)
+        # Block starting edits while a list is being generated.
+        self.member_list_page.busy_changed.connect(
             lambda busy: self.menu_new.setEnabled(not busy)
         )
 

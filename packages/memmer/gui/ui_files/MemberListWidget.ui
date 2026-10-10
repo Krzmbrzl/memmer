@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MemberListWidget</class>
+ <widget class="QWidget" name="MemberListWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>720</width>
+    <height>640</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="selection_group">
+     <property name="title">
+      <string>Members</string>
+     </property>
+     <layout class="QVBoxLayout" name="selection_layout">
+      <item>
+       <layout class="QHBoxLayout" name="selection_combo_layout">
+        <item>
+         <widget class="QLabel" name="selection_label">
+          <property name="text">
+           <string>Selection</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="selection_combo"/>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="member_tables_layout">
+        <item>
+         <widget class="QGroupBox" name="included_group">
+          <property name="title">
+           <string>Included</string>
+          </property>
+          <layout class="QVBoxLayout" name="included_layout">
+           <item>
+            <widget class="QTableView" name="included_table"/>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="available_group">
+          <property name="title">
+           <string>Available</string>
+          </property>
+          <layout class="QVBoxLayout" name="available_layout">
+           <item>
+            <widget class="FilterWidget" name="available_filter" native="true"/>
+           </item>
+           <item>
+            <widget class="QTableView" name="available_table"/>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="selection_hint">
+        <property name="text">
+         <string>Double-click a member to move them between the lists.</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="columns_group">
+     <property name="title">
+      <string>Columns</string>
+     </property>
+     <layout class="QHBoxLayout" name="columns_layout">
+      <item>
+       <layout class="QVBoxLayout" name="available_columns_layout">
+        <item>
+         <widget class="QLabel" name="available_columns_label">
+          <property name="text">
+           <string>Available</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QListWidget" name="available_columns"/>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="column_buttons_layout">
+        <item>
+         <spacer name="column_buttons_top_spacer">
+          <property name="orientation">
+           <enum>Qt::Orientation::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="add_column_button">
+          <property name="text">
+           <string>Add &gt;</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="remove_column_button">
+          <property name="text">
+           <string>&lt; Remove</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="add_empty_button">
+          <property name="text">
+           <string>Add empty</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="add_checkbox_button">
+          <property name="text">
+           <string>Add checkbox</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="column_buttons_bottom_spacer">
+          <property name="orientation">
+           <enum>Qt::Orientation::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="chosen_columns_layout">
+        <item>
+         <widget class="QLabel" name="chosen_columns_label">
+          <property name="text">
+           <string>Chosen (printed left to right; double-click to rename)</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QListWidget" name="chosen_columns"/>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="reorder_buttons_layout">
+        <item>
+         <spacer name="reorder_top_spacer">
+          <property name="orientation">
+           <enum>Qt::Orientation::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="up_button">
+          <property name="text">
+           <string>Up</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="down_button">
+          <property name="text">
+           <string>Down</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="reorder_bottom_spacer">
+          <property name="orientation">
+           <enum>Qt::Orientation::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="template_group">
+     <property name="title">
+      <string>Column template</string>
+     </property>
+     <layout class="QHBoxLayout" name="template_layout">
+      <item>
+       <widget class="QComboBox" name="template_combo"/>
+      </item>
+      <item>
+       <widget class="QPushButton" name="save_template_button">
+        <property name="text">
+         <string>Save as…</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="update_template_button">
+        <property name="text">
+         <string>Update</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="delete_template_button">
+        <property name="text">
+         <string>Delete</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="options_group">
+     <property name="title">
+      <string>Output</string>
+     </property>
+     <layout class="QFormLayout" name="options_layout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="format_label">
+        <property name="text">
+         <string>Format</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="format_combo"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="as_of_label">
+        <property name="text">
+         <string>Reference date</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QDateEdit" name="as_of_input">
+        <property name="calendarPopup">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="out_file_label">
+        <property name="text">
+         <string>Output file</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="PathSelectorWidget" name="out_file_input" native="true">
+        <property name="minimumSize">
+         <size>
+          <width>10</width>
+          <height>0</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="pdf_options_group">
+     <property name="title">
+      <string>PDF options</string>
+     </property>
+     <layout class="QFormLayout" name="pdf_options_layout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="title_label">
+        <property name="text">
+         <string>Title</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="title_input"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="orientation_label">
+        <property name="text">
+         <string>Orientation</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="orientation_combo"/>
+      </item>
+      <item row="2" column="1">
+       <widget class="QCheckBox" name="zebra_check">
+        <property name="text">
+         <string>Shade alternating rows</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QProgressBar" name="progress_bar">
+     <property name="visible">
+      <bool>false</bool>
+     </property>
+     <property name="value">
+      <number>0</number>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="progress_label">
+     <property name="visible">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="buttons_layout">
+     <item>
+      <widget class="QPushButton" name="back_button">
+       <property name="text">
+        <string>Back</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="buttons_spacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="create_button">
+       <property name="text">
+        <string>Create</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>FilterWidget</class>
+   <extends>QWidget</extends>
+   <header>FilterWidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>PathSelectorWidget</class>
+   <extends>QWidget</extends>
+   <header>PathSelectorWidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
