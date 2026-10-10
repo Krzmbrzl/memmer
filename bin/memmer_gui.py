@@ -11,6 +11,7 @@ from PySide6.QtCore import QTimer
 from PySide6.QtUiTools import QUiLoader
 
 from memmer.gui import MainWindow
+from memmer.gui.translations import install_translators
 
 
 def quit_app(*_):
@@ -21,6 +22,10 @@ def main():
     signal.signal(signal.SIGINT, quit_app)
 
     app = QApplication(sys.argv)
+
+    # Install the GUI translators before any widget is built, so the chosen
+    # language is applied as the widgets are created.
+    install_translators(app)
 
     # Required to ensure that the Python interpreter is called every now
     # and then in order to allow for signal handling (e.g. Ctrl+C)
