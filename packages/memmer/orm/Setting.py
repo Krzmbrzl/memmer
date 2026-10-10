@@ -25,6 +25,9 @@ class Setting(Base):
     TALLY_CREDITOR_BIC = "tally_creditor_bic"
     TALLY_CREDITOR_ID = "tally_creditor_identification"
 
+    # JSON-encoded list of named column-selection templates for member lists.
+    MEMBER_LIST_TEMPLATES = "member_list_templates"
+
     CLUB_NAME = "club_name"
     CLUB_NUMBER = "club_number"
     CLUB_FOUNDING_YEAR = "club_founding_year"

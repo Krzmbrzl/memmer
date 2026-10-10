@@ -4,7 +4,7 @@
 # <https://github.com/Krzmbrzl/memmer/blob/main/LICENSE>.
 
 from .time import nominal_year_diff
-from .active import restrict_to_active_members, is_active
+from .active import restrict_to_active_members, is_active, active_members
 from .connection import connect, ConnectionParameter, SSHTunnelParameter
 from .config import (
     ConfigKey,

@@ -3,13 +3,21 @@
 # LICENSE file at the root of the source tree or at
 # <https://github.com/Krzmbrzl/memmer/blob/main/LICENSE>.
 
-from typing import Any
+from typing import Any, List, Sequence
 
 from datetime import date, datetime
 
 from memmer.orm import Member
 
 from sqlalchemy import Select, or_
+
+
+def active_members(
+    members: Sequence[Member], target_date: date = datetime.now().date()
+) -> List[Member]:
+    """The members active at ``target_date`` (the list companion to
+    :func:`is_active`): a member who has already entered and not yet exited."""
+    return [member for member in members if is_active(member, target_date)]
 
 
 def is_active(member: Member, target_date: date = datetime.now().date()) -> bool:
